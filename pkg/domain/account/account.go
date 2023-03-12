@@ -64,10 +64,10 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 	}
 
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(NewTransferenceSent(amount, newBalanceOrigin, destination.ID()))
+	a.Apply(NewTransferenceSent(amount, newBalanceOrigin, a.ID(), destination.ID()))
 
 	newBalanceDestination := destination.Balance() + amount
-	destination.Apply(NewTransferenceReceived(amount, newBalanceDestination, a.ID()))
+	destination.Apply(NewTransferenceReceived(amount, newBalanceDestination, a.ID(), destination.ID()))
 
 	return nil
 }

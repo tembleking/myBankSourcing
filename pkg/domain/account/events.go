@@ -39,14 +39,16 @@ type TransferenceSent struct {
 
 	Quantity int
 	Balance  int
+	From     ID
 	To       ID
 }
 
-func NewTransferenceSent(quantity int, balance int, to ID) *TransferenceSent {
+func NewTransferenceSent(quantity int, balance int, from, to ID) *TransferenceSent {
 	return &TransferenceSent{
 		BaseEvent: domain.NewBaseEvent(),
 		Quantity:  quantity,
 		Balance:   balance,
+		From:      from,
 		To:        to,
 	}
 }
@@ -57,13 +59,15 @@ type TransferenceReceived struct {
 	Quantity int
 	Balance  int
 	From     ID
+	To       ID
 }
 
-func NewTransferenceReceived(quantity int, balance int, from ID) *TransferenceReceived {
+func NewTransferenceReceived(quantity int, balance int, from, to ID) *TransferenceReceived {
 	return &TransferenceReceived{
 		BaseEvent: domain.NewBaseEvent(),
 		Quantity:  quantity,
 		Balance:   balance,
 		From:      from,
+		To:        to,
 	}
 }
