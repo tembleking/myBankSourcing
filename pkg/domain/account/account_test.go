@@ -3,16 +3,16 @@ package account_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	account2 "github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
 var _ = Describe("Account", func() {
 	var (
-		acc *account2.Account
+		acc *account.Account
 	)
 
 	BeforeEach(func() {
-		acc = account2.NewAccount("some-id")
+		acc = account.NewAccount("some-id")
 	})
 
 	When("adding money to the account", func() {
@@ -38,7 +38,7 @@ var _ = Describe("Account", func() {
 			It("fails", func() {
 				err := acc.AddMoney(-1)
 
-				Expect(err).To(MatchError(account2.ErrAddMoneyQuantityCannotBeNegative))
+				Expect(err).To(MatchError(account.ErrAddMoneyQuantityCannotBeNegative))
 			})
 		})
 	})
@@ -61,7 +61,36 @@ var _ = Describe("Account", func() {
 
 				err := acc.WithdrawalMoney(51)
 
-				Expect(err).To(MatchError(account2.ErrBalanceIsNotEnoughForWithdrawal))
+				Expect(err).To(MatchError(account.ErrBalanceIsNotEnoughForWithdrawal))
+			})
+		})
+	})
+
+	When("transferring money to another account", func() {
+		It("transfers the money correctly", func() {
+			origin := account.NewAccount("origin")
+			_ = origin.AddMoney(100)
+			destination := account.NewAccount("destination")
+			_ = destination.AddMoney(30)
+			amount := 50
+
+			err := origin.TransferMoney(amount, destination)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(origin.Balance()).To(Equal(50))
+			Expect(destination.Balance()).To(Equal(80))
+		})
+
+		When("the origin account has less money than the amount to transfer", func() {
+			It("returns an error", func() {
+				origin := account.NewAccount("origin")
+				_ = origin.AddMoney(30)
+				destination := account.NewAccount("destination")
+				amount := 50
+
+				err := origin.TransferMoney(amount, destination)
+
+				Expect(err).To(MatchError(account.ErrBalanceIsNotEnoughForTransfer))
 			})
 		})
 	})

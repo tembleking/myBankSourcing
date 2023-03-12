@@ -51,5 +51,23 @@ func (a *Account) onEvent(event domain.Event) {
 		a.balance = event.Balance
 	case *AmountWithdrawn:
 		a.balance = event.Balance
+	case *TransferenceSent:
+		a.balance = event.Balance
+	case *TransferenceReceived:
+		a.balance = event.Balance
 	}
+}
+
+func (a *Account) TransferMoney(amount int, destination *Account) error {
+	if amount > a.Balance() {
+		return ErrBalanceIsNotEnoughForTransfer
+	}
+
+	newBalanceOrigin := a.Balance() - amount
+	a.Apply(NewTransferenceSent(amount, newBalanceOrigin, destination.ID()))
+
+	newBalanceDestination := destination.Balance() + amount
+	destination.Apply(NewTransferenceReceived(amount, newBalanceDestination, a.ID()))
+
+	return nil
 }
