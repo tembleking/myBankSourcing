@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"context"
+	"sync"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
@@ -13,10 +14,14 @@ type dataWithVersionAndName struct {
 }
 
 type AppendOnlyStore struct {
-	fields map[string][]dataWithVersionAndName
+	fields  map[string][]dataWithVersionAndName
+	rwMutex sync.RWMutex
 }
 
 func (a *AppendOnlyStore) Append(ctx context.Context, name string, data []byte, expectedVersion uint64) error {
+	a.rwMutex.Lock()
+	defer a.rwMutex.Unlock()
+
 	existingVersion := 0
 	fields, ok := a.fields[name]
 	if !ok {
@@ -41,6 +46,9 @@ func (a *AppendOnlyStore) Append(ctx context.Context, name string, data []byte, 
 }
 
 func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVersion uint64, maxCount uint64) ([]persistence.DataWithVersion, error) {
+	a.rwMutex.RLock()
+	defer a.rwMutex.RUnlock()
+
 	fields, ok := a.fields[name]
 	if !ok {
 		return nil, &persistence.ErrAggregateNotFound{Name: name}
@@ -66,6 +74,9 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVer
 }
 
 func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion uint64, maxCount uint64) ([]persistence.DataWithName, error) {
+	a.rwMutex.RLock()
+	defer a.rwMutex.RUnlock()
+
 	result := make([]persistence.DataWithName, 0)
 	for _, fields := range a.fields {
 		records, err := a.ReadRecords(ctx, fields[0].name, startVersion, maxCount)
