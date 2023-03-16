@@ -62,7 +62,7 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVer
 		maxCount = uint64(len(fields))
 	}
 
-	result := make([]persistence.DataWithVersion, 0)
+	result := make([]persistence.DataWithVersion, 0, len(fields))
 	for i := startVersion; i < uint64(len(fields)) && maxCount > 0; i++ {
 		maxCount--
 		result = append(result, persistence.DataWithVersion{
