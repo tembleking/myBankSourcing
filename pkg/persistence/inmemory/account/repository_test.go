@@ -1,20 +1,22 @@
-package inmemory_test
+package account_test
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
+	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
 )
 
 var _ = Describe("In Memory Repository", func() {
 	var (
-		repository *inmemory.Repository
+		repository *account2.Repository
 	)
 
 	BeforeEach(func() {
-		repository = inmemory.NewRepository()
+		repository = account2.NewRepository()
 	})
 
 	It("saves the account and retrieves it again", func() {

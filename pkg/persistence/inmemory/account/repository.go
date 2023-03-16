@@ -1,12 +1,13 @@
-package inmemory
+package account
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
-	"sync"
 )
 
 type Repository struct {
