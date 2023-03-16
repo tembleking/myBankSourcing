@@ -25,7 +25,7 @@ var _ = Describe("EventStore", func() {
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		binarySerializer = serializer.NewGoBinarySerializer()
+		binarySerializer = &serializer.GoBinarySerializer{}
 		ctrl = gomock.NewController(GinkgoT())
 		appendOnlyStore = mocks.NewMockAppendOnlyStore(ctrl)
 		eventStore = persistence.NewEventStore(binarySerializer, binarySerializer, appendOnlyStore)
@@ -71,7 +71,7 @@ var _ = Describe("EventStore", func() {
 })
 
 func dataRecordInStore() []byte {
-	serializer := serializer.NewGoBinarySerializer()
+	serializer := &serializer.GoBinarySerializer{}
 	data, err := serializer.Serialize([]domain.Event{
 		&account.AmountAdded{
 			BaseEvent: domain.BaseEvent{EventID: "event-0"},

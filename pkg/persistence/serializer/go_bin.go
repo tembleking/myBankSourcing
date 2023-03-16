@@ -9,15 +9,14 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
-type GoBinarySerializer struct{}
-
-func NewGoBinarySerializer() *GoBinarySerializer {
+func init() {
 	gob.Register(&account.AmountAdded{})
 	gob.Register(&account.AmountWithdrawn{})
 	gob.Register(&account.TransferenceReceived{})
 	gob.Register(&account.TransferenceSent{})
-	return &GoBinarySerializer{}
 }
+
+type GoBinarySerializer struct{}
 
 func (J *GoBinarySerializer) Serialize(events []domain.Event) ([]byte, error) {
 	var buf bytes.Buffer
