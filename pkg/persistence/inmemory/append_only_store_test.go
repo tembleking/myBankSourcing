@@ -2,6 +2,7 @@ package inmemory_test
 
 import (
 	"context"
+	"sort"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -133,9 +134,15 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 		data, err := store.ReadAllRecords(context.Background(), 0, 0)
 		Expect(err).To(BeNil())
 		Expect(data).To(HaveLen(2))
-		Expect(data[0].Data).To(Equal([]byte("data0")))
-		Expect(data[0].Name).To(Equal("aggregate-0"))
-		Expect(data[1].Data).To(Equal([]byte("data1")))
-		Expect(data[1].Name).To(Equal("aggregate-1"))
+		// sort for testing only, we don't care about the order in production
+		sort.Slice(data, func(i, j int) bool { return data[i].Name < data[j].Name })
+		Expect(data[0]).To(Equal(persistence.DataWithName{
+			Name: "aggregate-0",
+			Data: []byte("data0"),
+		}))
+		Expect(data[1]).To(Equal(persistence.DataWithName{
+			Name: "aggregate-1",
+			Data: []byte("data1"),
+		}))
 	})
 })
