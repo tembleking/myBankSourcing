@@ -8,17 +8,17 @@ type Event interface {
 }
 
 type BaseEvent struct {
-	id string
+	EventID string
 }
 
 func (b *BaseEvent) ID() string {
-	return b.id
+	return b.EventID
 }
 
 func (b *BaseEvent) IsDomainEvent() {}
 
 func NewBaseEvent() BaseEvent {
 	return BaseEvent{
-		id: uuid.NewString(),
+		EventID: uuid.NewString(),
 	}
 }
