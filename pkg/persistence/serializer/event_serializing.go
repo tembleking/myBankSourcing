@@ -1,7 +1,10 @@
 package serializer
 
 import (
+	"encoding/gob"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
+	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
 type EventSerializer interface {
@@ -10,4 +13,18 @@ type EventSerializer interface {
 
 type EventDeserializer interface {
 	Deserialize(data []byte) ([]domain.Event, error)
+}
+
+func RegisterSerializableType(t any) {
+	gob.Register(t)
+	registerTypeInStructSerializer(t)
+}
+
+func init() {
+	StructMapSerializer = &structMapSerializing{registeredTypes: map[string]any{}}
+
+	RegisterSerializableType(&account.AmountAdded{})
+	RegisterSerializableType(&account.AmountWithdrawn{})
+	RegisterSerializableType(&account.TransferenceReceived{})
+	RegisterSerializableType(&account.TransferenceSent{})
 }

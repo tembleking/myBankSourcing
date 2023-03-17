@@ -6,15 +6,7 @@ import (
 	"fmt"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
-
-func init() {
-	gob.Register(&account.AmountAdded{})
-	gob.Register(&account.AmountWithdrawn{})
-	gob.Register(&account.TransferenceReceived{})
-	gob.Register(&account.TransferenceSent{})
-}
 
 type GoBinarySerializer struct{}
 
