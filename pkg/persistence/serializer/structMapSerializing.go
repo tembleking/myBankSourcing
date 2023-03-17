@@ -13,10 +13,14 @@ type structMapSerializing struct {
 	registeredTypes map[string]any
 }
 
-var StructMapSerializer *structMapSerializing
+var structMapSerializer *structMapSerializing
+
+func init() {
+	structMapSerializer = &structMapSerializing{registeredTypes: map[string]any{}}
+}
 
 func registerTypeInStructSerializer(value any) {
-	StructMapSerializer.Register(value)
+	structMapSerializer.Register(value)
 }
 
 func (s *structMapSerializing) SerializeToMap(event domain.Event) (map[string]map[string]any, error) {

@@ -2,7 +2,15 @@ package account
 
 import (
 	"github.com/tembleking/myBankSourcing/pkg/domain"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
+
+func init() {
+	serializer.RegisterSerializableType(&AmountAdded{})
+	serializer.RegisterSerializableType(&AmountWithdrawn{})
+	serializer.RegisterSerializableType(&TransferenceSent{})
+	serializer.RegisterSerializableType(&TransferenceReceived{})
+}
 
 type AmountAdded struct {
 	domain.BaseEvent

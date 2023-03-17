@@ -14,7 +14,7 @@ type Msgpack struct {
 func (m *Msgpack) Serialize(events []domain.Event) ([]byte, error) {
 	eventDataAsMap := make([]map[string]map[string]any, 0)
 	for _, event := range events {
-		eventData, err := StructMapSerializer.SerializeToMap(event)
+		eventData, err := structMapSerializer.SerializeToMap(event)
 		if err != nil {
 			return nil, fmt.Errorf("error serializing event to map: %w", err)
 		}
@@ -38,7 +38,7 @@ func (m *Msgpack) Deserialize(data []byte) ([]domain.Event, error) {
 
 	events := make([]domain.Event, 0)
 	for _, eventData := range eventDataAsMap {
-		event, err := StructMapSerializer.DeserializeFromMap(eventData)
+		event, err := structMapSerializer.DeserializeFromMap(eventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event from map: %w", err)
 		}
