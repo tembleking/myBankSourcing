@@ -41,8 +41,9 @@ var _ = Describe("In Memory Repository", func() {
 })
 
 func someAccountWithMovements() *account.Account {
-	anAccount := account.NewAccount("some-id")
+	anAccount := account.NewAccount()
 
+	_ = anAccount.OpenAccount("some-id")
 	_ = anAccount.AddMoney(50)
 	_ = anAccount.WithdrawalMoney(35)
 	_ = anAccount.AddMoney(10)

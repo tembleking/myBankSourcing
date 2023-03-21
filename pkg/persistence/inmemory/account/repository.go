@@ -40,7 +40,7 @@ func (r *Repository) GetAccount(ctx context.Context, id account.ID) (*account.Ac
 		return nil, errors.New("not found")
 	}
 
-	anAccount := account.NewAccount(id)
+	anAccount := account.NewAccount()
 	for _, persistedEvent := range persistedEvents {
 		// Print is here for demonstration purposes. It can be removed safely.
 		fmt.Printf("%#v\n", persistedEvent)
