@@ -6,10 +6,24 @@ import (
 )
 
 func init() {
+	serializer.RegisterSerializableType(&AccountOpened{})
 	serializer.RegisterSerializableType(&AmountAdded{})
 	serializer.RegisterSerializableType(&AmountWithdrawn{})
 	serializer.RegisterSerializableType(&TransferenceSent{})
 	serializer.RegisterSerializableType(&TransferenceReceived{})
+}
+
+type AccountOpened struct {
+	domain.BaseEvent
+
+	AccountID ID
+}
+
+func NewAccountOpened(id ID) *AccountOpened {
+	return &AccountOpened{
+		BaseEvent: domain.NewBaseEvent(),
+		AccountID: id,
+	}
 }
 
 type AmountAdded struct {

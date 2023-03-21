@@ -1,6 +1,8 @@
 package account
 
-import "github.com/tembleking/myBankSourcing/pkg/domain"
+import (
+	"github.com/tembleking/myBankSourcing/pkg/domain"
+)
 
 type ID string
 
@@ -8,11 +10,12 @@ type Account struct {
 	domain.BaseAggregate
 
 	id      ID
+	isOpen  bool
 	balance int
 }
 
-func NewAccount(id ID) *Account {
-	a := &Account{id: id}
+func NewAccount() *Account {
+	a := &Account{}
 	a.OnEventFunc = a.onEvent
 	return a
 }
@@ -21,7 +24,20 @@ func (a *Account) ID() ID {
 	return a.id
 }
 
+func (a *Account) OpenAccount(id ID) error {
+	if a.isOpen {
+		return ErrAccountIsAlreadyOpen
+	}
+
+	a.Apply(NewAccountOpened(id))
+	return nil
+
+}
+
 func (a *Account) AddMoney(amount int) error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
 	if amount < 0 {
 		return ErrAddMoneyQuantityCannotBeNegative
 	}
@@ -32,6 +48,9 @@ func (a *Account) AddMoney(amount int) error {
 }
 
 func (a *Account) WithdrawalMoney(amount int) error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
 	if amount > a.Balance() {
 		return ErrBalanceIsNotEnoughForWithdrawal
 	}
@@ -47,6 +66,9 @@ func (a *Account) Balance() int {
 
 func (a *Account) onEvent(event domain.Event) {
 	switch event := event.(type) {
+	case *AccountOpened:
+		a.id = event.AccountID
+		a.isOpen = true
 	case *AmountAdded:
 		a.balance = event.Balance
 	case *AmountWithdrawn:
@@ -56,6 +78,10 @@ func (a *Account) onEvent(event domain.Event) {
 	case *TransferenceReceived:
 		a.balance = event.Balance
 	}
+}
+
+func (a *Account) IsOpen() bool {
+	return a.isOpen
 }
 
 func (a *Account) TransferMoney(amount int, destination *Account) error {
