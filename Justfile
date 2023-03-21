@@ -7,6 +7,11 @@ generate:
     go install github.com/golang/mock/mockgen@latest
     go generate ./...
 
+lint:
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    golangci-lint run --timeout 1h
+
+
 ginkgo-bootstrap NAME="":
     cd {{invocation_directory()}}; go run github.com/onsi/ginkgo/v2/ginkgo bootstrap
     cd {{invocation_directory()}}; go run github.com/onsi/ginkgo/v2/ginkgo generate {{ NAME }}
