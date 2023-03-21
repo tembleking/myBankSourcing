@@ -14,9 +14,12 @@ type Account struct {
 	balance int
 }
 
-func NewAccount() *Account {
+func NewAccount(events ...domain.Event) *Account {
 	a := &Account{}
 	a.OnEventFunc = a.onEvent
+	for _, event := range events {
+		a.OnEventFunc(event)
+	}
 	return a
 }
 
