@@ -13,14 +13,14 @@ type AccountService struct {
 	repository account.Repository
 }
 
-func (s *AccountService) OpenAccount(background context.Context) (*account.Account, error) {
+func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
 	accountCreated := account.NewAccount()
 	err := accountCreated.OpenAccount(account.ID(uuid.NewString()))
 	if err != nil {
 		return nil, fmt.Errorf("error opening account: %w", err)
 	}
 
-	err = s.repository.SaveAccount(background, accountCreated)
+	err = s.repository.SaveAccount(ctx, accountCreated)
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
