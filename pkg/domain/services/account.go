@@ -1,0 +1,35 @@
+package services
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/google/uuid"
+
+	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+)
+
+type AccountService struct {
+	repository account.Repository
+}
+
+func (s *AccountService) OpenAccount(background context.Context) (*account.Account, error) {
+	accountCreated := account.NewAccount()
+	err := accountCreated.OpenAccount(account.ID(uuid.NewString()))
+	if err != nil {
+		return nil, fmt.Errorf("error opening account: %w", err)
+	}
+
+	err = s.repository.SaveAccount(background, accountCreated)
+	if err != nil {
+		return nil, fmt.Errorf("error saving account: %w", err)
+	}
+
+	return accountCreated, nil
+}
+
+func NewAccountService(repository account.Repository) *AccountService {
+	return &AccountService{
+		repository: repository,
+	}
+}
