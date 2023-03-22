@@ -8,11 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tembleking/myBankSourcing/pkg/domain/services"
-	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	inmemoryaccount "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
+	"github.com/tembleking/myBankSourcing/internal/factory"
 )
 
 // accountOpenCmd represents the open command
@@ -20,10 +16,7 @@ var accountOpenCmd = &cobra.Command{
 	Use:   "open",
 	Short: "Open an account",
 	Run: func(cmd *cobra.Command, args []string) {
-		eventSerializer := &serializer.Msgpack{}
-		eventStore := persistence.NewEventStore(eventSerializer, eventSerializer, inmemory.NewAppendOnlyStore())
-		repository := inmemoryaccount.NewRepository(eventStore)
-		service := services.NewAccountService(repository)
+		service := factory.NewAccountService()
 
 		account, err := service.OpenAccount(cmd.Context())
 		if err != nil {
