@@ -2,9 +2,10 @@ package transferences
 
 import (
 	"context"
+	"sync"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
-	"sync"
 )
 
 type View struct {

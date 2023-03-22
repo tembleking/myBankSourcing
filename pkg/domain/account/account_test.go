@@ -8,9 +8,7 @@ import (
 )
 
 var _ = Describe("Account", func() {
-	var (
-		acc *account.Account
-	)
+	var acc *account.Account
 
 	When("the account is not yet open", func() {
 		BeforeEach(func() {

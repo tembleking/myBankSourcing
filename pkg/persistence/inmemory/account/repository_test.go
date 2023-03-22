@@ -8,12 +8,11 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
+	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("In Memory Repository", func() {
-	var (
-		repository *account2.Repository
-	)
+	var repository *account2.Repository
 
 	BeforeEach(func() {
 		repository = account2.NewRepository()
@@ -38,12 +37,31 @@ var _ = Describe("In Memory Repository", func() {
 			Expect(err).To(MatchError("not found"))
 		})
 	})
+
+	It("lists the accounts", func() {
+		oneAccount := someAccountWithMovementsAndID("some-id")
+		anotherAccount := someAccountWithMovementsAndID("some-other-id")
+
+		err := repository.SaveAccount(context.Background(), oneAccount)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = repository.SaveAccount(context.Background(), anotherAccount)
+		Expect(err).ToNot(HaveOccurred())
+
+		accounts, err := repository.ListAccounts(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(oneAccount), BeAnAccountEqualsTo(anotherAccount)))
+	})
 })
 
 func someAccountWithMovements() *account.Account {
+	return someAccountWithMovementsAndID("some-id")
+}
+
+func someAccountWithMovementsAndID(id string) *account.Account {
 	anAccount := account.NewAccount()
 
-	_ = anAccount.OpenAccount("some-id")
+	_ = anAccount.OpenAccount(account.ID(id))
 	_ = anAccount.AddMoney(50)
 	_ = anAccount.WithdrawalMoney(35)
 	_ = anAccount.AddMoney(10)

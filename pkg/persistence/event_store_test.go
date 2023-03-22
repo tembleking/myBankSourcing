@@ -77,7 +77,8 @@ func dataRecordInStore() []byte {
 			BaseEvent: domain.BaseEvent{EventID: "event-0"},
 			Quantity:  10,
 			Balance:   10,
-		}},
+		},
+	},
 	)
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 	return data

@@ -7,17 +7,18 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
+	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
+	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("Account", func() {
 	var (
 		accountService    *services.AccountService
-		accountRepository *account.Repository
+		accountRepository *accountpersistence.Repository
 	)
 
 	BeforeEach(func() {
-		accountRepository = account.NewRepository()
+		accountRepository = accountpersistence.NewRepository()
 		accountService = services.NewAccountService(accountRepository)
 	})
 
@@ -34,5 +35,18 @@ var _ = Describe("Account", func() {
 		Expect(accountSaved.ID()).To(Equal(accountCreated.ID()))
 		Expect(accountSaved.Balance()).To(Equal(accountCreated.Balance()))
 		Expect(accountSaved.IsOpen()).To(Equal(accountCreated.IsOpen()))
+	})
+
+	It("lists the accounts", func() {
+		oneAccount, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		anotherAccount, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		accounts, err := accountService.ListAccounts(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(oneAccount), BeAnAccountEqualsTo(anotherAccount)))
+		Expect(oneAccount).To(BeAnAccountEqualsTo(anotherAccount))
 	})
 })

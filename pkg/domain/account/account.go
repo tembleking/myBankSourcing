@@ -34,7 +34,6 @@ func (a *Account) OpenAccount(id ID) error {
 
 	a.Apply(NewAccountOpened(id))
 	return nil
-
 }
 
 func (a *Account) AddMoney(amount int) error {

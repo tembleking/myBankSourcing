@@ -28,6 +28,10 @@ func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, err
 	return accountCreated, nil
 }
 
+func (s *AccountService) ListAccounts(ctx context.Context) ([]*account.Account, error) {
+	return s.repository.ListAccounts(ctx)
+}
+
 func NewAccountService(repository account.Repository) *AccountService {
 	return &AccountService{
 		repository: repository,

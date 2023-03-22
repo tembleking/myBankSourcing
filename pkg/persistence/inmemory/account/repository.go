@@ -17,6 +17,18 @@ type Repository struct {
 	subscriptions map[chan domain.Event]struct{}
 }
 
+func (r *Repository) ListAccounts(ctx context.Context) ([]*account.Account, error) {
+	r.rwMutex.RLock()
+	defer r.rwMutex.RUnlock()
+
+	accounts := make([]*account.Account, 0)
+	for _, events := range r.accounts {
+		accounts = append(accounts, account.NewAccount(events...))
+	}
+
+	return accounts, nil
+}
+
 func NewRepository() *Repository {
 	r := &Repository{
 		accounts:      map[account.ID][]domain.Event{},

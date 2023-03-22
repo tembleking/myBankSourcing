@@ -8,8 +8,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-type Msgpack struct {
-}
+type Msgpack struct{}
 
 func (m *Msgpack) Serialize(events []domain.Event) ([]byte, error) {
 	eventDataAsMap := make([]map[string]map[string]any, 0)
