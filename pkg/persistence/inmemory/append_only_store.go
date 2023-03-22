@@ -45,7 +45,7 @@ func (a *AppendOnlyStore) Append(ctx context.Context, name string, data []byte, 
 	return nil
 }
 
-func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVersion uint64, maxCount uint64) ([]persistence.DataWithVersion, error) {
+func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string) ([]persistence.DataWithVersion, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
@@ -54,17 +54,8 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVer
 		return nil, &persistence.ErrAggregateNotFound{Name: name}
 	}
 
-	if startVersion > uint64(len(fields)) {
-		return nil, nil
-	}
-
-	if maxCount == 0 || maxCount > uint64(len(fields)) {
-		maxCount = uint64(len(fields))
-	}
-
 	result := make([]persistence.DataWithVersion, 0, len(fields))
-	for i := startVersion; i < uint64(len(fields)) && maxCount > 0; i++ {
-		maxCount--
+	for i := uint64(0); i < uint64(len(fields)); i++ {
 		result = append(result, persistence.DataWithVersion{
 			Data:    fields[i].data,
 			Version: fields[i].version,
@@ -73,13 +64,13 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVer
 	return result, nil
 }
 
-func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion uint64, maxCount uint64) ([]persistence.DataWithNameAndVersion, error) {
+func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.DataWithNameAndVersion, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
 	result := make([]persistence.DataWithNameAndVersion, 0)
 	for _, fields := range a.fields {
-		records, err := a.ReadRecords(ctx, fields[0].name, startVersion, maxCount)
+		records, err := a.ReadRecords(ctx, fields[0].name)
 		if err != nil {
 			return nil, err
 		}

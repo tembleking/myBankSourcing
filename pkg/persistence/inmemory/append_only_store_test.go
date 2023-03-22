@@ -68,64 +68,11 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 		err := store.Append(ctx, "aggregate-0", []byte("data"), 0)
 		Expect(err).To(BeNil())
 
-		data, err := store.ReadRecords(ctx, "aggregate-0", 0, 0)
+		data, err := store.ReadRecords(ctx, "aggregate-0")
 		Expect(err).To(BeNil())
 		Expect(data).To(HaveLen(1))
 		Expect(data[0].Data).To(Equal([]byte("data")))
 		Expect(data[0].Version).To(Equal(uint64(1)))
-	})
-
-	When("the requested start is 1", func() {
-		It("should return all events but the previous ones", func() {
-			err := store.Append(ctx, "aggregate-0", []byte("data-0"), 0)
-			Expect(err).To(BeNil())
-
-			err = store.Append(ctx, "aggregate-0", []byte("data-1"), 1)
-			Expect(err).To(BeNil())
-
-			data, err := store.ReadRecords(ctx, "aggregate-0", 1, 0)
-			Expect(err).To(BeNil())
-			Expect(data).To(HaveLen(1))
-			Expect(data[0].Data).To(Equal([]byte("data-1")))
-			Expect(data[0].Version).To(Equal(uint64(2)))
-		})
-	})
-
-	When("the start version is higher than the number of events", func() {
-		It("should return an empty list", func() {
-			err := store.Append(ctx, "aggregate-0", []byte("data"), 0)
-			Expect(err).To(BeNil())
-
-			data, err := store.ReadRecords(ctx, "aggregate-0", 1, 0)
-			Expect(err).To(BeNil())
-			Expect(data).To(HaveLen(0))
-		})
-
-		When("the max count is set", func() {
-			It("should return an empty list", func() {
-				err := store.Append(ctx, "aggregate-0", []byte("data"), 0)
-				Expect(err).To(BeNil())
-
-				data, err := store.ReadRecords(ctx, "aggregate-0", 1, 1)
-				Expect(err).To(BeNil())
-				Expect(data).To(HaveLen(0))
-			})
-		})
-	})
-
-	When("the max count is set", func() {
-		It("should return the max count of events", func() {
-			err := store.Append(ctx, "aggregate-0", []byte("data-0"), 0)
-			Expect(err).To(BeNil())
-
-			err = store.Append(ctx, "aggregate-0", []byte("data-1"), 1)
-			Expect(err).To(BeNil())
-
-			data, err := store.ReadRecords(ctx, "aggregate-0", 0, 1)
-			Expect(err).To(BeNil())
-			Expect(data).To(HaveLen(1))
-			Expect(data[0].Data).To(Equal([]byte("data-0")))
-		})
 	})
 
 	It("should be able to read from all event streams", func() {
@@ -135,7 +82,7 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 		err = store.Append(ctx, "aggregate-1", []byte("data1"), 0)
 		Expect(err).To(BeNil())
 
-		data, err := store.ReadAllRecords(ctx, 0, 0)
+		data, err := store.ReadAllRecords(ctx)
 		Expect(err).To(BeNil())
 		Expect(data).To(HaveLen(2))
 		// sort for testing only, we don't care about the order in production
@@ -154,7 +101,7 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 		It("should be able work correctly", func() {
 			appendingConcurrentlyTo(store)
 
-			data, err := store.ReadAllRecords(ctx, 0, 0)
+			data, err := store.ReadAllRecords(ctx)
 			Expect(err).To(BeNil())
 			expectAllDataToBePresent(data)
 		})

@@ -1,8 +1,6 @@
 package account
 
 import (
-	"fmt"
-
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 

@@ -28,15 +28,15 @@ type EventStore struct {
 
 // LoadEventStream loads all events for a given aggregate id
 func (e *EventStore) LoadEventStream(ctx context.Context, streamName string) (*EventStream, error) {
-	return e.LoadEventStreamSubset(ctx, streamName, 0, 0)
+	return e.LoadEventStreamSubset(ctx, streamName)
 }
 
 // LoadEventStreamSubset loads a subset of events for a given aggregate id
 // starting from a given version and up to a maximum count
 // If the start version is 0, the stream will start from the beginning
 // If the max count is 0, the stream will return all events from the start version
-func (e *EventStore) LoadEventStreamSubset(ctx context.Context, streamName string, startVersion uint64, maxCount uint64) (*EventStream, error) {
-	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName, startVersion, maxCount)
+func (e *EventStore) LoadEventStreamSubset(ctx context.Context, streamName string) (*EventStream, error) {
+	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
@@ -77,29 +77,6 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamName string, expe
 	}
 
 	return nil
-}
-
-func (e *EventStore) LoadAllEventStreams(ctx context.Context) ([]*EventStream, error) {
-	records, err := e.appendOnlyStore.ReadAllRecords(ctx, 0, 0)
-	if err != nil {
-		return nil, fmt.Errorf("error reading records: %w", err)
-	}
-
-	streams := make([]*EventStream, 0, len(records))
-	for _, record := range records {
-		event, err := e.deserializer.Deserialize(record.Data)
-		if err != nil {
-			return nil, fmt.Errorf("error deserializing event: %w", err)
-		}
-
-		streams = append(streams, &EventStream{
-			Name:    record.Name,
-			Version: record.Version,
-			Events:  event,
-		})
-	}
-
-	return streams, nil
 }
 
 func NewEventStore(serializer serializer.EventSerializer, deserializer serializer.EventDeserializer, appendOnlyStore AppendOnlyStore) *EventStore {

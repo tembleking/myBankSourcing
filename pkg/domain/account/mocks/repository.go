@@ -50,6 +50,21 @@ func (mr *MockRepositoryMockRecorder) GetAccount(ctx, accountID interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockRepository)(nil).GetAccount), ctx, accountID)
 }
 
+// ListAccounts mocks base method.
+func (m *MockRepository) ListAccounts(ctx context.Context) ([]*account.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAccounts", ctx)
+	ret0, _ := ret[0].([]*account.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAccounts indicates an expected call of ListAccounts.
+func (mr *MockRepositoryMockRecorder) ListAccounts(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAccounts", reflect.TypeOf((*MockRepository)(nil).ListAccounts), ctx)
+}
+
 // SaveAccount mocks base method.
 func (m *MockRepository) SaveAccount(ctx context.Context, account *account.Account) error {
 	m.ctrl.T.Helper()

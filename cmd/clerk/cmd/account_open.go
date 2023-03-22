@@ -24,16 +24,6 @@ var accountOpenCmd = &cobra.Command{
 		}
 
 		fmt.Println("Account created:", account.ID())
-
-		accounts, err := service.ListAccounts(cmd.Context())
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println("Your Accounts:")
-		for _, account := range accounts {
-			fmt.Println("-", account.ID())
-		}
 	},
 }
 

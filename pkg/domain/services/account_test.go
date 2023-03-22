@@ -11,7 +11,6 @@ import (
 	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
-	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("Account", func() {
@@ -40,18 +39,5 @@ var _ = Describe("Account", func() {
 		Expect(accountSaved.ID()).To(Equal(accountCreated.ID()))
 		Expect(accountSaved.Balance()).To(Equal(accountCreated.Balance()))
 		Expect(accountSaved.IsOpen()).To(Equal(accountCreated.IsOpen()))
-	})
-
-	It("lists the accounts", func() {
-		oneAccount, err := accountService.OpenAccount(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-
-		anotherAccount, err := accountService.OpenAccount(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-
-		accounts, err := accountService.ListAccounts(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(oneAccount), BeAnAccountEqualsTo(anotherAccount)))
-		Expect(oneAccount).ToNot(BeAnAccountEqualsTo(anotherAccount))
 	})
 })

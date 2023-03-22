@@ -11,7 +11,6 @@ import (
 	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
-	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("In Memory Repository", func() {
@@ -41,21 +40,6 @@ var _ = Describe("In Memory Repository", func() {
 
 			Expect(err).To(MatchError(ContainSubstring("not found")))
 		})
-	})
-
-	It("lists the accounts", func() {
-		oneAccount := someAccountWithMovementsAndID("some-id")
-		anotherAccount := someAccountWithMovementsAndID("some-other-id")
-
-		err := repository.SaveAccount(context.Background(), oneAccount)
-		Expect(err).ToNot(HaveOccurred())
-
-		err = repository.SaveAccount(context.Background(), anotherAccount)
-		Expect(err).ToNot(HaveOccurred())
-
-		accounts, err := repository.ListAccounts(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(oneAccount), BeAnAccountEqualsTo(anotherAccount)))
 	})
 })
 
