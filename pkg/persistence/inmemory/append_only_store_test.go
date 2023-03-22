@@ -140,11 +140,11 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 		Expect(data).To(HaveLen(2))
 		// sort for testing only, we don't care about the order in production
 		sort.Slice(data, func(i, j int) bool { return data[i].Name < data[j].Name })
-		Expect(data[0]).To(Equal(persistence.DataWithName{
+		Expect(data[0]).To(Equal(persistence.DataWithNameAndVersion{
 			Name: "aggregate-0",
 			Data: []byte("data0"),
 		}))
-		Expect(data[1]).To(Equal(persistence.DataWithName{
+		Expect(data[1]).To(Equal(persistence.DataWithNameAndVersion{
 			Name: "aggregate-1",
 			Data: []byte("data1"),
 		}))
@@ -180,7 +180,7 @@ func appendingConcurrentlyTo(store persistence.AppendOnlyStore) {
 	wg.Wait()
 }
 
-func expectAllDataToBePresent(data []persistence.DataWithName) {
+func expectAllDataToBePresent(data []persistence.DataWithNameAndVersion) {
 	ExpectWithOffset(1, data).To(HaveLen(10000))
 	sort.Slice(data, func(i, j int) bool { return data[i].Name < data[j].Name })
 	for i := 0; i < 100; i++ {
@@ -188,7 +188,7 @@ func expectAllDataToBePresent(data []persistence.DataWithName) {
 	}
 }
 
-func expectDataFromAggregateToBePresentAndInOrder(data []persistence.DataWithName, aggregate int) {
+func expectDataFromAggregateToBePresentAndInOrder(data []persistence.DataWithNameAndVersion, aggregate int) {
 	aggregateName := fmt.Sprintf("aggregate-%2d", aggregate)
 	aggregateData := []byte(fmt.Sprintf("data-%2d", aggregate))
 

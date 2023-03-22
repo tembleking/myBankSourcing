@@ -14,7 +14,7 @@ type AppendOnlyStore interface {
 	ReadRecords(ctx context.Context, name string, startVersion uint64, maxCount uint64) ([]DataWithVersion, error)
 
 	// ReadAllRecords reads all events from the store. It's commonly used to replicate events.
-	ReadAllRecords(ctx context.Context, startVersion uint64, maxCount uint64) ([]DataWithName, error)
+	ReadAllRecords(ctx context.Context, startVersion uint64, maxCount uint64) ([]DataWithNameAndVersion, error)
 }
 
 // DataWithVersion is a data record with a version.
@@ -23,7 +23,8 @@ type DataWithVersion struct {
 	Data    []byte
 }
 
-type DataWithName struct {
-	Name string
-	Data []byte
+type DataWithNameAndVersion struct {
+	Version uint64
+	Name    string
+	Data    []byte
 }

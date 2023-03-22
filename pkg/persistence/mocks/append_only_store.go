@@ -50,10 +50,10 @@ func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx, name, data, expectedVersi
 }
 
 // ReadAllRecords mocks base method.
-func (m *MockAppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion, maxCount uint64) ([]persistence.DataWithName, error) {
+func (m *MockAppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion, maxCount uint64) ([]persistence.DataWithNameAndVersion, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadAllRecords", ctx, startVersion, maxCount)
-	ret0, _ := ret[0].([]persistence.DataWithName)
+	ret0, _ := ret[0].([]persistence.DataWithNameAndVersion)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

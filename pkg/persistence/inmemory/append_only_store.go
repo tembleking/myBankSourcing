@@ -73,11 +73,11 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string, startVer
 	return result, nil
 }
 
-func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion uint64, maxCount uint64) ([]persistence.DataWithName, error) {
+func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion uint64, maxCount uint64) ([]persistence.DataWithNameAndVersion, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
-	result := make([]persistence.DataWithName, 0)
+	result := make([]persistence.DataWithNameAndVersion, 0)
 	for _, fields := range a.fields {
 		records, err := a.ReadRecords(ctx, fields[0].name, startVersion, maxCount)
 		if err != nil {
@@ -85,7 +85,7 @@ func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context, startVersion uint6
 		}
 
 		for _, record := range records {
-			result = append(result, persistence.DataWithName{
+			result = append(result, persistence.DataWithNameAndVersion{
 				Data: record.Data,
 				Name: fields[0].name,
 			})
