@@ -47,22 +47,6 @@ var _ = Describe("EventStore", func() {
 		}))
 	})
 
-	It("should be able to load an event stream subset", func() {
-		appendOnlyStore.EXPECT().ReadRecords(ctx, "aggregate-0").Return(
-			[]persistence.DataWithVersion{{Version: 2, Data: dataRecordInStore()}},
-			nil,
-		)
-
-		stream, err := eventStore.LoadEventStreamSubset(ctx, "aggregate-0")
-
-		Expect(err).To(BeNil())
-		Expect(stream).To(Equal(&persistence.EventStream{
-			Name:    "aggregate-0",
-			Version: 2,
-			Events:  []domain.Event{&account.AmountAdded{Quantity: 10, Balance: 10}},
-		}))
-	})
-
 	It("should be able to append to an event stream", func() {
 		appendOnlyStore.EXPECT().Append(ctx, "aggregate-0", dataRecordInStore(), uint64(1)).Return(nil)
 

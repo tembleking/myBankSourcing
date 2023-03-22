@@ -28,14 +28,6 @@ type EventStore struct {
 
 // LoadEventStream loads all events for a given aggregate id
 func (e *EventStore) LoadEventStream(ctx context.Context, streamName string) (*EventStream, error) {
-	return e.LoadEventStreamSubset(ctx, streamName)
-}
-
-// LoadEventStreamSubset loads a subset of events for a given aggregate id
-// starting from a given version and up to a maximum count
-// If the start version is 0, the stream will start from the beginning
-// If the max count is 0, the stream will return all events from the start version
-func (e *EventStore) LoadEventStreamSubset(ctx context.Context, streamName string) (*EventStream, error) {
 	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
