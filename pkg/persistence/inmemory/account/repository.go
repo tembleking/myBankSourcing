@@ -2,84 +2,61 @@ package account
 
 import (
 	"context"
-	"errors"
-	"sync"
+	"fmt"
+	"strings"
 
-	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
 type Repository struct {
-	accounts map[account.ID][]domain.Event
-
-	outbox        chan domain.Event
-	rwMutex       sync.RWMutex
-	subscriptions map[chan domain.Event]struct{}
+	eventStore *persistence.EventStore
 }
 
 func (r *Repository) ListAccounts(ctx context.Context) ([]*account.Account, error) {
-	r.rwMutex.RLock()
-	defer r.rwMutex.RUnlock()
-
 	accounts := make([]*account.Account, 0)
-	for _, events := range r.accounts {
-		accounts = append(accounts, account.NewAccount(events...))
+	streams, err := r.eventStore.LoadAllEventStreams(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error loading event streams: %w", err)
+	}
+
+	for _, stream := range streams {
+		if !strings.HasPrefix(stream.Name, "account-") {
+			continue
+		}
+		accounts = append(accounts, account.NewAccount(stream.Events...))
 	}
 
 	return accounts, nil
 }
 
-func NewRepository() *Repository {
-	r := &Repository{
-		accounts:      map[account.ID][]domain.Event{},
-		outbox:        make(chan domain.Event),
-		subscriptions: map[chan domain.Event]struct{}{},
+func NewRepository(store *persistence.EventStore) *Repository {
+	return &Repository{
+		eventStore: store,
 	}
-	return r
 }
 
 func (r *Repository) SaveAccount(ctx context.Context, account *account.Account) error {
 	eventsToPersist := account.Events()
-	r.accounts[account.ID()] = append(r.accounts[account.ID()], eventsToPersist...)
-	go r.sendEventsToSubscriptions(eventsToPersist)
+	expectedVersion := uint64(0)
+	stream, err := r.eventStore.LoadEventStream(ctx, string("account-"+account.ID()))
+	if err == nil {
+		expectedVersion = stream.Version
+	}
+
+	err = r.eventStore.AppendToStream(ctx, string("account-"+account.ID()), expectedVersion, eventsToPersist)
+	if err != nil {
+		return fmt.Errorf("error appending to stream: %w", err)
+	}
+
 	return nil
 }
 
 func (r *Repository) GetAccount(ctx context.Context, id account.ID) (*account.Account, error) {
-	persistedEvents, ok := r.accounts[id]
-	if !ok {
-		return nil, errors.New("not found")
+	stream, err := r.eventStore.LoadEventStream(ctx, string("account-"+id))
+	if err != nil {
+		return nil, fmt.Errorf("error loading event stream: %w", err)
 	}
 
-	anAccount := account.NewAccount(persistedEvents...)
-	return anAccount, nil
-}
-
-func (r *Repository) Subscribe(ctx context.Context) (<-chan domain.Event, error) {
-	r.rwMutex.Lock()
-	defer r.rwMutex.Unlock()
-
-	subscription := make(chan domain.Event)
-	r.subscriptions[subscription] = struct{}{}
-
-	go func() {
-		<-ctx.Done()
-		r.rwMutex.Lock()
-		defer r.rwMutex.Unlock()
-		delete(r.subscriptions, subscription)
-		close(subscription)
-	}()
-
-	return subscription, nil
-}
-
-func (r *Repository) sendEventsToSubscriptions(events []domain.Event) {
-	r.rwMutex.RLock()
-	defer r.rwMutex.RUnlock()
-
-	for subscription := range r.subscriptions {
-		for _, event := range events {
-			subscription <- event
-		}
-	}
+	return account.NewAccount(stream.Events...), nil
 }

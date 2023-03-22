@@ -7,7 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
+	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
 	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
@@ -18,7 +21,9 @@ var _ = Describe("Account", func() {
 	)
 
 	BeforeEach(func() {
-		accountRepository = accountpersistence.NewRepository()
+		serializer := &serializer.GoBinarySerializer{}
+		eventStore := persistence.NewEventStore(serializer, serializer, inmemory.NewAppendOnlyStore())
+		accountRepository = accountpersistence.NewRepository(eventStore)
 		accountService = services.NewAccountService(accountRepository)
 	})
 
@@ -47,6 +52,6 @@ var _ = Describe("Account", func() {
 		accounts, err := accountService.ListAccounts(context.Background())
 		Expect(err).ToNot(HaveOccurred())
 		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(oneAccount), BeAnAccountEqualsTo(anotherAccount)))
-		Expect(oneAccount).To(BeAnAccountEqualsTo(anotherAccount))
+		Expect(oneAccount).ToNot(BeAnAccountEqualsTo(anotherAccount))
 	})
 })

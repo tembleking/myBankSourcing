@@ -7,7 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
 	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
@@ -15,7 +18,9 @@ var _ = Describe("In Memory Repository", func() {
 	var repository *account2.Repository
 
 	BeforeEach(func() {
-		repository = account2.NewRepository()
+		eventSerializer := &serializer.GoBinarySerializer{}
+		eventStore := persistence.NewEventStore(eventSerializer, eventSerializer, inmemory.NewAppendOnlyStore())
+		repository = account2.NewRepository(eventStore)
 	})
 
 	It("saves the account and retrieves it again", func() {
@@ -34,7 +39,7 @@ var _ = Describe("In Memory Repository", func() {
 		It("returns an error", func() {
 			_, err := repository.GetAccount(context.Background(), "unknown")
 
-			Expect(err).To(MatchError("not found"))
+			Expect(err).To(MatchError(ContainSubstring("not found")))
 		})
 	})
 
