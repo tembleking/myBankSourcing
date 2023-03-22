@@ -49,21 +49,6 @@ func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx, name, data, expectedVersi
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), ctx, name, data, expectedVersion)
 }
 
-// ReadAllRecords mocks base method.
-func (m *MockAppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.DataWithNameAndVersion, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadAllRecords", ctx)
-	ret0, _ := ret[0].([]persistence.DataWithNameAndVersion)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ReadAllRecords indicates an expected call of ReadAllRecords.
-func (mr *MockAppendOnlyStoreMockRecorder) ReadAllRecords(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadAllRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadAllRecords), ctx)
-}
-
 // ReadRecords mocks base method.
 func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, name string) ([]persistence.DataWithVersion, error) {
 	m.ctrl.T.Helper()

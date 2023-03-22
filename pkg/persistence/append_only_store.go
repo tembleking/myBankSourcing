@@ -12,19 +12,10 @@ type AppendOnlyStore interface {
 
 	// ReadRecords reads events within a single Stream by their names.
 	ReadRecords(ctx context.Context, name string) ([]DataWithVersion, error)
-
-	// ReadAllRecords reads all events from the store. It's commonly used to replicate events.
-	ReadAllRecords(ctx context.Context) ([]DataWithNameAndVersion, error)
 }
 
 // DataWithVersion is a data record with a version.
 type DataWithVersion struct {
 	Version uint64
-	Data    []byte
-}
-
-type DataWithNameAndVersion struct {
-	Version uint64
-	Name    string
 	Data    []byte
 }
