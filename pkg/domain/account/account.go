@@ -1,6 +1,8 @@
 package account
 
 import (
+	"fmt"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
@@ -32,7 +34,7 @@ func (a *Account) OpenAccount(id ID) error {
 		return ErrAccountIsAlreadyOpen
 	}
 
-	a.Apply(NewAccountOpened(id))
+	a.Apply(&AccountOpened{AccountID: id})
 	return nil
 }
 
@@ -45,7 +47,7 @@ func (a *Account) AddMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(NewAmountAdded(amount, newBalance))
+	a.Apply(&AmountAdded{Quantity: amount, Balance: newBalance})
 	return nil
 }
 
@@ -58,7 +60,7 @@ func (a *Account) WithdrawalMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(NewAmountWithdrawn(amount, newBalance))
+	a.Apply(&AmountWithdrawn{Quantity: amount, Balance: newBalance})
 	return nil
 }
 
@@ -92,10 +94,10 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 	}
 
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(NewTransferenceSent(amount, newBalanceOrigin, a.ID(), destination.ID()))
+	a.Apply(&TransferenceSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID()})
 
 	newBalanceDestination := destination.Balance() + amount
-	destination.Apply(NewTransferenceReceived(amount, newBalanceDestination, a.ID(), destination.ID()))
+	destination.Apply(&TransferenceReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID()})
 
 	return nil
 }

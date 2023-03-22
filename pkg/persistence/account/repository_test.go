@@ -8,8 +8,8 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	. "github.com/tembleking/myBankSourcing/test/matchers"
 )

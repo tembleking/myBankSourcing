@@ -3,8 +3,8 @@ package factory
 import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/inmemory/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 

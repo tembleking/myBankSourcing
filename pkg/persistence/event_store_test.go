@@ -43,7 +43,7 @@ var _ = Describe("EventStore", func() {
 		Expect(stream).To(Equal(&persistence.EventStream{
 			Name:    "aggregate-0",
 			Version: 1,
-			Events:  []domain.Event{&account.AmountAdded{BaseEvent: domain.BaseEvent{EventID: "event-0"}, Quantity: 10, Balance: 10}},
+			Events:  []domain.Event{&account.AmountAdded{Quantity: 10, Balance: 10}},
 		}))
 	})
 
@@ -59,7 +59,7 @@ var _ = Describe("EventStore", func() {
 		Expect(stream).To(Equal(&persistence.EventStream{
 			Name:    "aggregate-0",
 			Version: 2,
-			Events:  []domain.Event{&account.AmountAdded{BaseEvent: domain.BaseEvent{EventID: "event-0"}, Quantity: 10, Balance: 10}},
+			Events:  []domain.Event{&account.AmountAdded{Quantity: 10, Balance: 10}},
 		}))
 	})
 
@@ -67,11 +67,7 @@ var _ = Describe("EventStore", func() {
 		appendOnlyStore.EXPECT().Append(ctx, "aggregate-0", dataRecordInStore(), uint64(1)).Return(nil)
 
 		err := eventStore.AppendToStream(ctx, "aggregate-0", 1, []domain.Event{
-			&account.AmountAdded{
-				BaseEvent: domain.BaseEvent{EventID: "event-0"},
-				Quantity:  10,
-				Balance:   10,
-			},
+			&account.AmountAdded{Quantity: 10, Balance: 10},
 		})
 
 		Expect(err).To(BeNil())
@@ -90,12 +86,12 @@ var _ = Describe("EventStore", func() {
 		Expect(streams[0]).To(Equal(&persistence.EventStream{
 			Name:    "aggregate-0",
 			Version: 4,
-			Events:  []domain.Event{&account.AmountAdded{BaseEvent: domain.BaseEvent{EventID: "event-0"}, Quantity: 10, Balance: 10}},
+			Events:  []domain.Event{&account.AmountAdded{Quantity: 10, Balance: 10}},
 		}))
 		Expect(streams[1]).To(Equal(&persistence.EventStream{
 			Name:    "aggregate-1",
 			Version: 7,
-			Events:  []domain.Event{&account.AmountAdded{BaseEvent: domain.BaseEvent{EventID: "event-0"}, Quantity: 10, Balance: 10}},
+			Events:  []domain.Event{&account.AmountAdded{Quantity: 10, Balance: 10}},
 		}))
 	})
 })
@@ -103,13 +99,8 @@ var _ = Describe("EventStore", func() {
 func dataRecordInStore() []byte {
 	serializer := &serializer.GoBinarySerializer{}
 	data, err := serializer.Serialize([]domain.Event{
-		&account.AmountAdded{
-			BaseEvent: domain.BaseEvent{EventID: "event-0"},
-			Quantity:  10,
-			Balance:   10,
-		},
-	},
-	)
+		&account.AmountAdded{Quantity: 10, Balance: 10},
+	})
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 	return data
 }
