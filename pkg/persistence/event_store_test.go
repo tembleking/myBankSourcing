@@ -33,22 +33,27 @@ var _ = Describe("EventStore", func() {
 
 	It("should be able to load an event stream", func() {
 		appendOnlyStore.EXPECT().ReadRecords(ctx, "aggregate-0").Return(
-			[]persistence.DataWithVersion{{Version: 1, Data: dataRecordInStore()}},
+			[]persistence.StoredStreamEvent{{StreamVersion: 1, EventData: dataRecordInStore()}},
 			nil,
 		)
 
 		stream, err := eventStore.LoadEventStream(ctx, "aggregate-0")
 
 		Expect(err).To(BeNil())
-		Expect(stream).To(Equal(&persistence.EventStream{
-			Name:    "aggregate-0",
-			Version: 1,
-			Events:  []domain.Event{&account.AmountAdded{Quantity: 10, Balance: 10}},
-		}))
+		Expect(stream).To(Equal([]persistence.StreamEvent{{
+			StreamID:      "aggregate-0",
+			StreamVersion: 1,
+			Event:         &account.AmountAdded{Quantity: 10, Balance: 10},
+		}}))
 	})
 
 	It("should be able to append to an event stream", func() {
-		appendOnlyStore.EXPECT().Append(ctx, "aggregate-0", dataRecordInStore(), uint64(1)).Return(nil)
+		appendOnlyStore.EXPECT().Append(ctx, persistence.StoredStreamEvent{
+			StreamID:      "aggregate-0",
+			StreamVersion: 0,
+			EventName:     "AmountAdded",
+			EventData:     dataRecordInStore(),
+		}).Return(nil)
 
 		err := eventStore.AppendToStream(ctx, "aggregate-0", 1, []domain.Event{
 			&account.AmountAdded{Quantity: 10, Balance: 10},
@@ -59,9 +64,9 @@ var _ = Describe("EventStore", func() {
 
 func dataRecordInStore() []byte {
 	serializer := &serializer.GoBinarySerializer{}
-	data, err := serializer.Serialize([]domain.Event{
+	data, err := serializer.Serialize(
 		&account.AmountAdded{Quantity: 10, Balance: 10},
-	})
+	)
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 	return data
 }

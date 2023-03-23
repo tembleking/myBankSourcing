@@ -4,12 +4,12 @@ import (
 	"fmt"
 )
 
-type ErrAggregateNotFound struct {
-	Name string
+type ErrRecordsNotFound struct {
+	StreamID string
 }
 
-func (e *ErrAggregateNotFound) Error() string {
-	return fmt.Sprintf("aggregate not found: %s", e.Name)
+func (e *ErrRecordsNotFound) Error() string {
+	return fmt.Sprintf("records not found for stream: %s", e.StreamID)
 }
 
 type ErrUnexpectedVersion struct {

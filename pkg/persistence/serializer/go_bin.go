@@ -10,20 +10,20 @@ import (
 
 type GoBinarySerializer struct{}
 
-func (g *GoBinarySerializer) Serialize(events []domain.Event) ([]byte, error) {
+func (g *GoBinarySerializer) Serialize(events domain.Event) ([]byte, error) {
 	var buf bytes.Buffer
-	err := gob.NewEncoder(&buf).Encode(events)
+	err := gob.NewEncoder(&buf).Encode(&events)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing events: %w", err)
 	}
 	return buf.Bytes(), nil
 }
 
-func (g *GoBinarySerializer) Deserialize(data []byte) ([]domain.Event, error) {
-	events := make([]domain.Event, 0)
-	err := gob.NewDecoder(bytes.NewReader(data)).Decode(&events)
+func (g *GoBinarySerializer) Deserialize(data []byte) (domain.Event, error) {
+	var event domain.Event
+	err := gob.NewDecoder(bytes.NewReader(data)).Decode(&event)
 	if err != nil {
-		return nil, fmt.Errorf("error deserializing events: %w", err)
+		return nil, fmt.Errorf("error deserializing event: %w", err)
 	}
-	return events, nil
+	return event, nil
 }

@@ -14,7 +14,7 @@ var _ = Describe("Msgpack", func() {
 	})
 
 	It("serializes and deserializes the event", func() {
-		serialize, err := ser.Serialize(someEvents())
+		serialize, err := ser.Serialize(anEvent())
 		Expect(err).ToNot(HaveOccurred())
 		Expect(serialize).ToNot(BeEmpty())
 		Expect(serialize).To(BeAssignableToTypeOf([]byte{}))
@@ -22,6 +22,6 @@ var _ = Describe("Msgpack", func() {
 		deserialize, err := ser.Deserialize(serialize)
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(deserialize).To(Equal(someEvents()))
+		Expect(deserialize).To(Equal(anEvent()))
 	})
 })

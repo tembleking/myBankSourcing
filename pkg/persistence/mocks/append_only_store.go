@@ -36,24 +36,29 @@ func (m *MockAppendOnlyStore) EXPECT() *MockAppendOnlyStoreMockRecorder {
 }
 
 // Append mocks base method.
-func (m *MockAppendOnlyStore) Append(ctx context.Context, name string, data []byte, expectedVersion uint64) error {
+func (m *MockAppendOnlyStore) Append(ctx context.Context, events ...persistence.StoredStreamEvent) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Append", ctx, name, data, expectedVersion)
+	varargs := []interface{}{ctx}
+	for _, a := range events {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Append", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Append indicates an expected call of Append.
-func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx, name, data, expectedVersion interface{}) *gomock.Call {
+func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx interface{}, events ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), ctx, name, data, expectedVersion)
+	varargs := append([]interface{}{ctx}, events...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), varargs...)
 }
 
 // ReadRecords mocks base method.
-func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, name string) ([]persistence.DataWithVersion, error) {
+func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, name string) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadRecords", ctx, name)
-	ret0, _ := ret[0].([]persistence.DataWithVersion)
+	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -7,65 +7,53 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
-type dataWithVersionAndName struct {
-	data    []byte
-	version uint64
-	name    string
-}
-
 type AppendOnlyStore struct {
-	fields  map[string][]dataWithVersionAndName
+	fields  map[string][]persistence.StoredStreamEvent
 	rwMutex sync.RWMutex
 }
 
-func (a *AppendOnlyStore) Append(ctx context.Context, name string, data []byte, expectedVersion uint64) error {
+func (a *AppendOnlyStore) appendEvent(event persistence.StoredStreamEvent) error {
+	streamEvents, ok := a.fields[event.StreamID]
+	if !ok {
+		streamEvents = make([]persistence.StoredStreamEvent, 0)
+	}
+
+	currentVersion := uint64(len(streamEvents))
+	if currentVersion != event.StreamVersion {
+		return &persistence.ErrUnexpectedVersion{Found: currentVersion, Expected: event.StreamVersion}
+	}
+
+	a.fields[event.StreamID] = append(streamEvents, event)
+	return nil
+}
+
+func (a *AppendOnlyStore) Append(_ context.Context, events ...persistence.StoredStreamEvent) error {
 	a.rwMutex.Lock()
 	defer a.rwMutex.Unlock()
 
-	existingVersion := 0
-	fields, ok := a.fields[name]
-	if !ok {
-		fields = make([]dataWithVersionAndName, 0)
+	for _, event := range events {
+		if err := a.appendEvent(event); err != nil {
+			return err
+		}
 	}
-
-	if len(fields) > 0 {
-		existingVersion = len(fields)
-	}
-
-	if uint64(existingVersion) != expectedVersion {
-		return &persistence.ErrUnexpectedVersion{Found: uint64(existingVersion), Expected: expectedVersion}
-	}
-
-	a.fields[name] = append(fields, dataWithVersionAndName{
-		version: uint64(existingVersion + 1),
-		data:    data,
-		name:    name,
-	})
 
 	return nil
 }
 
-func (a *AppendOnlyStore) ReadRecords(ctx context.Context, name string) ([]persistence.DataWithVersion, error) {
+func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]persistence.StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
-	fields, ok := a.fields[name]
+	fields, ok := a.fields[streamID]
 	if !ok {
-		return nil, &persistence.ErrAggregateNotFound{Name: name}
+		return nil, &persistence.ErrRecordsNotFound{StreamID: streamID}
 	}
 
-	result := make([]persistence.DataWithVersion, 0, len(fields))
-	for i := uint64(0); i < uint64(len(fields)); i++ {
-		result = append(result, persistence.DataWithVersion{
-			Data:    fields[i].data,
-			Version: fields[i].version,
-		})
-	}
-	return result, nil
+	return fields, nil
 }
 
 func NewAppendOnlyStore() *AppendOnlyStore {
 	return &AppendOnlyStore{
-		fields: make(map[string][]dataWithVersionAndName),
+		fields: make(map[string][]persistence.StoredStreamEvent),
 	}
 }

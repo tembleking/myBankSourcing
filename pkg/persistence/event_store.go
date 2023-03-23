@@ -8,15 +8,15 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 
-type EventStream struct {
-	// Name is commonly the aggregate id, but can be any value as long as it is unique for an event stream
-	Name string
+type StreamEvent struct {
+	// StreamID is commonly the aggregate id, but can be any value as long as it is unique for an event stream
+	StreamID string
 
-	// Version is the version of the last event in the stream
-	Version uint64
+	// StreamVersion is the version of the last event in the stream
+	StreamVersion uint64
 
-	// Events is the list of events in the stream
-	Events []domain.Event
+	// Event is the deserialized event
+	Event domain.Event
 }
 
 type EventStore struct {
@@ -27,43 +27,54 @@ type EventStore struct {
 }
 
 // LoadEventStream loads all events for a given aggregate id
-func (e *EventStore) LoadEventStream(ctx context.Context, streamName string) (*EventStream, error) {
+func (e *EventStore) LoadEventStream(ctx context.Context, streamName string) ([]StreamEvent, error) {
 	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
 
-	stream := &EventStream{
-		Name:    streamName,
-		Version: uint64(0),
-		Events:  make([]domain.Event, 0, len(records)),
-	}
-
+	events := make([]StreamEvent, 0, len(records))
 	for _, record := range records {
-		event, err := e.deserializer.Deserialize(record.Data)
+		event, err := e.deserializer.Deserialize(record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
-		stream.Events = append(stream.Events, event...)
-		stream.Version = record.Version
+		events = append(events, StreamEvent{
+			StreamID:      streamName,
+			StreamVersion: record.StreamVersion,
+			Event:         event,
+		})
 	}
 
-	return stream, nil
+	return events, nil
 }
 
 // AppendToStream appends a list of events to the event stream for a given aggregate id
 // returning an error if the expected version does not match the current version
-func (e *EventStore) AppendToStream(ctx context.Context, streamName string, expectedVersion uint64, events []domain.Event) error {
+func (e *EventStore) AppendToStream(ctx context.Context, streamID string, expectedVersion uint64, events []domain.Event) error {
 	if len(events) == 0 {
 		return nil
 	}
 
-	data, err := e.serializer.Serialize(events)
-	if err != nil {
-		return fmt.Errorf("error serializing events: %w", err)
+	streamEvents := make([]StoredStreamEvent, 0, len(events))
+	version := expectedVersion - uint64(len(events))
+	for _, event := range events {
+		eventData, err := e.serializer.Serialize(event)
+		if err != nil {
+			return fmt.Errorf("error serializing event: %w", err)
+		}
+
+		streamEvents = append(streamEvents, StoredStreamEvent{
+			StreamID:      streamID,
+			StreamVersion: version,
+			EventName:     event.EventName(),
+			EventData:     eventData,
+		})
+
+		version++
 	}
 
-	err = e.appendOnlyStore.Append(ctx, streamName, data, expectedVersion)
+	err := e.appendOnlyStore.Append(ctx, streamEvents...)
 	if err != nil {
 		return fmt.Errorf("error appending to stream: %w", err)
 	}
