@@ -11,7 +11,9 @@ type AppendOnlyStore interface {
 	Append(ctx context.Context, events ...StoredStreamEvent) error
 
 	// ReadRecords reads events within a single Stream by their names.
-	ReadRecords(ctx context.Context, name string) ([]StoredStreamEvent, error)
+	ReadRecords(ctx context.Context, streamID string) ([]StoredStreamEvent, error)
+
+	ReadEventsByName(ctx context.Context, eventName string) ([]StoredStreamEvent, error)
 }
 
 type StoredStreamEvent struct {

@@ -4,12 +4,20 @@ import (
 	"fmt"
 )
 
-type ErrRecordsNotFound struct {
+type ErrRecordsNotFoundForStream struct {
 	StreamID string
 }
 
-func (e *ErrRecordsNotFound) Error() string {
+func (e *ErrRecordsNotFoundForStream) Error() string {
 	return fmt.Sprintf("records not found for stream: %s", e.StreamID)
+}
+
+type ErrRecordsNotFoundForEvent struct {
+	EventName string
+}
+
+func (e *ErrRecordsNotFoundForEvent) Error() string {
+	return fmt.Sprintf("records not found for event: %s", e.EventName)
 }
 
 type ErrUnexpectedVersion struct {

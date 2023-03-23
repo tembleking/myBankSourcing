@@ -74,4 +74,21 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 		Expect(data[0].StreamVersion).To(Equal(uint64(0)))
 	})
 
+	It("should be able to retrieve the events by name", func() {
+		err := store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-1", StreamVersion: 0, EventName: "eventNameToIgnore", EventData: []byte("data1")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")})
+		Expect(err).To(BeNil())
+
+		data, err := store.ReadEventsByName(ctx, "eventName")
+		Expect(err).To(BeNil())
+		Expect(data).To(HaveLen(2))
+		Expect(data).To(ConsistOf(
+			persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")},
+			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")},
+		))
+	})
+
 })

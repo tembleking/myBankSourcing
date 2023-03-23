@@ -8,22 +8,22 @@ import (
 )
 
 type AppendOnlyStore struct {
-	fields  map[string][]persistence.StoredStreamEvent
-	rwMutex sync.RWMutex
+	eventsByStream map[string][]persistence.StoredStreamEvent
+	eventsByName   map[string][]persistence.StoredStreamEvent
+	rwMutex        sync.RWMutex
 }
 
 func (a *AppendOnlyStore) appendEvent(event persistence.StoredStreamEvent) error {
-	streamEvents, ok := a.fields[event.StreamID]
-	if !ok {
-		streamEvents = make([]persistence.StoredStreamEvent, 0)
-	}
+	eventsByStream, _ := a.eventsByStream[event.StreamID]
+	eventsByName, _ := a.eventsByName[event.EventName]
 
-	currentVersion := uint64(len(streamEvents))
+	currentVersion := uint64(len(eventsByStream))
 	if currentVersion != event.StreamVersion {
 		return &persistence.ErrUnexpectedVersion{Found: currentVersion, Expected: event.StreamVersion}
 	}
 
-	a.fields[event.StreamID] = append(streamEvents, event)
+	a.eventsByStream[event.StreamID] = append(eventsByStream, event)
+	a.eventsByName[event.EventName] = append(eventsByName, event)
 	return nil
 }
 
@@ -44,9 +44,21 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]p
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
-	fields, ok := a.fields[streamID]
+	fields, ok := a.eventsByStream[streamID]
 	if !ok {
-		return nil, &persistence.ErrRecordsNotFound{StreamID: streamID}
+		return nil, &persistence.ErrRecordsNotFoundForStream{StreamID: streamID}
+	}
+
+	return fields, nil
+}
+
+func (a *AppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string) ([]persistence.StoredStreamEvent, error) {
+	a.rwMutex.RLock()
+	defer a.rwMutex.RUnlock()
+
+	fields, ok := a.eventsByName[eventName]
+	if !ok {
+		return nil, &persistence.ErrRecordsNotFoundForEvent{EventName: eventName}
 	}
 
 	return fields, nil
@@ -54,6 +66,7 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]p
 
 func NewAppendOnlyStore() *AppendOnlyStore {
 	return &AppendOnlyStore{
-		fields: make(map[string][]persistence.StoredStreamEvent),
+		eventsByStream: make(map[string][]persistence.StoredStreamEvent),
+		eventsByName:   make(map[string][]persistence.StoredStreamEvent),
 	}
 }

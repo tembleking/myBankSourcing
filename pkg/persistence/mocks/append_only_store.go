@@ -54,17 +54,32 @@ func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx interface{}, events ...int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), varargs...)
 }
 
-// ReadRecords mocks base method.
-func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, name string) ([]persistence.StoredStreamEvent, error) {
+// ReadEventsByName mocks base method.
+func (m *MockAppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadRecords", ctx, name)
+	ret := m.ctrl.Call(m, "ReadEventsByName", ctx, eventName)
+	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadEventsByName indicates an expected call of ReadEventsByName.
+func (mr *MockAppendOnlyStoreMockRecorder) ReadEventsByName(ctx, eventName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadEventsByName", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadEventsByName), ctx, eventName)
+}
+
+// ReadRecords mocks base method.
+func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]persistence.StoredStreamEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadRecords", ctx, streamID)
 	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ReadRecords indicates an expected call of ReadRecords.
-func (mr *MockAppendOnlyStoreMockRecorder) ReadRecords(ctx, name interface{}) *gomock.Call {
+func (mr *MockAppendOnlyStoreMockRecorder) ReadRecords(ctx, streamID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadRecords), ctx, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadRecords), ctx, streamID)
 }
