@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/tembleking/myBankSourcing/pkg/clock"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/account"
@@ -18,7 +19,7 @@ var _ = Describe("In Memory Repository", func() {
 
 	BeforeEach(func() {
 		eventSerializer := &serializer.GoBinarySerializer{}
-		eventStore := persistence.NewEventStore(eventSerializer, eventSerializer, inmemory.NewAppendOnlyStore())
+		eventStore := persistence.NewEventStore(eventSerializer, eventSerializer, inmemory.NewAppendOnlyStore(), clock.System{})
 		repository = account2.NewRepository(eventStore)
 	})
 

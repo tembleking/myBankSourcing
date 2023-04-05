@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"time"
 )
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/$GOFILE -package=mocks
@@ -21,4 +22,5 @@ type StoredStreamEvent struct {
 	StreamVersion uint64
 	EventName     string
 	EventData     []byte
+	HappenedOn    time.Time
 }

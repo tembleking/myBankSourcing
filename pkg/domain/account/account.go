@@ -43,7 +43,7 @@ func (a *Account) AddMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountAdded{Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
+	a.Apply(&AmountAdded{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
 	return nil
 }
 
@@ -56,7 +56,7 @@ func (a *Account) WithdrawalMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
+	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
 	return nil
 }
 
@@ -73,9 +73,9 @@ func (a *Account) onEvent(event domain.Event) {
 		a.balance = event.Balance
 	case *AmountWithdrawn:
 		a.balance = event.Balance
-	case *TransferenceSent:
+	case *TransferSent:
 		a.balance = event.Balance
-	case *TransferenceReceived:
+	case *TransferReceived:
 		a.balance = event.Balance
 	case *AccountClosed:
 		a.isOpen = false
@@ -95,10 +95,10 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 	}
 
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(&TransferenceSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.AggregateVersion()})
+	a.Apply(&TransferSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.AggregateVersion()})
 
 	newBalanceDestination := destination.Balance() + amount
-	destination.Apply(&TransferenceReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.AggregateVersion()})
+	destination.Apply(&TransferReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.AggregateVersion()})
 
 	return nil
 }

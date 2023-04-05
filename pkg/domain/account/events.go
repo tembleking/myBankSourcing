@@ -8,8 +8,8 @@ func init() {
 	serializer.RegisterSerializableType(&AccountOpened{})
 	serializer.RegisterSerializableType(&AmountAdded{})
 	serializer.RegisterSerializableType(&AmountWithdrawn{})
-	serializer.RegisterSerializableType(&TransferenceSent{})
-	serializer.RegisterSerializableType(&TransferenceReceived{})
+	serializer.RegisterSerializableType(&TransferSent{})
+	serializer.RegisterSerializableType(&TransferReceived{})
 }
 
 type AccountOpened struct {
@@ -26,6 +26,7 @@ func (a *AccountOpened) EventName() string {
 }
 
 type AmountAdded struct {
+	AccountID      ID
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
@@ -40,6 +41,7 @@ func (a *AmountAdded) EventName() string {
 }
 
 type AmountWithdrawn struct {
+	AccountID      ID
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
@@ -53,7 +55,7 @@ func (a *AmountWithdrawn) EventName() string {
 	return "AmountWithdrawn"
 }
 
-type TransferenceSent struct {
+type TransferSent struct {
 	Quantity       int
 	Balance        int
 	From           ID
@@ -61,15 +63,15 @@ type TransferenceSent struct {
 	AccountVersion uint64
 }
 
-func (t *TransferenceSent) EventName() string {
-	return "TransferenceSent"
+func (t *TransferSent) EventName() string {
+	return "TransferSent"
 }
 
-func (t *TransferenceSent) Version() uint64 {
+func (t *TransferSent) Version() uint64 {
 	return t.AccountVersion
 }
 
-type TransferenceReceived struct {
+type TransferReceived struct {
 	Quantity       int
 	Balance        int
 	From           ID
@@ -77,11 +79,11 @@ type TransferenceReceived struct {
 	AccountVersion uint64
 }
 
-func (t *TransferenceReceived) EventName() string {
-	return "TransferenceReceived"
+func (t *TransferReceived) EventName() string {
+	return "TransferReceived"
 }
 
-func (t *TransferenceReceived) Version() uint64 {
+func (t *TransferReceived) Version() uint64 {
 	return t.AccountVersion
 }
 
