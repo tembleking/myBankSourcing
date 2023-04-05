@@ -14,8 +14,8 @@ type AppendOnlyStore struct {
 }
 
 func (a *AppendOnlyStore) appendEvent(event persistence.StoredStreamEvent) error {
-	eventsByStream, _ := a.eventsByStream[event.StreamID]
-	eventsByName, _ := a.eventsByName[event.EventName]
+	eventsByStream := a.eventsByStream[event.StreamID]
+	eventsByName := a.eventsByName[event.EventName]
 
 	currentVersion := uint64(len(eventsByStream))
 	if currentVersion != event.StreamVersion {
