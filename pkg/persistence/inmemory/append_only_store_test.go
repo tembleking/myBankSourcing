@@ -90,5 +90,4 @@ var _ = Describe("InMemory / AppendOnlyStore", func() {
 			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")},
 		))
 	})
-
 })

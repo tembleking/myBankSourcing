@@ -18,8 +18,9 @@ func NewAccount(events ...domain.Event) *Account {
 	a := &Account{}
 	a.OnEventFunc = a.onEvent
 	for _, event := range events {
-		a.OnEventFunc(event)
+		a.Apply(event)
 	}
+	a.ClearEvents()
 	return a
 }
 
@@ -27,13 +28,10 @@ func (a *Account) ID() ID {
 	return a.id
 }
 
-func (a *Account) OpenAccount(id ID) error {
-	if a.isOpen {
-		return ErrAccountIsAlreadyOpen
-	}
-
-	a.Apply(&AccountOpened{AccountID: id})
-	return nil
+func OpenAccount(id ID) *Account {
+	a := NewAccount()
+	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.AggregateVersion()})
+	return a
 }
 
 func (a *Account) AddMoney(amount int) error {
@@ -45,7 +43,7 @@ func (a *Account) AddMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountAdded{Quantity: amount, Balance: newBalance})
+	a.Apply(&AmountAdded{Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
 	return nil
 }
 
@@ -58,7 +56,7 @@ func (a *Account) WithdrawalMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{Quantity: amount, Balance: newBalance})
+	a.Apply(&AmountWithdrawn{Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
 	return nil
 }
 
@@ -79,6 +77,8 @@ func (a *Account) onEvent(event domain.Event) {
 		a.balance = event.Balance
 	case *TransferenceReceived:
 		a.balance = event.Balance
+	case *AccountClosed:
+		a.isOpen = false
 	}
 }
 
@@ -87,15 +87,29 @@ func (a *Account) IsOpen() bool {
 }
 
 func (a *Account) TransferMoney(amount int, destination *Account) error {
+	if !a.IsOpen() || !destination.IsOpen() {
+		return ErrAccountIsClosed
+	}
 	if amount > a.Balance() {
 		return ErrBalanceIsNotEnoughForTransfer
 	}
 
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(&TransferenceSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID()})
+	a.Apply(&TransferenceSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.AggregateVersion()})
 
 	newBalanceDestination := destination.Balance() + amount
-	destination.Apply(&TransferenceReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID()})
+	destination.Apply(&TransferenceReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.AggregateVersion()})
 
+	return nil
+}
+
+func (a *Account) CloseAccount() error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
+	if a.Balance() > 0 {
+		return ErrAccountCannotBeClosedWithBalance
+	}
+	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.AggregateVersion()})
 	return nil
 }

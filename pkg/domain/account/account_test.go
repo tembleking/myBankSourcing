@@ -16,10 +16,8 @@ var _ = Describe("Account", func() {
 		})
 
 		It("opens the account correctly", func() {
-			acc := account.NewAccount()
-			err := acc.OpenAccount("some-id")
+			acc := account.OpenAccount("some-id")
 
-			Expect(err).ToNot(HaveOccurred())
 			Expect(acc.ID()).To(Equal(account.ID("some-id")))
 			Expect(acc.IsOpen()).To(BeTrue())
 		})
@@ -41,7 +39,7 @@ var _ = Describe("Account", func() {
 
 	When("the account is already open", func() {
 		BeforeEach(func() {
-			acc = account.NewAccount(&account.AccountOpened{AccountID: "some-id"})
+			acc = account.OpenAccount("some-id")
 		})
 
 		When("adding money to the account", func() {
@@ -103,12 +101,12 @@ var _ = Describe("Account", func() {
 		)
 		BeforeEach(func() {
 			origin = account.NewAccount(
-				&account.AccountOpened{AccountID: "origin"},
-				&account.AmountAdded{Balance: 100, Quantity: 100},
+				&account.AccountOpened{AccountID: "origin", AccountVersion: 0},
+				&account.AmountAdded{Balance: 100, Quantity: 100, AccountVersion: 1},
 			)
 			destination = account.NewAccount(
-				&account.AccountOpened{AccountID: "destination"},
-				&account.AmountAdded{Balance: 30, Quantity: 30},
+				&account.AccountOpened{AccountID: "destination", AccountVersion: 0},
+				&account.AmountAdded{Balance: 30, Quantity: 30, AccountVersion: 1},
 			)
 		})
 
@@ -130,6 +128,41 @@ var _ = Describe("Account", func() {
 
 				Expect(err).To(MatchError(account.ErrBalanceIsNotEnoughForTransfer))
 			})
+		})
+	})
+
+	When("the account has been closed", func() {
+		It("returns an error if it still contains some balance", func() {
+			acc := account.OpenAccount("some-id")
+			_ = acc.AddMoney(50)
+
+			err := acc.CloseAccount()
+
+			Expect(err).To(MatchError(account.ErrAccountCannotBeClosedWithBalance))
+		})
+
+		It("doesn't allow to perform any action on the account", func() {
+			acc := account.OpenAccount("some-id")
+			Expect(acc.IsOpen()).To(BeTrue())
+
+			err := acc.CloseAccount()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(acc.IsOpen()).To(BeFalse())
+
+			err = acc.AddMoney(50)
+			Expect(err).To(MatchError(account.ErrAccountIsClosed))
+
+			err = acc.WithdrawalMoney(50)
+			Expect(err).To(MatchError(account.ErrAccountIsClosed))
+
+			err = acc.TransferMoney(50, account.OpenAccount("some-other-id"))
+			Expect(err).To(MatchError(account.ErrAccountIsClosed))
+
+			err = account.OpenAccount("some-other-id").TransferMoney(50, acc)
+			Expect(err).To(MatchError(account.ErrAccountIsClosed))
+
+			err = acc.CloseAccount()
+			Expect(err).To(MatchError(account.ErrAccountIsClosed))
 		})
 	})
 })

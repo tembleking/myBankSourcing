@@ -8,6 +8,10 @@ type BaseAggregate struct {
 
 // Apply applies the event by calling the on-event function and saves them, so they can then be returned by Events
 func (a *BaseAggregate) Apply(event Event) {
+	if event.Version() != a.AggregateVersion() {
+		return
+	}
+
 	a.OnEventFunc(event)
 	a.events = append(a.events, event)
 	a.aggregateVersion++
@@ -22,4 +26,8 @@ func (a *BaseAggregate) Events() []Event {
 
 func (a *BaseAggregate) AggregateVersion() uint64 {
 	return a.aggregateVersion
+}
+
+func (a *BaseAggregate) ClearEvents() {
+	a.events = nil
 }

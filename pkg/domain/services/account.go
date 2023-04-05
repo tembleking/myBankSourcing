@@ -14,13 +14,8 @@ type AccountService struct {
 }
 
 func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
-	accountCreated := account.NewAccount()
-	err := accountCreated.OpenAccount(account.ID(uuid.NewString()))
-	if err != nil {
-		return nil, fmt.Errorf("error opening account: %w", err)
-	}
-
-	err = s.repository.SaveAccount(ctx, accountCreated)
+	accountCreated := account.OpenAccount(account.ID(uuid.NewString()))
+	err := s.repository.SaveAccount(ctx, accountCreated)
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}

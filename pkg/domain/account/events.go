@@ -13,7 +13,12 @@ func init() {
 }
 
 type AccountOpened struct {
-	AccountID ID
+	AccountID      ID
+	AccountVersion uint64
+}
+
+func (a *AccountOpened) Version() uint64 {
+	return a.AccountVersion
 }
 
 func (a *AccountOpened) EventName() string {
@@ -21,8 +26,13 @@ func (a *AccountOpened) EventName() string {
 }
 
 type AmountAdded struct {
-	Quantity int
-	Balance  int
+	Quantity       int
+	Balance        int
+	AccountVersion uint64
+}
+
+func (a *AmountAdded) Version() uint64 {
+	return a.AccountVersion
 }
 
 func (a *AmountAdded) EventName() string {
@@ -30,8 +40,13 @@ func (a *AmountAdded) EventName() string {
 }
 
 type AmountWithdrawn struct {
-	Quantity int
-	Balance  int
+	Quantity       int
+	Balance        int
+	AccountVersion uint64
+}
+
+func (a *AmountWithdrawn) Version() uint64 {
+	return a.AccountVersion
 }
 
 func (a *AmountWithdrawn) EventName() string {
@@ -39,23 +54,46 @@ func (a *AmountWithdrawn) EventName() string {
 }
 
 type TransferenceSent struct {
-	Quantity int
-	Balance  int
-	From     ID
-	To       ID
+	Quantity       int
+	Balance        int
+	From           ID
+	To             ID
+	AccountVersion uint64
 }
 
 func (t *TransferenceSent) EventName() string {
 	return "TransferenceSent"
 }
 
+func (t *TransferenceSent) Version() uint64 {
+	return t.AccountVersion
+}
+
 type TransferenceReceived struct {
-	Quantity int
-	Balance  int
-	From     ID
-	To       ID
+	Quantity       int
+	Balance        int
+	From           ID
+	To             ID
+	AccountVersion uint64
 }
 
 func (t *TransferenceReceived) EventName() string {
 	return "TransferenceReceived"
+}
+
+func (t *TransferenceReceived) Version() uint64 {
+	return t.AccountVersion
+}
+
+type AccountClosed struct {
+	AccountID      ID
+	AccountVersion uint64
+}
+
+func (a *AccountClosed) EventName() string {
+	return "AccountClosed"
+}
+
+func (a *AccountClosed) Version() uint64 {
+	return a.AccountVersion
 }
