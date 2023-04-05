@@ -6,13 +6,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/tembleking/myBankSourcing/pkg/clock"
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 
 var _ = Describe("Transfers", func() {
@@ -21,8 +18,7 @@ var _ = Describe("Transfers", func() {
 	)
 
 	BeforeEach(func() {
-		serializerDeserializer := &serializer.GoBinarySerializer{}
-		eventStore = persistence.NewEventStore(serializerDeserializer, serializerDeserializer, inmemory.NewAppendOnlyStore(), clock.System{})
+		eventStore = persistence.NewEventStoreBuilder().Build()
 
 		err := eventStore.AppendToStream(context.Background(), "aggregate-0", 5, []domain.Event{
 			&account.AccountOpened{AccountID: "some-account", AccountVersion: 0},

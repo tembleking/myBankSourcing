@@ -6,21 +6,17 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/tembleking/myBankSourcing/pkg/clock"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	account2 "github.com/tembleking/myBankSourcing/pkg/persistence/account"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
+	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 )
 
 var _ = Describe("In Memory Repository", func() {
-	var repository *account2.Repository
+	var repository *accountpersistence.Repository
 
 	BeforeEach(func() {
-		eventSerializer := &serializer.GoBinarySerializer{}
-		eventStore := persistence.NewEventStore(eventSerializer, eventSerializer, inmemory.NewAppendOnlyStore(), clock.System{})
-		repository = account2.NewRepository(eventStore)
+		eventStore := persistence.NewEventStoreBuilder().Build()
+		repository = accountpersistence.NewRepository(eventStore)
 	})
 
 	It("saves the account and retrieves it again", func() {

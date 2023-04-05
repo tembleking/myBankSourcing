@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/$GOFILE -package=mocks
@@ -26,14 +25,19 @@ type StreamEvent struct {
 	StreamVersion uint64
 
 	// Event is the deserialized event
-	Event      domain.Event
+	Event domain.Event
+
+	// HappenedOn is the time the event happened
 	HappenedOn time.Time
 }
 
+// EventStore is a store for events that can be used to load and save domain events.
+// It is a wrapper around an AppendOnlyStore that handles serialization and deserialization of events.
+// It also handles dispatching events to any registered EventDispatchers.
+// It can be constructed using the EventStoreBuilder.
 type EventStore struct {
-	serializer   serializer.EventSerializer
-	deserializer serializer.EventDeserializer
-
+	serializer      EventSerializer
+	deserializer    EventDeserializer
 	appendOnlyStore AppendOnlyStore
 	dispatchers     []EventDispatcher
 	clock           Clock
@@ -110,10 +114,6 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastEx
 	return nil
 }
 
-func (e *EventStore) AddDispatchers(dispatchers ...EventDispatcher) {
-	e.dispatchers = append(e.dispatchers, dispatchers...)
-}
-
 func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]StreamEvent, error) {
 	records, err := e.appendOnlyStore.ReadEventsByName(ctx, eventName)
 	if err != nil {
@@ -137,11 +137,6 @@ func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]
 	return events, nil
 }
 
-func NewEventStore(serializer serializer.EventSerializer, deserializer serializer.EventDeserializer, appendOnlyStore AppendOnlyStore, clock Clock) *EventStore {
-	return &EventStore{
-		serializer:      serializer,
-		deserializer:    deserializer,
-		appendOnlyStore: appendOnlyStore,
-		clock:           clock,
-	}
+func (e *EventStore) AddDispatchers(dispatchers ...EventDispatcher) {
+	e.dispatchers = append(e.dispatchers, dispatchers...)
 }

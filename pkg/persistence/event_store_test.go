@@ -17,19 +17,17 @@ import (
 
 var _ = Describe("EventStore", func() {
 	var (
-		ctx              context.Context
-		binarySerializer *serializer.GoBinarySerializer
-		ctrl             *gomock.Controller
-		appendOnlyStore  *mocks.MockAppendOnlyStore
-		eventStore       *persistence.EventStore
+		ctx             context.Context
+		ctrl            *gomock.Controller
+		appendOnlyStore *mocks.MockAppendOnlyStore
+		eventStore      *persistence.EventStore
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		binarySerializer = &serializer.GoBinarySerializer{}
 		ctrl = gomock.NewController(GinkgoT())
 		appendOnlyStore = mocks.NewMockAppendOnlyStore(ctrl)
-		eventStore = persistence.NewEventStore(binarySerializer, binarySerializer, appendOnlyStore, &stubClock{})
+		eventStore = persistence.NewEventStoreBuilder().WithAppendOnlyStore(appendOnlyStore).WithClock(&stubClock{}).Build()
 	})
 
 	It("should be able to load an event stream", func() {

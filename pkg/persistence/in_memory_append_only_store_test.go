@@ -1,4 +1,4 @@
-package inmemory_test
+package persistence_test
 
 import (
 	"context"
@@ -7,18 +7,17 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
 )
 
-var _ = Describe("InMemory / AppendOnlyStore", func() {
+var _ = Describe("InMemory / InMemoryAppendOnlyStore", func() {
 	var (
 		ctx   context.Context
-		store *inmemory.AppendOnlyStore
+		store *persistence.InMemoryAppendOnlyStore
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		store = inmemory.NewAppendOnlyStore()
+		store = persistence.NewInMemoryAppendOnlyStore()
 	})
 
 	It("should be able to append to an event stream", func() {

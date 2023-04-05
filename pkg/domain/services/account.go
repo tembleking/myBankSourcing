@@ -9,8 +9,13 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
+type AccountRepository interface {
+	SaveAccount(ctx context.Context, account *account.Account) error
+	GetAccount(ctx context.Context, accountID account.ID) (*account.Account, error)
+}
+
 type AccountService struct {
-	repository account.Repository
+	repository AccountRepository
 }
 
 func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
@@ -23,8 +28,8 @@ func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, err
 	return accountCreated, nil
 }
 
-func NewAccountService(repository account.Repository) *AccountService {
+func NewAccountService(accountRepository AccountRepository) *AccountService {
 	return &AccountService{
-		repository: repository,
+		repository: accountRepository,
 	}
 }

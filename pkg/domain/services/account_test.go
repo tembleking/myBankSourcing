@@ -6,12 +6,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/tembleking/myBankSourcing/pkg/clock"
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 
 var _ = Describe("Account", func() {
@@ -21,8 +18,7 @@ var _ = Describe("Account", func() {
 	)
 
 	BeforeEach(func() {
-		serializer := &serializer.GoBinarySerializer{}
-		eventStore := persistence.NewEventStore(serializer, serializer, inmemory.NewAppendOnlyStore(), clock.System{})
+		eventStore := persistence.NewEventStoreBuilder().Build()
 		accountRepository = accountpersistence.NewRepository(eventStore)
 		accountService = services.NewAccountService(accountRepository)
 	})
