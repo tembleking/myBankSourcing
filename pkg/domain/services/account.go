@@ -71,6 +71,25 @@ func (s *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 	return account, nil
 }
 
+func (s *AccountService) CloseAccount(ctx context.Context, accountID account.ID) (*account.Account, error) {
+	account, err := s.repository.GetAccount(ctx, accountID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account: %w", err)
+	}
+
+	err = account.CloseAccount()
+	if err != nil {
+		return nil, fmt.Errorf("error closing account: %w", err)
+	}
+
+	err = s.repository.SaveAccount(ctx, account)
+	if err != nil {
+		return nil, fmt.Errorf("error saving account: %w", err)
+	}
+
+	return account, nil
+}
+
 func NewAccountService(accountRepository AccountRepository) *AccountService {
 	return &AccountService{
 		repository: accountRepository,

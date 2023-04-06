@@ -10,6 +10,7 @@ func init() {
 	serializer.RegisterSerializableType(&AmountWithdrawn{})
 	serializer.RegisterSerializableType(&TransferSent{})
 	serializer.RegisterSerializableType(&TransferReceived{})
+	serializer.RegisterSerializableType(&AccountClosed{})
 }
 
 type AccountOpened struct {

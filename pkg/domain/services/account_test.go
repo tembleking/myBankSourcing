@@ -77,4 +77,14 @@ var _ = Describe("Account", func() {
 
 		Expect(accountUpdated.Balance()).To(Equal(75))
 	})
+
+	It("closes the account", func() {
+		accountCreated, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		updatedAccount, err := accountService.CloseAccount(context.Background(), accountCreated.ID())
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(updatedAccount.IsOpen()).To(BeFalse())
+	})
 })
