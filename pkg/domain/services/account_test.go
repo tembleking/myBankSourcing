@@ -21,7 +21,7 @@ var _ = Describe("Account", func() {
 	BeforeEach(func() {
 		eventStore := persistence.NewEventStoreBuilder().Build()
 		accountRepository = accountpersistence.NewRepository(eventStore)
-		accountService = services.NewAccountService(accountRepository)
+		accountService = services.NewAccountService(accountRepository, eventStore)
 	})
 
 	It("opens the account", func() {
@@ -97,6 +97,7 @@ var _ = Describe("Account", func() {
 
 		amountToAdd := 100
 		_, err = accountService.AddMoneyToAccount(context.Background(), firstAccount.ID(), amountToAdd)
+		Expect(err).ToNot(HaveOccurred())
 
 		amountToTransfer := 25
 		modifiedFirstAccount, err := accountService.TransferMoney(context.Background(), firstAccount.ID(), secondAccount.ID(), amountToTransfer)

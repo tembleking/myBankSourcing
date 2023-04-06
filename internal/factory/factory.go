@@ -20,8 +20,9 @@ func NewFactory() *Factory {
 }
 
 func (f *Factory) NewAccountService() *services.AccountService {
-	repository := accountpersistence.NewRepository(f.eventStore())
-	return services.NewAccountService(repository)
+	eventStore := f.eventStore()
+	repository := accountpersistence.NewRepository(eventStore)
+	return services.NewAccountService(repository, eventStore)
 }
 
 func (f *Factory) eventStore() *persistence.EventStore {

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
 type AccountRepository interface {
@@ -17,6 +18,7 @@ type AccountRepository interface {
 
 type AccountService struct {
 	repository AccountRepository
+	eventStore *persistence.EventStore
 }
 
 func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
@@ -119,8 +121,9 @@ func (s *AccountService) TransferMoney(ctx context.Context, origin account.ID, d
 	return originAccount, nil
 }
 
-func NewAccountService(accountRepository AccountRepository) *AccountService {
+func NewAccountService(accountRepository AccountRepository, eventStore *persistence.EventStore) *AccountService {
 	return &AccountService{
 		repository: accountRepository,
+		eventStore: eventStore,
 	}
 }
