@@ -7,7 +7,6 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/surrealdb"
 )
@@ -21,8 +20,7 @@ func NewFactory() *Factory {
 
 func (f *Factory) NewAccountService() *services.AccountService {
 	eventStore := f.eventStore()
-	repository := accountpersistence.NewRepository(eventStore)
-	return services.NewAccountService(repository, eventStore)
+	return services.NewAccountService(eventStore)
 }
 
 func (f *Factory) eventStore() *persistence.EventStore {

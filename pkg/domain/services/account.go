@@ -6,24 +6,21 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
-type AccountRepository interface {
-	SaveAccount(ctx context.Context, account *account.Account) error
-	GetAccount(ctx context.Context, accountID account.ID) (*account.Account, error)
-	ListAccounts(ctx context.Context) ([]*account.Account, error)
-}
-
 type AccountService struct {
-	repository AccountRepository
-	eventStore *persistence.EventStore
+	eventStore  *persistence.EventStore
+	accountView *views.AccountView
 }
 
-func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
+func (a *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
 	accountCreated := account.OpenAccount(account.ID(uuid.NewString()))
-	err := s.repository.SaveAccount(ctx, accountCreated)
+
+	err := a.eventStore.AppendToStream(ctx, string(accountCreated.ID()), accountCreated.AggregateVersion(), accountCreated.Events())
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -31,12 +28,12 @@ func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, err
 	return accountCreated, nil
 }
 
-func (s *AccountService) ListAccounts(ctx context.Context) ([]*account.Account, error) {
-	return s.repository.ListAccounts(ctx)
+func (a *AccountService) ListAccounts(ctx context.Context) ([]*account.Account, error) {
+	return a.accountView.Accounts(), nil
 }
 
-func (s *AccountService) AddMoneyToAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
-	account, err := s.repository.GetAccount(ctx, accountID)
+func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
+	account, err := a.getAccount(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
 	}
@@ -46,7 +43,7 @@ func (s *AccountService) AddMoneyToAccount(ctx context.Context, accountID accoun
 		return nil, fmt.Errorf("error adding money to account: %w", err)
 	}
 
-	err = s.repository.SaveAccount(ctx, account)
+	err = a.eventStore.AppendToStream(ctx, string(account.ID()), account.AggregateVersion(), account.Events())
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -54,8 +51,8 @@ func (s *AccountService) AddMoneyToAccount(ctx context.Context, accountID accoun
 	return account, nil
 }
 
-func (s *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
-	account, err := s.repository.GetAccount(ctx, accountID)
+func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
+	account, err := a.getAccount(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
 	}
@@ -65,7 +62,7 @@ func (s *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 		return nil, fmt.Errorf("error withdrawing money from account: %w", err)
 	}
 
-	err = s.repository.SaveAccount(ctx, account)
+	err = a.eventStore.AppendToStream(ctx, string(account.ID()), account.AggregateVersion(), account.Events())
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -73,8 +70,8 @@ func (s *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 	return account, nil
 }
 
-func (s *AccountService) CloseAccount(ctx context.Context, accountID account.ID) (*account.Account, error) {
-	account, err := s.repository.GetAccount(ctx, accountID)
+func (a *AccountService) CloseAccount(ctx context.Context, accountID account.ID) (*account.Account, error) {
+	account, err := a.getAccount(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
 	}
@@ -84,7 +81,7 @@ func (s *AccountService) CloseAccount(ctx context.Context, accountID account.ID)
 		return nil, fmt.Errorf("error closing account: %w", err)
 	}
 
-	err = s.repository.SaveAccount(ctx, account)
+	err = a.eventStore.AppendToStream(ctx, string(account.ID()), account.AggregateVersion(), account.Events())
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -92,13 +89,13 @@ func (s *AccountService) CloseAccount(ctx context.Context, accountID account.ID)
 	return account, nil
 }
 
-func (s *AccountService) TransferMoney(ctx context.Context, origin account.ID, destination account.ID, amountToTransfer int) (*account.Account, error) {
-	originAccount, err := s.repository.GetAccount(ctx, origin)
+func (a *AccountService) TransferMoney(ctx context.Context, origin account.ID, destination account.ID, amountToTransfer int) (*account.Account, error) {
+	originAccount, err := a.getAccount(ctx, origin)
 	if err != nil {
 		return nil, fmt.Errorf("error getting origin account: %w", err)
 	}
 
-	destinationAccount, err := s.repository.GetAccount(ctx, destination)
+	destinationAccount, err := a.getAccount(ctx, destination)
 	if err != nil {
 		return nil, fmt.Errorf("error getting destination account: %w", err)
 	}
@@ -108,12 +105,12 @@ func (s *AccountService) TransferMoney(ctx context.Context, origin account.ID, d
 		return nil, fmt.Errorf("error transferring money: %w", err)
 	}
 
-	err = s.repository.SaveAccount(ctx, originAccount)
+	err = a.eventStore.AppendToStream(ctx, string(originAccount.ID()), originAccount.AggregateVersion(), originAccount.Events())
 	if err != nil {
 		return nil, fmt.Errorf("error saving from account: %w", err)
 	}
 
-	err = s.repository.SaveAccount(ctx, destinationAccount)
+	err = a.eventStore.AppendToStream(ctx, string(destinationAccount.ID()), destinationAccount.AggregateVersion(), destinationAccount.Events())
 	if err != nil {
 		return nil, fmt.Errorf("error saving to account: %w", err)
 	}
@@ -121,9 +118,30 @@ func (s *AccountService) TransferMoney(ctx context.Context, origin account.ID, d
 	return originAccount, nil
 }
 
-func NewAccountService(accountRepository AccountRepository, eventStore *persistence.EventStore) *AccountService {
+func (a *AccountService) getAccount(ctx context.Context, id account.ID) (*account.Account, error) {
+	stream, err := a.eventStore.LoadEventStream(ctx, string(id))
+	if err != nil {
+		return nil, fmt.Errorf("error loading event stream: %w", err)
+	}
+	if len(stream) == 0 {
+		return nil, fmt.Errorf("account not found: %s", id)
+	}
+
+	events := make([]domain.Event, 0, len(stream))
+	for _, event := range stream {
+		events = append(events, event.Event)
+	}
+
+	return account.NewAccount(events...), nil
+}
+
+func NewAccountService(eventStore *persistence.EventStore) *AccountService {
+	accountView, err := views.NewAccountView(eventStore)
+	if err != nil {
+		panic(err)
+	}
 	return &AccountService{
-		repository: accountRepository,
-		eventStore: eventStore,
+		eventStore:  eventStore,
+		accountView: accountView,
 	}
 }
