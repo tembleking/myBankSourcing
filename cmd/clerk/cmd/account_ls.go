@@ -11,7 +11,7 @@ import (
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "ls",
 	Short: "Lists the accounts created",
 	Run: func(cmd *cobra.Command, args []string) {
 		accounts, err := factory.NewFactory().NewAccountService().ListAccounts(cmd.Context())
