@@ -105,11 +105,35 @@ var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
 		data, err := store.ReadEventsByName(ctx, "eventName")
 		Expect(err).To(BeNil())
 		Expect(data).To(HaveLen(4))
-		Expect(data).To(ConsistOf(
-			persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")},
-			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2-0")},
-			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 1, EventName: "eventName", EventData: []byte("data2-1")},
-			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 2, EventName: "eventName", EventData: []byte("data2-2")},
-		))
+		Expect(data).To(Equal([]persistence.StoredStreamEvent{
+			{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")},
+			{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2-0")},
+			{StreamID: "aggregate-2", StreamVersion: 1, EventName: "eventName", EventData: []byte("data2-1")},
+			{StreamID: "aggregate-2", StreamVersion: 2, EventName: "eventName", EventData: []byte("data2-2")},
+		}))
+	})
+
+	It("should return all the events", func() {
+		err := store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-1", StreamVersion: 0, EventName: "eventNameToIgnore", EventData: []byte("data1")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2-0")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 1, EventName: "eventName", EventData: []byte("data2-1")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 2, EventName: "eventName", EventData: []byte("data2-2")})
+		Expect(err).To(BeNil())
+
+		data, err := store.ReadAllRecords(ctx)
+		Expect(err).To(BeNil())
+		Expect(data).To(HaveLen(5))
+		Expect(data).To(Equal([]persistence.StoredStreamEvent{
+			{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")},
+			{StreamID: "aggregate-1", StreamVersion: 0, EventName: "eventNameToIgnore", EventData: []byte("data1")},
+			{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2-0")},
+			{StreamID: "aggregate-2", StreamVersion: 1, EventName: "eventName", EventData: []byte("data2-1")},
+			{StreamID: "aggregate-2", StreamVersion: 2, EventName: "eventName", EventData: []byte("data2-2")},
+		}))
 	})
 })

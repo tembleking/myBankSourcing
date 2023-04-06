@@ -89,4 +89,34 @@ var _ = Describe("InMemory / InMemoryAppendOnlyStore", func() {
 			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")},
 		))
 	})
+
+	It("should be able to load all events", func() {
+		err := store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-1", StreamVersion: 0, EventName: "eventNameToIgnore", EventData: []byte("data1")})
+		Expect(err).To(BeNil())
+		err = store.Append(ctx, persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")})
+		Expect(err).To(BeNil())
+
+		data, err := store.ReadAllRecords(ctx)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(data).To(HaveLen(3))
+		Expect(data).To(ConsistOf(
+			persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")},
+			persistence.StoredStreamEvent{StreamID: "aggregate-1", StreamVersion: 0, EventName: "eventNameToIgnore", EventData: []byte("data1")},
+			persistence.StoredStreamEvent{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")},
+		))
+	})
+
+	When("there are no events", func() {
+		It("doesn't return any event", func() {
+			data, err := store.ReadRecords(ctx, "aggregate-0")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(data).To(BeEmpty())
+
+			data, err = store.ReadEventsByName(ctx, "eventName")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(data).To(BeEmpty())
+		})
+	})
 })

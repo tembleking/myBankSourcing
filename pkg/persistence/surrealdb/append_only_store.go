@@ -65,6 +65,27 @@ SET
 	return nil
 }
 
+func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
+	a.rwMutex.RLock()
+	defer a.rwMutex.RUnlock()
+
+	query := `
+select 
+    id.stream_version as stream_version, 
+    id.stream_id as stream_id, 
+    event_name, 
+    event_data, 
+    happened_on 
+from event;`
+
+	result, err := a.db.Query(query, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error reading records: %w", err)
+	}
+
+	return resultToStoredStreamEvent(result)
+}
+
 func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]persistence.StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()

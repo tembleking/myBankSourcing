@@ -140,3 +140,26 @@ func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]
 func (e *EventStore) AddDispatchers(dispatchers ...EventDispatcher) {
 	e.dispatchers = append(e.dispatchers, dispatchers...)
 }
+
+func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
+	records, err := e.appendOnlyStore.ReadAllRecords(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error reading records: %w", err)
+	}
+
+	events := make([]StreamEvent, 0, len(records))
+	for _, record := range records {
+		event, err := e.deserializer.Deserialize(record.EventData)
+		if err != nil {
+			return nil, fmt.Errorf("error deserializing event: %w", err)
+		}
+		events = append(events, StreamEvent{
+			StreamID:      record.StreamID,
+			StreamVersion: record.StreamVersion,
+			Event:         event,
+			HappenedOn:    record.HappenedOn,
+		})
+	}
+
+	return events, nil
+}

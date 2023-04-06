@@ -54,6 +54,21 @@ func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx interface{}, events ...int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), varargs...)
 }
 
+// ReadAllRecords mocks base method.
+func (m *MockAppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadAllRecords", ctx)
+	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadAllRecords indicates an expected call of ReadAllRecords.
+func (mr *MockAppendOnlyStoreMockRecorder) ReadAllRecords(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadAllRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadAllRecords), ctx)
+}
+
 // ReadEventsByName mocks base method.
 func (m *MockAppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()

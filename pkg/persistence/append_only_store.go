@@ -11,6 +11,8 @@ type AppendOnlyStore interface {
 	// It returns an error if the expected version does not match the current version.
 	Append(ctx context.Context, events ...StoredStreamEvent) error
 
+	ReadAllRecords(ctx context.Context) ([]StoredStreamEvent, error)
+
 	// ReadRecords reads events within a single Stream by their names.
 	ReadRecords(ctx context.Context, streamID string) ([]StoredStreamEvent, error)
 

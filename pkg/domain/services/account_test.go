@@ -37,4 +37,17 @@ var _ = Describe("Account", func() {
 		Expect(accountSaved.Balance()).To(Equal(accountCreated.Balance()))
 		Expect(accountSaved.IsOpen()).To(Equal(accountCreated.IsOpen()))
 	})
+
+	It("lists the accounts created", func() {
+		accounts, err := accountService.ListAccounts(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(accounts).To(BeEmpty())
+
+		accountCreated, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		accounts, err = accountService.ListAccounts(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(accounts).To(ConsistOf(accountCreated.ID()))
+	})
 })

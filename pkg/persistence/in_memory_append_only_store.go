@@ -6,6 +6,7 @@ import (
 )
 
 type InMemoryAppendOnlyStore struct {
+	allEvents      []StoredStreamEvent
 	eventsByStream map[string][]StoredStreamEvent
 	eventsByName   map[string][]StoredStreamEvent
 	rwMutex        sync.RWMutex
@@ -20,6 +21,7 @@ func (a *InMemoryAppendOnlyStore) appendEvent(event StoredStreamEvent) error {
 		return &ErrUnexpectedVersion{Found: currentVersion, Expected: event.StreamVersion}
 	}
 
+	a.allEvents = append(a.allEvents, event)
 	a.eventsByStream[event.StreamID] = append(eventsByStream, event)
 	a.eventsByName[event.EventName] = append(eventsByName, event)
 	return nil
@@ -38,13 +40,20 @@ func (a *InMemoryAppendOnlyStore) Append(_ context.Context, events ...StoredStre
 	return nil
 }
 
+func (a *InMemoryAppendOnlyStore) ReadAllRecords(ctx context.Context) ([]StoredStreamEvent, error) {
+	a.rwMutex.RLock()
+	defer a.rwMutex.RUnlock()
+
+	return a.allEvents, nil
+}
+
 func (a *InMemoryAppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
 	fields, ok := a.eventsByStream[streamID]
 	if !ok {
-		return nil, &ErrRecordsNotFoundForStream{StreamID: streamID}
+		return nil, nil
 	}
 
 	return fields, nil
@@ -56,7 +65,7 @@ func (a *InMemoryAppendOnlyStore) ReadEventsByName(ctx context.Context, eventNam
 
 	fields, ok := a.eventsByName[eventName]
 	if !ok {
-		return nil, &ErrRecordsNotFoundForEvent{EventName: eventName}
+		return nil, nil
 	}
 
 	return fields, nil
@@ -64,6 +73,7 @@ func (a *InMemoryAppendOnlyStore) ReadEventsByName(ctx context.Context, eventNam
 
 func NewInMemoryAppendOnlyStore() *InMemoryAppendOnlyStore {
 	return &InMemoryAppendOnlyStore{
+		allEvents:      make([]StoredStreamEvent, 0),
 		eventsByStream: make(map[string][]StoredStreamEvent),
 		eventsByName:   make(map[string][]StoredStreamEvent),
 	}

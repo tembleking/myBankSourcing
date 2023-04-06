@@ -76,6 +76,22 @@ var _ = Describe("EventStore", func() {
 		})
 	})
 
+	When("asking for all events", func() {
+		It("returns all events", func() {
+			appendOnlyStore.EXPECT().
+				ReadAllRecords(ctx).
+				Return([]persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventData: dataRecordInStore()}}, nil)
+
+			stream, err := eventStore.LoadAllEvents(ctx)
+			Expect(err).To(BeNil())
+			Expect(stream).To(Equal([]persistence.StreamEvent{{
+				StreamID:      "aggregate-0",
+				StreamVersion: 1,
+				Event:         &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
+			}}))
+		})
+	})
+
 	When("configured with a dispatcher", func() {
 		It("sends the events to the dispatcher", func() {
 			mockDispatcher := mocks.NewMockEventDispatcher(ctrl)

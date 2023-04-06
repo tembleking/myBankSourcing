@@ -1,3 +1,4 @@
+set positional-arguments
 
 [private]
 help:
@@ -21,6 +22,9 @@ lint:
 mktest NAME="":
     cd {{invocation_directory()}}; go run github.com/onsi/ginkgo/v2/ginkgo bootstrap 2>/dev/null || true
     cd {{invocation_directory()}}; go run github.com/onsi/ginkgo/v2/ginkgo generate {{ NAME }}
+
+mkcommand *args='':
+    go run github.com/spf13/cobra-cli@latest add "$@"
 
 # Tests if the project builds correctly
 test-build:
