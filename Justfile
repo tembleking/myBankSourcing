@@ -29,3 +29,13 @@ test-build:
 # Runs all tests
 test:
     go run github.com/onsi/ginkgo/v2/ginkgo -r -p
+
+# Launches the database in a docker container for development
+db-launch: db-kill
+    docker run --rm -d --pull always --name surrealdb -p 8000:8000 surrealdb/surrealdb:latest start --log trace --user root --pass root memory
+
+db-logs:
+    docker logs -f surrealdb
+
+db-kill:
+    docker rm -f surrealdb
