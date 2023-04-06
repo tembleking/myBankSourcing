@@ -20,7 +20,7 @@ type TransfersView struct {
 	transfers []Transfer
 }
 
-func (v *TransfersView) Dispatch(ctx context.Context, events ...persistence.StreamEvent) {
+func (v *TransfersView) Dispatch(events ...persistence.StreamEvent) {
 	v.rwMutex.Lock()
 	defer v.rwMutex.Unlock()
 

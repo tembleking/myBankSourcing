@@ -95,7 +95,7 @@ var _ = Describe("EventStore", func() {
 	When("configured with a dispatcher", func() {
 		It("sends the events to the dispatcher", func() {
 			mockDispatcher := mocks.NewMockEventDispatcher(ctrl)
-			mockDispatcher.EXPECT().Dispatch(ctx, []persistence.StreamEvent{{
+			mockDispatcher.EXPECT().Dispatch([]persistence.StreamEvent{{
 				StreamID: "aggregate-0", Event: &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
 			}})
 			appendOnlyStore.EXPECT().Append(ctx, persistence.StoredStreamEvent{

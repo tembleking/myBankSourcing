@@ -5,7 +5,6 @@
 package mocks
 
 import (
-	context "context"
 	reflect "reflect"
 	time "time"
 
@@ -37,9 +36,9 @@ func (m *MockEventDispatcher) EXPECT() *MockEventDispatcherMockRecorder {
 }
 
 // Dispatch mocks base method.
-func (m *MockEventDispatcher) Dispatch(ctx context.Context, events ...persistence.StreamEvent) {
+func (m *MockEventDispatcher) Dispatch(events ...persistence.StreamEvent) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx}
+	varargs := []interface{}{}
 	for _, a := range events {
 		varargs = append(varargs, a)
 	}
@@ -47,10 +46,9 @@ func (m *MockEventDispatcher) Dispatch(ctx context.Context, events ...persistenc
 }
 
 // Dispatch indicates an expected call of Dispatch.
-func (mr *MockEventDispatcherMockRecorder) Dispatch(ctx interface{}, events ...interface{}) *gomock.Call {
+func (mr *MockEventDispatcherMockRecorder) Dispatch(events ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx}, events...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockEventDispatcher)(nil).Dispatch), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dispatch", reflect.TypeOf((*MockEventDispatcher)(nil).Dispatch), events...)
 }
 
 // MockClock is a mock of Clock interface.

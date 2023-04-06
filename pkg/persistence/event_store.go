@@ -10,7 +10,7 @@ import (
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/$GOFILE -package=mocks
 type EventDispatcher interface {
-	Dispatch(ctx context.Context, events ...StreamEvent)
+	Dispatch(events ...StreamEvent)
 }
 
 type Clock interface {
@@ -108,7 +108,7 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastEx
 	}
 
 	for _, dispatcher := range e.dispatchers {
-		dispatcher.Dispatch(ctx, streamEvents...)
+		dispatcher.Dispatch(streamEvents...)
 	}
 
 	return nil
