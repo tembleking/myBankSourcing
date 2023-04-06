@@ -1,6 +1,8 @@
 package factory
 
 import (
+	"fmt"
+
 	surreal "github.com/surrealdb/surrealdb.go"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
@@ -38,18 +40,18 @@ func (f *Factory) appendOnlyStore() persistence.AppendOnlyStore {
 func (f *Factory) surrealDBInstance() *surreal.DB {
 	db, err := surreal.New("ws://localhost:8000/rpc")
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("error connecting to surrealdb: %w", err))
 	}
 	_, err = db.Signin(map[string]string{
 		"user": "root",
 		"pass": "root",
 	})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("error signing in to surrealdb: %w", err))
 	}
 	_, err = db.Use("ns", "db")
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("error using namespace and database in surrealdb: %w", err))
 	}
 	return db
 }
