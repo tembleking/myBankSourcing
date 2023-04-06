@@ -11,7 +11,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence/surrealdb"
 )
 
-var _ = Describe("SurrealDB AppendOnlyStore", func() {
+var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
 	var (
 		ctx   context.Context
 		store *surrealdb.AppendOnlyStore

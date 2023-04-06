@@ -180,7 +180,6 @@ func executeInTransaction[T any](a *AppendOnlyStore, f func() (T, error)) (resul
 		if err != nil {
 			err = fmt.Errorf("error committing transaction: %w", err)
 		}
-		return
 	}()
 
 	result, err = f()
