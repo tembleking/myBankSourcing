@@ -30,7 +30,7 @@ var _ = Describe("Account", func() {
 			})
 
 			It("fails if the account is not open", func() {
-				err := acc.WithdrawalMoney(50)
+				err := acc.WithdrawMoney(50)
 
 				Expect(err).To(MatchError(account.ErrAccountIsClosed))
 			})
@@ -75,7 +75,7 @@ var _ = Describe("Account", func() {
 				It("subtracts the money", func() {
 					_ = acc.AddMoney(50)
 
-					err := acc.WithdrawalMoney(30)
+					err := acc.WithdrawMoney(30)
 
 					Expect(err).ToNot(HaveOccurred())
 					Expect(acc.Balance()).To(Equal(20))
@@ -86,7 +86,7 @@ var _ = Describe("Account", func() {
 				It("returns an error", func() {
 					_ = acc.AddMoney(50)
 
-					err := acc.WithdrawalMoney(51)
+					err := acc.WithdrawMoney(51)
 
 					Expect(err).To(MatchError(account.ErrBalanceIsNotEnoughForWithdrawal))
 				})
@@ -152,7 +152,7 @@ var _ = Describe("Account", func() {
 			err = acc.AddMoney(50)
 			Expect(err).To(MatchError(account.ErrAccountIsClosed))
 
-			err = acc.WithdrawalMoney(50)
+			err = acc.WithdrawMoney(50)
 			Expect(err).To(MatchError(account.ErrAccountIsClosed))
 
 			err = acc.TransferMoney(50, account.OpenAccount("some-other-id"))

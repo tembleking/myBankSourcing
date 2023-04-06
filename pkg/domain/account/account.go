@@ -47,7 +47,7 @@ func (a *Account) AddMoney(amount int) error {
 	return nil
 }
 
-func (a *Account) WithdrawalMoney(amount int) error {
+func (a *Account) WithdrawMoney(amount int) error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
 	}

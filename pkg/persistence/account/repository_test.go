@@ -64,7 +64,7 @@ func someAccountWithMovementsAndID(id string) *account.Account {
 	anAccount := account.OpenAccount(account.ID(id))
 
 	_ = anAccount.AddMoney(50)
-	_ = anAccount.WithdrawalMoney(35)
+	_ = anAccount.WithdrawMoney(35)
 	_ = anAccount.AddMoney(10)
 
 	return anAccount

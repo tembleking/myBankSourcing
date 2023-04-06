@@ -62,4 +62,19 @@ var _ = Describe("Account", func() {
 
 		Expect(accountUpdated.Balance()).To(Equal(amount))
 	})
+
+	It("withdraws money from the account", func() {
+		accountCreated, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		amount := 100
+		_, err = accountService.AddMoneyToAccount(context.Background(), accountCreated.ID(), amount)
+		Expect(err).ToNot(HaveOccurred())
+
+		amount = 25
+		accountUpdated, err := accountService.WithdrawMoneyFromAccount(context.Background(), accountCreated.ID(), amount)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(accountUpdated.Balance()).To(Equal(75))
+	})
 })
