@@ -87,4 +87,20 @@ var _ = Describe("Account", func() {
 
 		Expect(updatedAccount.IsOpen()).To(BeFalse())
 	})
+
+	It("transfers money between accounts", func() {
+		firstAccount, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		secondAccount, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		amountToAdd := 100
+		_, err = accountService.AddMoneyToAccount(context.Background(), firstAccount.ID(), amountToAdd)
+
+		amountToTransfer := 25
+		modifiedFirstAccount, err := accountService.TransferMoney(context.Background(), firstAccount.ID(), secondAccount.ID(), amountToTransfer)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(modifiedFirstAccount.Balance()).To(Equal(75))
+	})
 })
