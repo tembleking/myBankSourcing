@@ -23,8 +23,9 @@ mktest NAME="":
     cd {{invocation_directory()}}; go run github.com/onsi/ginkgo/v2/ginkgo bootstrap 2>/dev/null || true
     cd {{invocation_directory()}}; go run github.com/onsi/ginkgo/v2/ginkgo generate {{ NAME }}
 
-mkcommand *args='':
-    go run github.com/spf13/cobra-cli@latest add "$@"
+# Adds a new command to the project with the given name and parent command.
+mkcommand NAME PARENT_COMMAND:
+    cd ./cmd/clerk; go run github.com/spf13/cobra-cli@latest add {{ NAME }} --parent {{ PARENT_COMMAND }}
 
 # Tests if the project builds correctly
 test-build:

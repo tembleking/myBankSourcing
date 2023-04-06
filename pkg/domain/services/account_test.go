@@ -51,4 +51,15 @@ var _ = Describe("Account", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(accountCreated)))
 	})
+
+	It("adds money to the account", func() {
+		accountCreated, err := accountService.OpenAccount(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+
+		amount := 100
+		accountUpdated, err := accountService.AddMoneyToAccount(context.Background(), accountCreated.ID(), amount)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(accountUpdated.Balance()).To(Equal(amount))
+	})
 })

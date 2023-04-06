@@ -33,6 +33,25 @@ func (s *AccountService) ListAccounts(ctx context.Context) ([]*account.Account, 
 	return s.repository.ListAccounts(ctx)
 }
 
+func (s *AccountService) AddMoneyToAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
+	account, err := s.repository.GetAccount(ctx, accountID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account: %w", err)
+	}
+
+	err = account.AddMoney(amount)
+	if err != nil {
+		return nil, fmt.Errorf("error adding money to account: %w", err)
+	}
+
+	err = s.repository.SaveAccount(ctx, account)
+	if err != nil {
+		return nil, fmt.Errorf("error saving account: %w", err)
+	}
+
+	return account, nil
+}
+
 func NewAccountService(accountRepository AccountRepository) *AccountService {
 	return &AccountService{
 		repository: accountRepository,
