@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 
@@ -67,7 +68,7 @@ func NewAccountView(eventStore *persistence.EventStore) (*AccountView, error) {
 
 	events, err := eventStore.LoadAllEvents(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error loading all events: %w", err)
 	}
 	for _, event := range events {
 		a.handleEvent(event)

@@ -3,7 +3,6 @@ package account
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
@@ -54,17 +53,6 @@ func (r *Repository) GetAccount(ctx context.Context, id account.ID) (*account.Ac
 	return account.NewAccount(events...), nil
 }
 
-func (r *Repository) ListAccounts(ctx context.Context) ([]account.ID, error) {
-	allAccounts := r.accountView.Accounts()
-
-	accountIDs := make([]account.ID, 0, len(allAccounts))
-	for _, account := range allAccounts {
-		accountIDs = append(accountIDs, account.ID())
-	}
-
-	sort.Slice(accountIDs, func(i, j int) bool {
-		return accountIDs[i] < accountIDs[j]
-	})
-
-	return accountIDs, nil
+func (r *Repository) ListAccounts(ctx context.Context) ([]*account.Account, error) {
+	return r.accountView.Accounts(), nil
 }

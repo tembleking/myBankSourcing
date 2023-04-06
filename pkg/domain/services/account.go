@@ -12,7 +12,7 @@ import (
 type AccountRepository interface {
 	SaveAccount(ctx context.Context, account *account.Account) error
 	GetAccount(ctx context.Context, accountID account.ID) (*account.Account, error)
-	ListAccounts(ctx context.Context) ([]account.ID, error)
+	ListAccounts(ctx context.Context) ([]*account.Account, error)
 }
 
 type AccountService struct {
@@ -29,7 +29,7 @@ func (s *AccountService) OpenAccount(ctx context.Context) (*account.Account, err
 	return accountCreated, nil
 }
 
-func (s *AccountService) ListAccounts(ctx context.Context) ([]account.ID, error) {
+func (s *AccountService) ListAccounts(ctx context.Context) ([]*account.Account, error) {
 	return s.repository.ListAccounts(ctx)
 }
 

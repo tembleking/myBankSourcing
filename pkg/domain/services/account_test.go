@@ -9,6 +9,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
+	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("Account", func() {
@@ -48,6 +49,6 @@ var _ = Describe("Account", func() {
 
 		accounts, err = accountService.ListAccounts(context.Background())
 		Expect(err).ToNot(HaveOccurred())
-		Expect(accounts).To(ConsistOf(accountCreated.ID()))
+		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(accountCreated)))
 	})
 })

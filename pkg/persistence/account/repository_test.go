@@ -9,6 +9,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
+	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("In Memory Repository", func() {
@@ -37,6 +38,21 @@ var _ = Describe("In Memory Repository", func() {
 
 			Expect(err).To(MatchError(ContainSubstring("not found")))
 		})
+	})
+
+	It("returns all the accounts", func() {
+		_ = repository.SaveAccount(context.Background(), someAccountWithMovementsAndID("some-id-1"))
+		_ = repository.SaveAccount(context.Background(), someAccountWithMovementsAndID("some-id-2"))
+		_ = repository.SaveAccount(context.Background(), someAccountWithMovementsAndID("some-id-3"))
+
+		accounts, err := repository.ListAccounts(context.Background())
+		Expect(err).ToNot(HaveOccurred())
+		Expect(accounts).To(HaveLen(3))
+		Expect(accounts).To(ConsistOf(
+			BeAnAccountEqualsTo(someAccountWithMovementsAndID("some-id-1")),
+			BeAnAccountEqualsTo(someAccountWithMovementsAndID("some-id-2")),
+			BeAnAccountEqualsTo(someAccountWithMovementsAndID("some-id-3")),
+		))
 	})
 })
 

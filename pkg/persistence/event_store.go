@@ -151,7 +151,7 @@ func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
 	for _, record := range records {
 		event, err := e.deserializer.Deserialize(record.EventData)
 		if err != nil {
-			return nil, fmt.Errorf("error deserializing event: %w", err)
+			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.StreamID, record.StreamVersion, err)
 		}
 		events = append(events, StreamEvent{
 			StreamID:      record.StreamID,
