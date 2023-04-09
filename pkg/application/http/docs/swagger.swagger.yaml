@@ -1,0 +1,253 @@
+swagger: "2.0"
+info:
+  title: service.proto
+  version: version not set
+tags:
+  - name: ClerkAPIService
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/account/v1/{accountId}:
+    delete:
+      summary: Close an account
+      operationId: ClerkAPIService_CloseAccount
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            type: object
+            properties: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: accountId
+          description: The account id
+          in: path
+          required: true
+          type: string
+      tags:
+        - ClerkAPIService
+  /api/account/v1/{accountId}/add:
+    post:
+      summary: Adds money to an account
+      operationId: ClerkAPIService_AddMoney
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/AddMoneyResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: accountId
+          description: The account id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              amount:
+                type: string
+                format: int64
+                title: The amount to add
+            required:
+              - amount
+      tags:
+        - ClerkAPIService
+  /api/account/v1/{accountId}/withdraw:
+    post:
+      summary: Removes money from an account
+      operationId: ClerkAPIService_WithdrawMoney
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/WithdrawMoneyResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: accountId
+          description: The account id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              amount:
+                type: string
+                format: int64
+                title: The amount to withdraw
+            required:
+              - amount
+      tags:
+        - ClerkAPIService
+  /api/account/v1/{fromAccountId}/transfer/{toAccountId}:
+    post:
+      summary: Transfers money from one account to another
+      operationId: ClerkAPIService_TransferMoney
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/TransferMoneyResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: fromAccountId
+          description: The account id to transfer from
+          in: path
+          required: true
+          type: string
+        - name: toAccountId
+          description: The account id to transfer to
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              amount:
+                type: string
+                format: int64
+                title: The amount to transfer
+            required:
+              - amount
+      tags:
+        - ClerkAPIService
+  /api/account/v1/accounts:
+    get:
+      summary: Returns the list of open accounts
+      operationId: ClerkAPIService_ListAccounts
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/ListAccountsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - ClerkAPIService
+  /api/account/v1/open:
+    post:
+      summary: Creates a new account and returns it
+      operationId: ClerkAPIService_OpenAccount
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/OpenAccountResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties: {}
+      tags:
+        - ClerkAPIService
+      security:
+        - Bearer: []
+definitions:
+  Account:
+    type: object
+    properties:
+      id:
+        type: string
+      balance:
+        type: string
+        format: int64
+  AddMoneyResponse:
+    type: object
+    properties:
+      account:
+        $ref: '#/definitions/Account'
+        title: The updated account
+    required:
+      - account
+  ListAccountsResponse:
+    type: object
+    properties:
+      accounts:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/Account'
+        title: The list of open accounts
+    required:
+      - accounts
+  OpenAccountResponse:
+    type: object
+    properties:
+      account:
+        $ref: '#/definitions/Account'
+        title: The created account id
+    required:
+      - account
+  TransferMoneyResponse:
+    type: object
+    properties:
+      account:
+        $ref: '#/definitions/Account'
+        title: The updated account
+    required:
+      - account
+  WithdrawMoneyResponse:
+    type: object
+    properties:
+      account:
+        $ref: '#/definitions/Account'
+        title: The updated account
+    required:
+      - account
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    description: Bearer Token
+    name: Authorization
+    in: header

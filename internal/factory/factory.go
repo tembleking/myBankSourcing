@@ -1,11 +1,14 @@
 package factory
 
 import (
+	"context"
 	"fmt"
+	gohttp "net/http"
 
 	surreal "github.com/surrealdb/surrealdb.go"
 
 	"github.com/tembleking/myBankSourcing/internal/lazy"
+	"github.com/tembleking/myBankSourcing/pkg/application/http"
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
@@ -68,4 +71,8 @@ func (f *Factory) surrealDBInstance() *surreal.DB {
 
 		return db
 	})
+}
+
+func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {
+	return http.NewHTTPServer(ctx, f.NewAccountService())
 }

@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "google/api/visibility.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/tembleking/myBankSourcing/pkg/application/proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  security_definitions {
+    security {
+      key: "Bearer";
+      value: {
+        name: "Authorization";
+        type: TYPE_API_KEY;
+        description: "Bearer Token";
+        in: IN_HEADER;
+      }
+    }
+  };
+};
+
+// Registry Scanner API
+service ClerkAPIService {
+  // Creates a new account and returns it
+  rpc OpenAccount(google.protobuf.Empty) returns (OpenAccountResponse) {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      deprecated: false,
+      security: [
+        {
+          security_requirement: {
+            key: "Bearer";
+          }
+        }
+      ],
+    };
+    option (google.api.http) = {
+      post: "/api/account/v1/open"
+      body: "*"
+    };
+  }
+
+  // Returns the list of open accounts
+  rpc ListAccounts(google.protobuf.Empty) returns (ListAccountsResponse) {
+    option(google.api.http) = {
+      get: "/api/account/v1/accounts"
+    };
+  }
+
+  // Adds money to an account
+  rpc AddMoney(AddMoneyRequest) returns (AddMoneyResponse) {
+    option (google.api.http) = {
+      post: "/api/account/v1/{account_id}/add"
+      body: "*"
+    };
+  }
+
+  // Removes money from an account
+  rpc WithdrawMoney(WithdrawMoneyRequest) returns (WithdrawMoneyResponse) {
+    option (google.api.http) = {
+      post: "/api/account/v1/{account_id}/withdraw"
+      body: "*"
+    };
+  }
+
+  // Transfers money from one account to another
+  rpc TransferMoney(TransferMoneyRequest) returns (TransferMoneyResponse) {
+    option (google.api.http) = {
+      post: "/api/account/v1/{from_account_id}/transfer/{to_account_id}"
+      body: "*"
+    };
+  }
+
+  // Close an account
+  rpc CloseAccount(CloseAccountRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/account/v1/{account_id}"
+    };
+  }
+}
+
+message OpenAccountResponse {
+ // The created account id
+ Account account = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message ListAccountsResponse {
+  // The list of open accounts
+  repeated Account accounts = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message AddMoneyRequest {
+  // The account id
+  string account_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The amount to add
+  int64 amount = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message AddMoneyResponse {
+  // The updated account
+  Account account = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message WithdrawMoneyRequest {
+  // The account id
+  string account_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The amount to withdraw
+  int64 amount = 2 [(google.api.field_behavior) = REQUIRED];
+}
+
+message WithdrawMoneyResponse {
+  // The updated account
+  Account account = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message TransferMoneyRequest {
+  // The account id to transfer from
+  string from_account_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // The account id to transfer to
+  string to_account_id = 2 [(google.api.field_behavior) = REQUIRED];
+  // The amount to transfer
+  int64 amount = 3 [(google.api.field_behavior) = REQUIRED];
+}
+
+message TransferMoneyResponse {
+  // The updated account
+  Account account = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message CloseAccountRequest {
+  // The account id
+  string account_id = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message Account {
+  string id = 1;
+  int64 balance = 2;
+}

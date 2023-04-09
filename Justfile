@@ -8,10 +8,17 @@ help:
 check: generate lint test-build test
 
 # Generate mocks
-generate:
+generate: build-proto
     go install github.com/golang/mock/mockgen@latest
     find . -type d -name "mocks" | xargs rm -rf
     go generate ./...
+
+build-proto:
+    #!/usr/bin/env bash
+    go install github.com/bufbuild/buf/cmd/buf@latest
+    cd pkg/application/proto
+    buf mod update
+    buf generate
 
 # Lints the project
 lint:
