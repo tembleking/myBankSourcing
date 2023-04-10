@@ -30,8 +30,35 @@ func run() error {
 	wg.Add(1)
 	go serveHTTP(ctx, wg, factory)
 
+	wg.Add(1)
+	go serveGRPC(ctx, wg, factory)
+
 	wg.Wait()
 	return nil
+}
+
+func serveGRPC(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory) {
+	defer wg.Done()
+
+	server := factory.NewGRPCServer()
+	listener, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		panic(fmt.Errorf("error listening GRPC on port 8081: %w", err))
+	}
+	defer listener.Close()
+	fmt.Println("grpc listening on port 8081")
+
+	go func() {
+		<-ctx.Done()
+		fmt.Println("shutting down GRPC server")
+		server.GracefulStop()
+	}()
+
+	err = server.Serve(listener)
+	if err != nil {
+		panic(fmt.Errorf("error serving GRPC: %w", err))
+	}
+
 }
 
 func serveHTTP(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory) {
@@ -47,7 +74,7 @@ func serveHTTP(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory
 	}
 	defer listener.Close()
 
-	fmt.Println("listening on port 8080")
+	fmt.Println("http listening on port 8080")
 	go func() {
 		<-ctx.Done()
 		fmt.Println("shutting down HTTP server")

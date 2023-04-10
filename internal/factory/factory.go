@@ -3,6 +3,10 @@ package factory
 import (
 	"context"
 	"fmt"
+	"github.com/tembleking/myBankSourcing/pkg/application/grpc"
+	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
+	gogrpc "google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	gohttp "net/http"
 
 	surreal "github.com/surrealdb/surrealdb.go"
@@ -20,6 +24,8 @@ type Factory struct {
 	eventStoreField        lazy.Lazy[*persistence.EventStore]
 	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
 	surrealDBInstanceField lazy.Lazy[*surreal.DB]
+	httpHandlerField       lazy.Lazy[gohttp.Handler]
+	grpcServerField        lazy.Lazy[*gogrpc.Server]
 }
 
 func NewFactory() *Factory {
@@ -74,5 +80,18 @@ func (f *Factory) surrealDBInstance() *surreal.DB {
 }
 
 func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {
-	return http.NewHTTPServer(ctx, f.NewAccountService())
+	return f.httpHandlerField.GetOrInit(func() gohttp.Handler {
+		return http.NewHTTPServer(ctx, f.NewAccountService())
+	})
+}
+
+func (f *Factory) NewGRPCServer() *gogrpc.Server {
+	return f.grpcServerField.GetOrInit(func() *gogrpc.Server {
+		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService())
+		grpcServer := gogrpc.NewServer()
+		reflection.Register(grpcServer)
+
+		pb.RegisterClerkAPIServiceServer(grpcServer, accountGRPCServer)
+		return grpcServer
+	})
 }
