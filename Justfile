@@ -39,7 +39,7 @@ test-build:
     go build ./...
 
 # Runs all tests
-test:
+test: db-launch
     go run github.com/onsi/ginkgo/v2/ginkgo -r -p
 
 # Launches the database in a docker container for development
