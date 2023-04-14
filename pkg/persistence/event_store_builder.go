@@ -52,6 +52,5 @@ func (b *EventStoreBuilder) Build() *EventStore {
 		deserializer:    b.deserializer,
 		appendOnlyStore: b.appendOnlyStore,
 		clock:           b.clock,
-		dispatchers:     []EventDispatcher{},
 	}
 }

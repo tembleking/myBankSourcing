@@ -49,11 +49,10 @@ var _ = Describe("Accounts", func() {
 			accountsView, err := views.NewAccountView(eventStore)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = eventStore.AppendToStream(context.Background(), "another-account", 2, []domain.Event{
-				&account.AccountOpened{AccountID: "another-account", AccountVersion: 0},
-				&account.TransferReceived{Quantity: 50, Balance: 50, From: "some-account", To: "another-account", AccountVersion: 1},
-			})
-			Expect(err).ToNot(HaveOccurred())
+			accountsView.Dispatch([]persistence.StreamEvent{
+				{StreamID: "another-account", StreamVersion: 0, Event: &account.AccountOpened{AccountID: "another-account", AccountVersion: 0}},
+				{StreamID: "another-account", StreamVersion: 1, Event: &account.TransferReceived{Quantity: 50, Balance: 50, From: "some-account", To: "another-account", AccountVersion: 1}},
+			}...)
 
 			accounts := accountsView.Accounts()
 

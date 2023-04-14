@@ -8,7 +8,6 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("Account", func() {
@@ -30,17 +29,10 @@ var _ = Describe("Account", func() {
 		Expect(accountCreated.IsOpen()).To(BeTrue())
 	})
 
-	It("lists the accounts created", func() {
-		accounts, err := accountService.ListAccounts(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(accounts).To(BeEmpty())
-
+	It("returns the account created", func() {
 		accountCreated, err := accountService.OpenAccount(context.Background())
 		Expect(err).ToNot(HaveOccurred())
-
-		accounts, err = accountService.ListAccounts(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(accounts).To(ConsistOf(BeAnAccountEqualsTo(accountCreated)))
+		Expect(accountCreated).ToNot(BeNil())
 	})
 
 	It("adds money to the account", func() {

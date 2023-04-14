@@ -47,10 +47,9 @@ var _ = Describe("Transfers", func() {
 				transfersView, err := views.NewTransfersViewFrom(eventStore)
 				Expect(err).ToNot(HaveOccurred())
 
-				err = eventStore.AppendToStream(context.Background(), "aggregate-0", 6, []domain.Event{
-					&account.TransferSent{Quantity: 10, Balance: 40, From: "some-account", To: "another-account", AccountVersion: 5},
-				})
-				Expect(err).ToNot(HaveOccurred())
+				transfersView.Dispatch([]persistence.StreamEvent{
+					{StreamID: "aggregate-0", StreamVersion: 5, Event: &account.TransferSent{Quantity: 10, Balance: 40, From: "some-account", To: "another-account", AccountVersion: 5}},
+				}...)
 
 				transfers := transfersView.Transfers()
 

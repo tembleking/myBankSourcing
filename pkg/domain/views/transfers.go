@@ -50,8 +50,6 @@ func NewTransfersViewFrom(eventStore *persistence.EventStore) (*TransfersView, e
 	view.rwMutex.Lock()
 	defer view.rwMutex.Unlock()
 
-	eventStore.AddDispatchers(view)
-
 	err := loadViewFromEventStore(eventStore, view)
 	if err != nil {
 		return nil, fmt.Errorf("error loading view from event store: %w", err)

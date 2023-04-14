@@ -67,8 +67,6 @@ func NewAccountView(eventStore *persistence.EventStore) (*AccountView, error) {
 	a.rwMutex.Lock()
 	defer a.rwMutex.Unlock()
 
-	eventStore.AddDispatchers(a)
-
 	events, err := eventStore.LoadAllEvents(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("error loading all events: %w", err)

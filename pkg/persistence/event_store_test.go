@@ -91,30 +91,6 @@ var _ = Describe("EventStore", func() {
 			}}))
 		})
 	})
-
-	When("configured with a dispatcher", func() {
-		It("sends the events to the dispatcher", func() {
-			mockDispatcher := mocks.NewMockEventDispatcher(ctrl)
-			mockDispatcher.EXPECT().Dispatch([]persistence.StreamEvent{{
-				StreamID: "aggregate-0", Event: &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
-			}})
-			appendOnlyStore.EXPECT().Append(ctx, persistence.StoredStreamEvent{
-				StreamID:      "aggregate-0",
-				StreamVersion: 0,
-				EventName:     "AmountAdded",
-				EventData:     dataRecordInStore(),
-				HappenedOn:    time.Time{},
-			}).Return(nil)
-
-			eventStore.AddDispatchers(mockDispatcher)
-
-			err := eventStore.AppendToStream(ctx, "aggregate-0", 1, []domain.Event{
-				&account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
-			})
-
-			Expect(err).To(BeNil())
-		})
-	})
 })
 
 func dataRecordInStore() []byte {

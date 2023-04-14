@@ -39,7 +39,6 @@ type EventStore struct {
 	serializer      EventSerializer
 	deserializer    EventDeserializer
 	appendOnlyStore AppendOnlyStore
-	dispatchers     []EventDispatcher
 	clock           Clock
 }
 
@@ -75,7 +74,6 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastEx
 	}
 
 	storedStreamEvents := make([]StoredStreamEvent, 0, len(events))
-	streamEvents := make([]StreamEvent, 0, len(events))
 	version := lastExpectedVersionAfterEventsApplied - uint64(len(events))
 	for _, event := range events {
 		eventData, err := e.serializer.Serialize(event)
@@ -92,23 +90,12 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastEx
 			HappenedOn:    now,
 		})
 
-		streamEvents = append(streamEvents, StreamEvent{
-			StreamID:      streamID,
-			StreamVersion: version,
-			Event:         event,
-			HappenedOn:    now,
-		})
-
 		version++
 	}
 
 	err := e.appendOnlyStore.Append(ctx, storedStreamEvents...)
 	if err != nil {
 		return fmt.Errorf("error appending to stream: %w", err)
-	}
-
-	for _, dispatcher := range e.dispatchers {
-		dispatcher.Dispatch(streamEvents...)
 	}
 
 	return nil
@@ -135,10 +122,6 @@ func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]
 	}
 
 	return events, nil
-}
-
-func (e *EventStore) AddDispatchers(dispatchers ...EventDispatcher) {
-	e.dispatchers = append(e.dispatchers, dispatchers...)
 }
 
 func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
