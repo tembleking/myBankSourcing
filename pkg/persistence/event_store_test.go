@@ -91,6 +91,22 @@ var _ = Describe("EventStore", func() {
 			}}))
 		})
 	})
+
+	When("asking for undispatched events", func() {
+		It("returns all undispatched events", func() {
+			appendOnlyStore.EXPECT().
+				ReadUndispatchedRecords(ctx).
+				Return([]persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventData: dataRecordInStore()}}, nil)
+
+			stream, err := eventStore.LoadUndispatchedEvents(ctx)
+			Expect(err).To(BeNil())
+			Expect(stream).To(Equal([]persistence.StreamEvent{{
+				StreamID:      "aggregate-0",
+				StreamVersion: 1,
+				Event:         &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
+			}}))
+		})
+	})
 })
 
 func dataRecordInStore() []byte {

@@ -3,13 +3,21 @@ package persistence
 import (
 	"context"
 	"sync"
+	"time"
 )
 
+type trackableStoredStreamEvent struct {
+	StoredStreamEvent
+	reservedForDispatch bool
+}
+
 type InMemoryAppendOnlyStore struct {
-	allEvents      []StoredStreamEvent
-	eventsByStream map[string][]StoredStreamEvent
-	eventsByName   map[string][]StoredStreamEvent
-	rwMutex        sync.RWMutex
+	allEvents          []StoredStreamEvent
+	eventsByStream     map[string][]StoredStreamEvent
+	eventsByName       map[string][]StoredStreamEvent
+	undispatchedEvents []*trackableStoredStreamEvent
+
+	rwMutex sync.RWMutex
 }
 
 func (a *InMemoryAppendOnlyStore) appendEvent(event StoredStreamEvent) error {
@@ -35,19 +43,20 @@ func (a *InMemoryAppendOnlyStore) Append(_ context.Context, events ...StoredStre
 		if err := a.appendEvent(event); err != nil {
 			return err
 		}
+		a.undispatchedEvents = append(a.undispatchedEvents, &trackableStoredStreamEvent{StoredStreamEvent: event})
 	}
 
 	return nil
 }
 
-func (a *InMemoryAppendOnlyStore) ReadAllRecords(ctx context.Context) ([]StoredStreamEvent, error) {
+func (a *InMemoryAppendOnlyStore) ReadAllRecords(_ context.Context) ([]StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
 	return a.allEvents, nil
 }
 
-func (a *InMemoryAppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]StoredStreamEvent, error) {
+func (a *InMemoryAppendOnlyStore) ReadRecords(_ context.Context, streamID string) ([]StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
@@ -59,7 +68,7 @@ func (a *InMemoryAppendOnlyStore) ReadRecords(ctx context.Context, streamID stri
 	return fields, nil
 }
 
-func (a *InMemoryAppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string) ([]StoredStreamEvent, error) {
+func (a *InMemoryAppendOnlyStore) ReadEventsByName(_ context.Context, eventName string) ([]StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
@@ -69,6 +78,55 @@ func (a *InMemoryAppendOnlyStore) ReadEventsByName(ctx context.Context, eventNam
 	}
 
 	return fields, nil
+}
+
+func (a *InMemoryAppendOnlyStore) ReadUndispatchedRecords(_ context.Context) ([]StoredStreamEvent, error) {
+	a.rwMutex.Lock()
+	defer a.rwMutex.Unlock()
+
+	undispachedEvents := make([]StoredStreamEvent, 0, len(a.undispatchedEvents))
+	for _, event := range a.undispatchedEvents {
+		if !event.reservedForDispatch {
+			undispachedEvents = append(undispachedEvents, event.StoredStreamEvent)
+			event.reservedForDispatch = true
+		}
+	}
+	go a.unreserveAfterSomeTime(a.undispatchedEvents)
+	return undispachedEvents, nil
+}
+
+func (a *InMemoryAppendOnlyStore) unreserveAfterSomeTime(events []*trackableStoredStreamEvent) {
+	<-time.After(5 * time.Second)
+	a.rwMutex.Lock()
+	defer a.rwMutex.Unlock()
+
+	for _, event := range events {
+		event.reservedForDispatch = false
+	}
+}
+
+func (a *InMemoryAppendOnlyStore) MarkRecordsAsDispatched(_ context.Context, events ...StoredStreamEvent) error {
+	a.rwMutex.Lock()
+	defer a.rwMutex.Unlock()
+
+	undispatchedEvents := make([]*trackableStoredStreamEvent, 0, len(a.undispatchedEvents))
+	for _, undispatchedEvent := range a.undispatchedEvents {
+		if isEventInList(undispatchedEvent.StoredStreamEvent, events) {
+			continue
+		}
+		undispatchedEvents = append(undispatchedEvents, undispatchedEvent)
+	}
+	a.undispatchedEvents = undispatchedEvents
+	return nil
+}
+
+func isEventInList(event StoredStreamEvent, events []StoredStreamEvent) bool {
+	for _, e := range events {
+		if e.Equal(event) {
+			return true
+		}
+	}
+	return false
 }
 
 func NewInMemoryAppendOnlyStore() *InMemoryAppendOnlyStore {

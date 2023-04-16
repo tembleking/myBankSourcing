@@ -146,3 +146,26 @@ func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
 
 	return events, nil
 }
+
+func (e *EventStore) LoadUndispatchedEvents(ctx context.Context) ([]StreamEvent, error) {
+	records, err := e.appendOnlyStore.ReadUndispatchedRecords(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error reading records: %w", err)
+	}
+
+	events := make([]StreamEvent, 0, len(records))
+	for _, record := range records {
+		event, err := e.deserializer.Deserialize(record.EventData)
+		if err != nil {
+			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.StreamID, record.StreamVersion, err)
+		}
+		events = append(events, StreamEvent{
+			StreamID:      record.StreamID,
+			StreamVersion: record.StreamVersion,
+			Event:         event,
+			HappenedOn:    record.HappenedOn,
+		})
+	}
+
+	return events, nil
+}

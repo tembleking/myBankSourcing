@@ -2,6 +2,7 @@ package surrealdb_test
 
 import (
 	"context"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -136,4 +137,101 @@ var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
 			{StreamID: "aggregate-2", StreamVersion: 2, EventName: "eventName", EventData: []byte("data2-2")},
 		}))
 	})
+
+	Context("event dispatching", func() {
+		When("there were no events pushed", func() {
+			It("returns no events to dispatch", func() {
+				undispatchedRecords, err := store.ReadUndispatchedRecords(ctx)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(undispatchedRecords).To(BeEmpty())
+			})
+		})
+
+		When("there are events pushed and were not marked as dispatched", func() {
+			It("returns the undispatched events", func() {
+				event := persistence.StoredStreamEvent{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")}
+				err := store.Append(ctx, event)
+				Expect(err).ToNot(HaveOccurred())
+
+				records, err := store.ReadUndispatchedRecords(ctx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(records).To(ConsistOf(event))
+			})
+		})
+
+		When("the event was marked as dispatched", func() {
+			It("is not returned again", func() {
+				err := store.Append(ctx, eventsStored()...)
+				Expect(err).ToNot(HaveOccurred())
+
+				err = store.MarkRecordsAsDispatched(ctx, eventsStored()...)
+				Expect(err).ToNot(HaveOccurred())
+
+				records, err := store.ReadUndispatchedRecords(ctx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(records).To(BeEmpty())
+			})
+		})
+
+		When("the undispatched events are returned", func() {
+			It("doesn't return them again before some time passes", func() {
+				err := store.Append(ctx, eventsStored()...)
+				Expect(err).ToNot(HaveOccurred())
+
+				records, err := store.ReadUndispatchedRecords(ctx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(records).To(ConsistOf(eventsStored()))
+
+				records, err = store.ReadUndispatchedRecords(ctx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(records).To(BeEmpty())
+			})
+
+			When("some time passes", func() {
+				It("returns the undispatched events again", func() {
+					err := store.Append(ctx, eventsStored()...)
+					Expect(err).ToNot(HaveOccurred())
+
+					records, err := store.ReadUndispatchedRecords(ctx)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(records).To(ConsistOf(eventsStored()))
+
+					time.Sleep(6 * time.Second)
+
+					records, err = store.ReadUndispatchedRecords(ctx)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(records).To(ConsistOf(eventsStored()))
+				})
+
+				When("the event was marked as dispatched", func() {
+					It("is not returned again", func() {
+						err := store.Append(ctx, eventsStored()...)
+						Expect(err).ToNot(HaveOccurred())
+
+						records, err := store.ReadUndispatchedRecords(ctx)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(records).To(ConsistOf(eventsStored()))
+
+						err = store.MarkRecordsAsDispatched(ctx, eventsStored()...)
+						Expect(err).ToNot(HaveOccurred())
+
+						time.Sleep(6 * time.Second)
+
+						records, err = store.ReadUndispatchedRecords(ctx)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(records).To(BeEmpty())
+					})
+				})
+			})
+		})
+	})
 })
+
+func eventsStored() []persistence.StoredStreamEvent {
+	return []persistence.StoredStreamEvent{
+		{StreamID: "aggregate-0", StreamVersion: 0, EventName: "eventName", EventData: []byte("data0")},
+		{StreamID: "aggregate-1", StreamVersion: 0, EventName: "eventName", EventData: []byte("data1")},
+		{StreamID: "aggregate-2", StreamVersion: 0, EventName: "eventName", EventData: []byte("data2")},
+	}
+}

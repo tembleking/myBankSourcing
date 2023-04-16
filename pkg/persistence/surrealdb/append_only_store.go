@@ -21,14 +21,14 @@ type AppendOnlyStore struct {
 }
 
 func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.StoredStreamEvent) error {
-	_, err := executeInTransaction[any](a, func() (any, error) {
+	err := a.executeInTransaction(func() error {
 		for _, event := range events {
 			err := a.appendEvent(event)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
-		return nil, nil
+		return nil
 	})
 	return err
 }
@@ -174,11 +174,53 @@ func (a *AppendOnlyStore) numberOfEventsInStream(streamID string) (uint64, error
 	return parseUint, nil
 }
 
+func (a *AppendOnlyStore) ReadUndispatchedRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
+	a.rwMutex.RLock()
+	defer a.rwMutex.RUnlock()
+
+	update_query := `
+update event
+set reserved_until = time::now() + 5s where (reserved_until is none or reserved_until < time::now()) and (event_dispatched is none or event_dispatched = false)
+return 
+    id.stream_version as stream_version, 
+    id.stream_id as stream_id, 
+    event_name, 
+    event_data, 
+    happened_on;`
+
+	records, err := a.db.Query(update_query, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error updating records: %w", err)
+	}
+
+	return resultToStoredStreamEvent(records)
+}
+
+func (a *AppendOnlyStore) MarkRecordsAsDispatched(ctx context.Context, events ...persistence.StoredStreamEvent) error {
+	update_query := `
+update event
+set event_dispatched = true, reserved_until = none where id.stream_id = $stream_id and id.stream_version = $stream_version
+return none;`
+	err := a.executeInTransaction(func() error {
+		for _, event := range events {
+			_, err := a.db.Query(update_query, map[string]any{
+				"stream_id":      event.StreamID,
+				"stream_version": event.StreamVersion,
+			})
+			if err != nil {
+				return fmt.Errorf("error updating record: %w", err)
+			}
+		}
+		return nil
+	})
+	return err
+}
+
 func resultFromQuery(result any) any {
 	return gabs.Wrap(result).Index(0).Path("result").Data()
 }
 
-func executeInTransaction[T any](a *AppendOnlyStore, f func() (T, error)) (result T, err error) {
+func (a *AppendOnlyStore) executeInTransaction(f func() error) (err error) {
 	a.rwMutex.Lock()
 	defer a.rwMutex.Unlock()
 
@@ -203,7 +245,7 @@ func executeInTransaction[T any](a *AppendOnlyStore, f func() (T, error)) (resul
 		}
 	}()
 
-	result, err = f()
+	err = f()
 	return
 }
 

@@ -54,6 +54,25 @@ func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx interface{}, events ...int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), varargs...)
 }
 
+// MarkRecordsAsDispatched mocks base method.
+func (m *MockAppendOnlyStore) MarkRecordsAsDispatched(ctx context.Context, events ...persistence.StoredStreamEvent) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx}
+	for _, a := range events {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MarkRecordsAsDispatched", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MarkRecordsAsDispatched indicates an expected call of MarkRecordsAsDispatched.
+func (mr *MockAppendOnlyStoreMockRecorder) MarkRecordsAsDispatched(ctx interface{}, events ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx}, events...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkRecordsAsDispatched", reflect.TypeOf((*MockAppendOnlyStore)(nil).MarkRecordsAsDispatched), varargs...)
+}
+
 // ReadAllRecords mocks base method.
 func (m *MockAppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()
@@ -97,4 +116,19 @@ func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, streamID string) 
 func (mr *MockAppendOnlyStoreMockRecorder) ReadRecords(ctx, streamID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadRecords), ctx, streamID)
+}
+
+// ReadUndispatchedRecords mocks base method.
+func (m *MockAppendOnlyStore) ReadUndispatchedRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadUndispatchedRecords", ctx)
+	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadUndispatchedRecords indicates an expected call of ReadUndispatchedRecords.
+func (mr *MockAppendOnlyStoreMockRecorder) ReadUndispatchedRecords(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadUndispatchedRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadUndispatchedRecords), ctx)
 }
