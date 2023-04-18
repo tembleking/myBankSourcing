@@ -15,28 +15,12 @@ import (
 var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
 	var (
 		ctx   context.Context
-		store *surrealdb.AppendOnlyStore
+		store persistence.AppendOnlyStore
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		db, err := surreal.New("ws://localhost:8000/rpc")
-		Expect(err).ToNot(HaveOccurred())
-		_, err = db.Signin(struct {
-			User string `json:"user"`
-			Pass string `json:"pass"`
-		}{
-			User: "root",
-			Pass: "root",
-		})
-		Expect(err).ToNot(HaveOccurred())
-		_, err = db.Use("ns", "db")
-		Expect(err).ToNot(HaveOccurred())
-		_, err = db.Delete("event")
-		Expect(err).ToNot(HaveOccurred())
-
-		store = surrealdb.NewAppendOnlyStore(db)
-
+		store = setupStore()
 	})
 
 	It("should be able to append to an event stream", func() {
@@ -227,6 +211,22 @@ var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
 		})
 	})
 })
+
+func setupStore() *surrealdb.AppendOnlyStore {
+	db, err := surreal.New("ws://localhost:8000/rpc")
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+
+	_, err = db.Signin(map[string]string{"user": "root", "pass": "root"})
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+
+	_, err = db.Use("ns", "db")
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+
+	_, err = db.Delete("event")
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+
+	return surrealdb.NewAppendOnlyStore(db)
+}
 
 func eventsStored() []persistence.StoredStreamEvent {
 	return []persistence.StoredStreamEvent{
