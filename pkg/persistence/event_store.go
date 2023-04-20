@@ -36,8 +36,8 @@ type StreamEvent struct {
 // It also handles dispatching events to any registered EventDispatchers.
 // It can be constructed using the EventStoreBuilder.
 type EventStore struct {
-	serializer      EventSerializer
-	deserializer    EventDeserializer
+	serializer      DomainEventSerializer
+	deserializer    DomainEventDeserializer
 	appendOnlyStore AppendOnlyStore
 	clock           Clock
 }
@@ -51,7 +51,7 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamID string) ([]St
 
 	events := make([]StreamEvent, 0, len(records))
 	for _, record := range records {
-		event, err := e.deserializer.Deserialize(record.EventData)
+		event, err := e.deserializer.DeserializeDomainEvent(record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
@@ -76,7 +76,7 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastEx
 	storedStreamEvents := make([]StoredStreamEvent, 0, len(events))
 	version := lastExpectedVersionAfterEventsApplied - uint64(len(events))
 	for _, event := range events {
-		eventData, err := e.serializer.Serialize(event)
+		eventData, err := e.serializer.SerializeDomainEvent(event)
 		if err != nil {
 			return fmt.Errorf("error serializing event: %w", err)
 		}
@@ -109,7 +109,7 @@ func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]
 
 	events := make([]StreamEvent, 0, len(records))
 	for _, record := range records {
-		event, err := e.deserializer.Deserialize(record.EventData)
+		event, err := e.deserializer.DeserializeDomainEvent(record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
@@ -132,30 +132,7 @@ func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
 
 	events := make([]StreamEvent, 0, len(records))
 	for _, record := range records {
-		event, err := e.deserializer.Deserialize(record.EventData)
-		if err != nil {
-			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.StreamID, record.StreamVersion, err)
-		}
-		events = append(events, StreamEvent{
-			StreamID:      record.StreamID,
-			StreamVersion: record.StreamVersion,
-			Event:         event,
-			HappenedOn:    record.HappenedOn,
-		})
-	}
-
-	return events, nil
-}
-
-func (e *EventStore) LoadUndispatchedEvents(ctx context.Context) ([]StreamEvent, error) {
-	records, err := e.appendOnlyStore.ReadUndispatchedRecords(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error reading records: %w", err)
-	}
-
-	events := make([]StreamEvent, 0, len(records))
-	for _, record := range records {
-		event, err := e.deserializer.Deserialize(record.EventData)
+		event, err := e.deserializer.DeserializeDomainEvent(record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.StreamID, record.StreamVersion, err)
 		}

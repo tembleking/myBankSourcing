@@ -10,7 +10,7 @@ import (
 
 type Msgpack struct{}
 
-func (m *Msgpack) Serialize(event domain.Event) ([]byte, error) {
+func (m *Msgpack) SerializeDomainEvent(event domain.Event) ([]byte, error) {
 	eventData, err := structMapSerializer.SerializeToMap(event)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing event to map: %w", err)
@@ -24,7 +24,7 @@ func (m *Msgpack) Serialize(event domain.Event) ([]byte, error) {
 	return data, nil
 }
 
-func (m *Msgpack) Deserialize(data []byte) (domain.Event, error) {
+func (m *Msgpack) DeserializeDomainEvent(data []byte) (domain.Event, error) {
 	eventDataAsMap := make(map[string]map[string]any)
 	err := msgpack.Unmarshal(data, &eventDataAsMap)
 	if err != nil {
@@ -37,4 +37,13 @@ func (m *Msgpack) Deserialize(data []byte) (domain.Event, error) {
 	}
 
 	return event, nil
+}
+
+func (m *Msgpack) Serialize(event map[string]string) ([]byte, error) {
+	data, err := msgpack.Marshal(event)
+	if err != nil {
+		return nil, fmt.Errorf("error serializing map: %w", err)
+	}
+
+	return data, nil
 }

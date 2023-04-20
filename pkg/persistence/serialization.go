@@ -4,10 +4,10 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-type EventSerializer interface {
-	Serialize(events domain.Event) ([]byte, error)
+type DomainEventSerializer interface {
+	SerializeDomainEvent(events domain.Event) ([]byte, error)
 }
 
-type EventDeserializer interface {
-	Deserialize(data []byte) (domain.Event, error)
+type DomainEventDeserializer interface {
+	DeserializeDomainEvent(data []byte) (domain.Event, error)
 }

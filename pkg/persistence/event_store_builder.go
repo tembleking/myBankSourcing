@@ -6,8 +6,8 @@ import (
 )
 
 type EventStoreBuilder struct {
-	serializer      EventSerializer
-	deserializer    EventDeserializer
+	serializer      DomainEventSerializer
+	deserializer    DomainEventDeserializer
 	appendOnlyStore AppendOnlyStore
 	clock           Clock
 }
@@ -26,12 +26,12 @@ func NewEventStoreBuilder() *EventStoreBuilder {
 	}
 }
 
-func (b *EventStoreBuilder) WithSerializer(serializer EventSerializer) *EventStoreBuilder {
+func (b *EventStoreBuilder) WithSerializer(serializer DomainEventSerializer) *EventStoreBuilder {
 	b.serializer = serializer
 	return b
 }
 
-func (b *EventStoreBuilder) WithDeserializer(deserializer EventDeserializer) *EventStoreBuilder {
+func (b *EventStoreBuilder) WithDeserializer(deserializer DomainEventDeserializer) *EventStoreBuilder {
 	b.deserializer = deserializer
 	return b
 }

@@ -3,11 +3,15 @@ package factory
 import (
 	"context"
 	"fmt"
+	gohttp "net/http"
+
 	"github.com/tembleking/myBankSourcing/pkg/application/grpc"
 	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
+	"github.com/tembleking/myBankSourcing/pkg/broker"
+	"github.com/tembleking/myBankSourcing/pkg/outbox"
+
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	gohttp "net/http"
 
 	surreal "github.com/surrealdb/surrealdb.go"
 
@@ -94,4 +98,10 @@ func (f *Factory) NewGRPCServer() *gogrpc.Server {
 		pb.RegisterClerkAPIServiceServer(grpcServer, accountGRPCServer)
 		return grpcServer
 	})
+}
+
+func (f *Factory) NewTransactionalOutboxPublisher() *outbox.TransactionalOutbox {
+	return outbox.NewTransactionalOutboxBuilder(broker.NewInMemoryMessageBroker()).
+		WithAppendOnlyStore(f.appendOnlyStore()).
+		Build()
 }
