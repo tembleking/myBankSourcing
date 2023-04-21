@@ -40,14 +40,14 @@ var _ = Describe("TransactionalOutbox", func() {
 		It("dispatches all the undispatched events", func() {
 			appendOnlyStore.EXPECT().
 				ReadUndispatchedRecords(ctx).
-				Return([]persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventName: "AmountAdded", EventData: dataRecordInStore()}}, nil)
+				Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventName: "AmountAdded", EventData: dataRecordInStore()}}, nil)
 
 			messageBrokerPublisher.EXPECT().
 				Publish(ctx, gomock.Any()).
 				Return(nil)
 
 			appendOnlyStore.EXPECT().
-				MarkRecordsAsDispatched(ctx, []persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventName: "AmountAdded", EventData: dataRecordInStore()}}).
+				MarkRecordsAsDispatched(ctx, []persistence.StreamID{{StreamName: "aggregate-0", StreamVersion: 1}}).
 				Return(nil)
 
 			err := transactionalOutbox.DispatchUndispatchedEvents(ctx)
@@ -71,7 +71,7 @@ var _ = Describe("TransactionalOutbox", func() {
 			It("does not mark the events as dispatched", func() {
 				appendOnlyStore.EXPECT().
 					ReadUndispatchedRecords(ctx).
-					Return([]persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventName: "AmountAdded", EventData: dataRecordInStore()}}, nil)
+					Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventName: "AmountAdded", EventData: dataRecordInStore()}}, nil)
 
 				messageBrokerPublisher.EXPECT().
 					Publish(ctx, gomock.Any()).
@@ -87,14 +87,14 @@ var _ = Describe("TransactionalOutbox", func() {
 			It("returns the error", func() {
 				appendOnlyStore.EXPECT().
 					ReadUndispatchedRecords(ctx).
-					Return([]persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventName: "AmountAdded", EventData: dataRecordInStore()}}, nil)
+					Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventName: "AmountAdded", EventData: dataRecordInStore()}}, nil)
 
 				messageBrokerPublisher.EXPECT().
 					Publish(ctx, gomock.Any()).
 					Return(nil)
 
 				appendOnlyStore.EXPECT().
-					MarkRecordsAsDispatched(ctx, []persistence.StoredStreamEvent{{StreamID: "aggregate-0", StreamVersion: 1, EventName: "AmountAdded", EventData: dataRecordInStore()}}).
+					MarkRecordsAsDispatched(ctx, []persistence.StreamID{{StreamName: "aggregate-0", StreamVersion: 1}}).
 					Return(errors.New("some error"))
 
 				err := transactionalOutbox.DispatchUndispatchedEvents(ctx)

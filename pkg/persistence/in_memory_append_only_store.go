@@ -13,7 +13,7 @@ type trackableStoredStreamEvent struct {
 
 type InMemoryAppendOnlyStore struct {
 	allEvents          []StoredStreamEvent
-	eventsByStream     map[string][]StoredStreamEvent
+	eventsByStream     map[StreamName][]StoredStreamEvent
 	eventsByName       map[string][]StoredStreamEvent
 	undispatchedEvents []*trackableStoredStreamEvent
 
@@ -21,16 +21,16 @@ type InMemoryAppendOnlyStore struct {
 }
 
 func (a *InMemoryAppendOnlyStore) appendEvent(event StoredStreamEvent) error {
-	eventsByStream := a.eventsByStream[event.StreamID]
+	eventsByStream := a.eventsByStream[event.ID.StreamName]
 	eventsByName := a.eventsByName[event.EventName]
 
-	currentVersion := uint64(len(eventsByStream))
-	if currentVersion != event.StreamVersion {
-		return &ErrUnexpectedVersion{Found: currentVersion, Expected: event.StreamVersion}
+	currentVersion := StreamVersion(len(eventsByStream))
+	if currentVersion != event.ID.StreamVersion {
+		return &ErrUnexpectedVersion{Found: currentVersion, Expected: event.ID.StreamVersion}
 	}
 
 	a.allEvents = append(a.allEvents, event)
-	a.eventsByStream[event.StreamID] = append(eventsByStream, event)
+	a.eventsByStream[event.ID.StreamName] = append(eventsByStream, event)
 	a.eventsByName[event.EventName] = append(eventsByName, event)
 	return nil
 }
@@ -56,7 +56,7 @@ func (a *InMemoryAppendOnlyStore) ReadAllRecords(_ context.Context) ([]StoredStr
 	return a.allEvents, nil
 }
 
-func (a *InMemoryAppendOnlyStore) ReadRecords(_ context.Context, streamID string) ([]StoredStreamEvent, error) {
+func (a *InMemoryAppendOnlyStore) ReadRecords(_ context.Context, streamID StreamName) ([]StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
@@ -105,7 +105,7 @@ func (a *InMemoryAppendOnlyStore) unreserveAfterSomeTime(events []*trackableStor
 	}
 }
 
-func (a *InMemoryAppendOnlyStore) MarkRecordsAsDispatched(_ context.Context, events ...StoredStreamEvent) error {
+func (a *InMemoryAppendOnlyStore) MarkRecordsAsDispatched(ctx context.Context, events ...StreamID) error {
 	a.rwMutex.Lock()
 	defer a.rwMutex.Unlock()
 
@@ -120,9 +120,9 @@ func (a *InMemoryAppendOnlyStore) MarkRecordsAsDispatched(_ context.Context, eve
 	return nil
 }
 
-func isEventInList(event StoredStreamEvent, events []StoredStreamEvent) bool {
+func isEventInList(event StoredStreamEvent, events []StreamID) bool {
 	for _, e := range events {
-		if e.Equal(event) {
+		if e.Equal(event.ID) {
 			return true
 		}
 	}
@@ -132,7 +132,7 @@ func isEventInList(event StoredStreamEvent, events []StoredStreamEvent) bool {
 func NewInMemoryAppendOnlyStore() *InMemoryAppendOnlyStore {
 	return &InMemoryAppendOnlyStore{
 		allEvents:      make([]StoredStreamEvent, 0),
-		eventsByStream: make(map[string][]StoredStreamEvent),
+		eventsByStream: make(map[StreamName][]StoredStreamEvent),
 		eventsByName:   make(map[string][]StoredStreamEvent),
 	}
 }

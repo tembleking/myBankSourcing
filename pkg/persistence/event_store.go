@@ -17,12 +17,23 @@ type Clock interface {
 	Now() time.Time
 }
 
-type StreamEvent struct {
-	// StreamID is commonly the aggregate id, but can be any value as long as it is unique for an event stream
-	StreamID string
+type StreamName string
+type StreamVersion uint64
 
+type StreamID struct {
+	// StreamName is commonly the aggregate id, but can be any value as long as it is unique for an event stream
+	StreamName StreamName
 	// StreamVersion is the version of the last event in the stream
-	StreamVersion uint64
+	StreamVersion StreamVersion
+}
+
+func (s *StreamID) Equal(other StreamID) bool {
+	return s.StreamName == other.StreamName && s.StreamVersion == other.StreamVersion
+}
+
+type StreamEvent struct {
+	// ID is the id of the event stream
+	ID StreamID
 
 	// Event is the deserialized event
 	Event domain.Event
@@ -43,8 +54,8 @@ type EventStore struct {
 }
 
 // LoadEventStream loads all events for a given aggregate id
-func (e *EventStore) LoadEventStream(ctx context.Context, streamID string) ([]StreamEvent, error) {
-	records, err := e.appendOnlyStore.ReadRecords(ctx, streamID)
+func (e *EventStore) LoadEventStream(ctx context.Context, streamName StreamName) ([]StreamEvent, error) {
+	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
@@ -56,10 +67,9 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamID string) ([]St
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
 		events = append(events, StreamEvent{
-			StreamID:      streamID,
-			StreamVersion: record.StreamVersion,
-			Event:         event,
-			HappenedOn:    record.HappenedOn,
+			ID:         record.ID,
+			Event:      event,
+			HappenedOn: record.HappenedOn,
 		})
 	}
 
@@ -68,7 +78,7 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamID string) ([]St
 
 // AppendToStream appends a list of events to the event stream for a given aggregate id
 // returning an error if the expected version does not match the current version
-func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastExpectedVersionAfterEventsApplied uint64, events []domain.Event) error {
+func (e *EventStore) AppendToStream(ctx context.Context, streamName string, lastExpectedVersionAfterEventsApplied uint64, events []domain.Event) error {
 	if len(events) == 0 {
 		return nil
 	}
@@ -83,11 +93,10 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamID string, lastEx
 
 		now := e.clock.Now().UTC()
 		storedStreamEvents = append(storedStreamEvents, StoredStreamEvent{
-			StreamID:      streamID,
-			StreamVersion: version,
-			EventName:     event.EventName(),
-			EventData:     eventData,
-			HappenedOn:    now,
+			ID:         StreamID{StreamName: StreamName(streamName), StreamVersion: StreamVersion(version)},
+			EventName:  event.EventName(),
+			EventData:  eventData,
+			HappenedOn: now,
 		})
 
 		version++
@@ -114,10 +123,9 @@ func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
 		events = append(events, StreamEvent{
-			StreamID:      record.StreamID,
-			StreamVersion: record.StreamVersion,
-			Event:         event,
-			HappenedOn:    record.HappenedOn,
+			ID:         record.ID,
+			Event:      event,
+			HappenedOn: record.HappenedOn,
 		})
 	}
 
@@ -134,13 +142,12 @@ func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
 	for _, record := range records {
 		event, err := e.deserializer.DeserializeDomainEvent(record.EventData)
 		if err != nil {
-			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.StreamID, record.StreamVersion, err)
+			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.ID.StreamName, record.ID.StreamVersion, err)
 		}
 		events = append(events, StreamEvent{
-			StreamID:      record.StreamID,
-			StreamVersion: record.StreamVersion,
-			Event:         event,
-			HappenedOn:    record.HappenedOn,
+			ID:         record.ID,
+			Event:      event,
+			HappenedOn: record.HappenedOn,
 		})
 	}
 

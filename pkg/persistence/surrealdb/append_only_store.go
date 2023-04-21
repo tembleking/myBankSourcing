@@ -34,15 +34,16 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 }
 
 func (a *AppendOnlyStore) appendEvent(event persistence.StoredStreamEvent) error {
-	lastVersion, err := a.numberOfEventsInStream(event.StreamID)
+	lastVersion, err := a.numberOfEventsInStream(event.ID.StreamName)
+	lastStreamVersion := persistence.StreamVersion(lastVersion)
 	if err != nil {
 		return fmt.Errorf("error getting number of events in stream: %w", err)
 	}
-	if lastVersion != event.StreamVersion {
-		return &persistence.ErrUnexpectedVersion{Found: lastVersion, Expected: event.StreamVersion}
+	if lastStreamVersion != event.ID.StreamVersion {
+		return &persistence.ErrUnexpectedVersion{Found: lastStreamVersion, Expected: event.ID.StreamVersion}
 	}
 
-	id := fmt.Sprintf(`event:{stream_id: '%s', stream_version: %d}`, event.StreamID, event.StreamVersion)
+	id := fmt.Sprintf(`event:{stream_name: '%s', stream_version: %d}`, event.ID.StreamName, event.ID.StreamVersion)
 	query := fmt.Sprintf(`
 CREATE %s 
 SET 
@@ -72,7 +73,7 @@ func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.Sto
 	query := `
 select 
     id.stream_version as stream_version, 
-    id.stream_id as stream_id, 
+    id.stream_name as stream_name, 
     event_name, 
     event_data, 
     happened_on 
@@ -86,22 +87,22 @@ from event;`
 	return resultToStoredStreamEvent(result)
 }
 
-func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamID string) ([]persistence.StoredStreamEvent, error) {
+func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
 	query := `
 select 
     id.stream_version as stream_version, 
-    id.stream_id as stream_id, 
+    id.stream_name as stream_name, 
     event_name, 
     event_data, 
     happened_on 
 from event 
 where 
-    id.stream_id = $stream_id;`
+    id.stream_name = $stream_name;`
 
-	result, err := a.db.Query(query, map[string]any{"stream_id": streamID})
+	result, err := a.db.Query(query, map[string]any{"stream_name": streamName})
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
@@ -116,7 +117,7 @@ func (a *AppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string
 	query := `
 select 
     id.stream_version as stream_version, 
-    id.stream_id as stream_id, 
+    id.stream_name as stream_name, 
     event_name, 
     event_data, 
     happened_on 
@@ -152,19 +153,21 @@ func resultToStoredStreamEvent(result any) ([]persistence.StoredStreamEvent, err
 		}
 
 		storedStreamEvents = append(storedStreamEvents, persistence.StoredStreamEvent{
-			StreamID:      line.Path("stream_id").Data().(string),
-			StreamVersion: streamVersion,
-			EventName:     line.Path("event_name").Data().(string),
-			EventData:     eventData,
-			HappenedOn:    happenedOn,
+			ID: persistence.StreamID{
+				StreamName:    persistence.StreamName(line.Path("stream_name").Data().(string)),
+				StreamVersion: persistence.StreamVersion(streamVersion),
+			},
+			EventName:  line.Path("event_name").Data().(string),
+			EventData:  eventData,
+			HappenedOn: happenedOn,
 		})
 	}
 
 	return storedStreamEvents, nil
 }
 
-func (a *AppendOnlyStore) numberOfEventsInStream(streamID string) (uint64, error) {
-	result, err := a.db.Query(fmt.Sprintf(`select id.stream_id, count() from event where id.stream_id = '%s' group by id.stream_id;`, streamID), nil)
+func (a *AppendOnlyStore) numberOfEventsInStream(streamName persistence.StreamName) (uint64, error) {
+	result, err := a.db.Query(fmt.Sprintf(`select id.stream_name, count() from event where id.stream_name = '%s' group by id.stream_name;`, streamName), nil)
 	if err != nil {
 		return 0, fmt.Errorf("error getting stream version: %w", err)
 	}
@@ -183,7 +186,7 @@ update event
 set reserved_until = time::now() + 5s where (reserved_until is none or reserved_until < time::now()) and (event_dispatched is none or event_dispatched = false)
 return 
     id.stream_version as stream_version, 
-    id.stream_id as stream_id, 
+    id.stream_name as stream_name, 
     event_name, 
     event_data, 
     happened_on;`
@@ -196,16 +199,16 @@ return
 	return resultToStoredStreamEvent(records)
 }
 
-func (a *AppendOnlyStore) MarkRecordsAsDispatched(ctx context.Context, events ...persistence.StoredStreamEvent) error {
+func (a *AppendOnlyStore) MarkRecordsAsDispatched(ctx context.Context, streamIDs ...persistence.StreamID) error {
 	update_query := `
 update event
-set event_dispatched = true, reserved_until = none where id.stream_id = $stream_id and id.stream_version = $stream_version
+set event_dispatched = true, reserved_until = none where id.stream_name = $stream_name and id.stream_version = $stream_version
 return none;`
 	err := a.executeInTransaction(func() error {
-		for _, event := range events {
+		for _, eventID := range streamIDs {
 			_, err := a.db.Query(update_query, map[string]any{
-				"stream_id":      event.StreamID,
-				"stream_version": event.StreamVersion,
+				"stream_name":    eventID.StreamName,
+				"stream_version": eventID.StreamVersion,
 			})
 			if err != nil {
 				return fmt.Errorf("error updating record: %w", err)

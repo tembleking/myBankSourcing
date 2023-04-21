@@ -5,8 +5,8 @@ import (
 )
 
 type ErrUnexpectedVersion struct {
-	Found    uint64
-	Expected uint64
+	Found    StreamVersion
+	Expected StreamVersion
 }
 
 func (e *ErrUnexpectedVersion) Error() string {

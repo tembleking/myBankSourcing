@@ -53,7 +53,7 @@ func (e *TransactionalOutbox) DispatchUndispatchedEvents(ctx context.Context) er
 			return fmt.Errorf("error publishing event: %w", err)
 		}
 
-		err = e.appendOnlyStore.MarkRecordsAsDispatched(ctx, storedStreamEvent)
+		err = e.appendOnlyStore.MarkRecordsAsDispatched(ctx, storedStreamEvent.ID)
 		if err != nil {
 			return fmt.Errorf("error marking record as dispatched: %w", err)
 		}
@@ -64,8 +64,8 @@ func (e *TransactionalOutbox) DispatchUndispatchedEvents(ctx context.Context) er
 
 func (e *TransactionalOutbox) eventToMap(event persistence.StoredStreamEvent) map[string]string {
 	return map[string]string{
-		"stream_id":      event.StreamID,
-		"stream_version": fmt.Sprintf("%d", event.StreamVersion),
+		"stream_name":    string(event.ID.StreamName),
+		"stream_version": fmt.Sprintf("%d", event.ID.StreamVersion),
 		"event_name":     event.EventName,
 		"event_data":     base64.StdEncoding.EncodeToString(event.EventData),
 		"happened_on":    event.HappenedOn.Format(time.RFC3339),

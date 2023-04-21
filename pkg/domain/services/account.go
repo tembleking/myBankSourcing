@@ -119,7 +119,7 @@ func (a *AccountService) TransferMoney(ctx context.Context, origin account.ID, d
 }
 
 func (a *AccountService) getAccount(ctx context.Context, id account.ID) (*account.Account, error) {
-	stream, err := a.eventStore.LoadEventStream(ctx, string(id))
+	stream, err := a.eventStore.LoadEventStream(ctx, persistence.StreamName(id))
 	if err != nil {
 		return nil, fmt.Errorf("error loading event stream: %w", err)
 	}
