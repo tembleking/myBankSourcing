@@ -2,12 +2,10 @@ package surrealdb
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Jeffail/gabs/v2"
 	surreal "github.com/surrealdb/surrealdb.go"
@@ -43,19 +41,7 @@ func (a *AppendOnlyStore) appendEvent(event persistence.StoredStreamEvent) error
 		return &persistence.ErrUnexpectedVersion{Found: lastStreamVersion, Expected: event.ID.StreamVersion}
 	}
 
-	id := fmt.Sprintf(`event:{stream_name: '%s', stream_version: %d}`, event.ID.StreamName, event.ID.StreamVersion)
-	query := fmt.Sprintf(`
-CREATE %s 
-SET 
-	event_name = $event_name, 
-	event_data = $event_data, 
-	happened_on = $happened_on;
-`, id)
-	result, err := a.db.Query(query, map[string]any{
-		"event_name":  event.EventName,
-		"event_data":  base64.StdEncoding.EncodeToString(event.EventData),
-		"happened_on": event.HappenedOn.Format(time.RFC3339),
-	})
+	result, err := a.db.Create("event", storedStreamEventToSurreal(event))
 	if err != nil {
 		return fmt.Errorf("error appending event: %w", err)
 	} else if result != nil {
@@ -70,104 +56,58 @@ func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.Sto
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
-	query := `
-select 
-    id.stream_version as stream_version, 
-    id.stream_name as stream_name, 
-    event_name, 
-    event_data, 
-    happened_on 
-from event;`
-
+	query := `select * from event;`
 	result, err := a.db.Query(query, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
 
-	return resultToStoredStreamEvent(result)
+	return resultToStoredStreamEventSlice(result)
 }
 
 func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
-	query := `
-select 
-    id.stream_version as stream_version, 
-    id.stream_name as stream_name, 
-    event_name, 
-    event_data, 
-    happened_on 
-from event 
-where 
-    id.stream_name = $stream_name;`
-
+	query := `select * from event where id.stream_name = $stream_name;`
 	result, err := a.db.Query(query, map[string]any{"stream_name": streamName})
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
 
-	return resultToStoredStreamEvent(result)
+	return resultToStoredStreamEventSlice(result)
 }
 
 func (a *AppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string) ([]persistence.StoredStreamEvent, error) {
 	a.rwMutex.RLock()
 	defer a.rwMutex.RUnlock()
 
-	query := `
-select 
-    id.stream_version as stream_version, 
-    id.stream_name as stream_name, 
-    event_name, 
-    event_data, 
-    happened_on 
-from event 
-where 
-    event_name = $event_name;`
-
+	query := `select * from event where event_name = $event_name;`
 	result, err := a.db.Query(query, map[string]any{"event_name": eventName})
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
 
-	return resultToStoredStreamEvent(result)
+	return resultToStoredStreamEventSlice(result)
 }
 
-func resultToStoredStreamEvent(result any) ([]persistence.StoredStreamEvent, error) {
-	resultsInQuery := gabs.Wrap(resultFromQuery(result)).Children()
-	storedStreamEvents := make([]persistence.StoredStreamEvent, 0, len(resultsInQuery))
-
-	for _, line := range resultsInQuery {
-		happenedOn, err := time.Parse(time.RFC3339, line.Path("happened_on").Data().(string))
-		if err != nil {
-			return nil, fmt.Errorf("error parsing time: %w", err)
-		}
-		streamVersion, err := strconv.ParseUint(line.Path("stream_version").String(), 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing stream version: %w", err)
-		}
-
-		eventData, err := base64.StdEncoding.DecodeString(line.Path("event_data").Data().(string))
-		if err != nil {
-			return nil, fmt.Errorf("error decoding base64 string: %w", err)
-		}
-
-		storedStreamEvents = append(storedStreamEvents, persistence.StoredStreamEvent{
-			ID: persistence.StreamID{
-				StreamName:    persistence.StreamName(line.Path("stream_name").Data().(string)),
-				StreamVersion: persistence.StreamVersion(streamVersion),
-			},
-			EventName:  line.Path("event_name").Data().(string),
-			EventData:  eventData,
-			HappenedOn: happenedOn,
-		})
+func resultToStoredStreamEventSlice(result interface{}) ([]persistence.StoredStreamEvent, error) {
+	var eventsResponse []surrealStoredStreamEventOut
+	_, err := surreal.UnmarshalRaw(result, &eventsResponse)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling response: %w", err)
 	}
 
+	storedStreamEvents := make([]persistence.StoredStreamEvent, 0, len(eventsResponse))
+	for _, eventResponse := range eventsResponse {
+		storedStreamEvents = append(storedStreamEvents, eventResponse.ToStoredStreamEvent())
+	}
 	return storedStreamEvents, nil
 }
 
 func (a *AppendOnlyStore) numberOfEventsInStream(streamName persistence.StreamName) (uint64, error) {
-	result, err := a.db.Query(fmt.Sprintf(`select id.stream_name, count() from event where id.stream_name = '%s' group by id.stream_name;`, streamName), nil)
+	query := fmt.Sprintf(`select id.stream_name, count() from event where id.stream_name = '%s' group by id.stream_name;`, streamName)
+	result, err := a.db.Query(query, nil)
 	if err != nil {
 		return 0, fmt.Errorf("error getting stream version: %w", err)
 	}
@@ -196,7 +136,7 @@ return
 		return nil, fmt.Errorf("error updating records: %w", err)
 	}
 
-	return resultToStoredStreamEvent(records)
+	return resultToStoredStreamEventSlice(records)
 }
 
 func (a *AppendOnlyStore) MarkRecordsAsDispatched(ctx context.Context, streamIDs ...persistence.StreamID) error {
