@@ -105,14 +105,9 @@ func (a *AccountService) TransferMoney(ctx context.Context, origin string, desti
 		return nil, fmt.Errorf("error transferring money: %w", err)
 	}
 
-	err = a.eventStore.AppendToStream(ctx, originAccount)
+	err = a.eventStore.AppendToStream(ctx, originAccount, destinationAccount)
 	if err != nil {
-		return nil, fmt.Errorf("error saving from account: %w", err)
-	}
-
-	err = a.eventStore.AppendToStream(ctx, destinationAccount)
-	if err != nil {
-		return nil, fmt.Errorf("error saving to account: %w", err)
+		return nil, fmt.Errorf("error saving from accounts: %w", err)
 	}
 
 	return originAccount, nil

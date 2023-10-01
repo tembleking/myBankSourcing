@@ -46,15 +46,27 @@ var _ = Describe("EventStore", func() {
 	})
 
 	It("should be able to append to an event stream", func() {
-		appendOnlyStore.EXPECT().Append(ctx, persistence.StoredStreamEvent{
-			ID:        persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0},
-			EventName: "AmountAdded",
-			EventData: dataRecordInStore(),
-		}).Return(nil)
+		appendOnlyStore.EXPECT().Append(
+			ctx,
+			persistence.StoredStreamEvent{
+				ID:        persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0},
+				EventName: "AmountAdded",
+				EventData: dataRecordInStore(),
+			},
+			persistence.StoredStreamEvent{
+				ID:        persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0},
+				EventName: "AmountAdded",
+				EventData: dataRecordInStore(),
+			},
+		).Return(nil)
+
 		anAggregate := fakeAggregate{}.withID("aggregate-0").withVersion(1).withEvents(
 			&account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
 		)
-		err := eventStore.AppendToStream(ctx, &anAggregate)
+		anotherAggregate := fakeAggregate{}.withID("aggregate-1").withVersion(1).withEvents(
+			&account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
+		)
+		err := eventStore.AppendToStream(ctx, &anAggregate, &anotherAggregate)
 		Expect(err).To(BeNil())
 	})
 

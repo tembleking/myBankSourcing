@@ -78,18 +78,38 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamName StreamName)
 
 // AppendToStream appends a list of events to the event stream for a given aggregate id
 // returning an error if the expected version does not match the current version
-func (e *EventStore) AppendToStream(ctx context.Context, aggregate domain.Aggregate) error {
-	events := aggregate.Events()
-	if len(events) == 0 {
-		return nil
+func (e *EventStore) AppendToStream(ctx context.Context, aggregates ...domain.Aggregate) error {
+	storedStreamEvents := []StoredStreamEvent{}
+
+	for _, aggregate := range aggregates {
+		eventsFromAggregate, err := e.streamEventsFromAggregate(aggregate)
+		if err != nil {
+			return fmt.Errorf("error extracting stream events from aggregate: %w", err)
+		}
+
+		storedStreamEvents = append(storedStreamEvents, eventsFromAggregate...)
 	}
 
-	storedStreamEvents := make([]StoredStreamEvent, 0, len(events))
+	err := e.appendOnlyStore.Append(ctx, storedStreamEvents...)
+	if err != nil {
+		return fmt.Errorf("error appending to stream: %w", err)
+	}
+
+	return nil
+}
+
+func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]StoredStreamEvent, error) {
+	events := aggregate.Events()
+	if len(events) == 0 {
+		return nil, nil
+	}
+
+	storedStreamEvents := make([]StoredStreamEvent, 0, len(aggregate.Events()))
 	version := aggregate.Version() - uint64(len(events))
 	for _, event := range events {
 		eventData, err := e.serializer.SerializeDomainEvent(event)
 		if err != nil {
-			return fmt.Errorf("error serializing event: %w", err)
+			return nil, fmt.Errorf("error serializing event: %w", err)
 		}
 
 		now := e.clock.Now().UTC()
@@ -103,12 +123,7 @@ func (e *EventStore) AppendToStream(ctx context.Context, aggregate domain.Aggreg
 		version++
 	}
 
-	err := e.appendOnlyStore.Append(ctx, storedStreamEvents...)
-	if err != nil {
-		return fmt.Errorf("error appending to stream: %w", err)
-	}
-
-	return nil
+	return storedStreamEvents, nil
 }
 
 func (e *EventStore) LoadEventsByName(ctx context.Context, eventName string) ([]StreamEvent, error) {
