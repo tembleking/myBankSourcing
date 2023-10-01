@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/tembleking/myBankSourcing/pkg/application/proto"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 )
 
@@ -55,7 +54,7 @@ func (s *AccountGRPCServer) ListAccounts(ctx context.Context, empty *emptypb.Emp
 }
 
 func (s *AccountGRPCServer) AddMoney(ctx context.Context, request *proto.AddMoneyRequest) (*proto.AddMoneyResponse, error) {
-	accountID := account.ID(request.GetAccountId())
+	accountID := request.GetAccountId()
 	if accountID == "" {
 		return nil, &runtime.HTTPStatusError{HTTPStatus: 400, Err: fmt.Errorf("account id must be provided")}
 	}
@@ -79,7 +78,7 @@ func (s *AccountGRPCServer) AddMoney(ctx context.Context, request *proto.AddMone
 }
 
 func (s *AccountGRPCServer) WithdrawMoney(ctx context.Context, request *proto.WithdrawMoneyRequest) (*proto.WithdrawMoneyResponse, error) {
-	accountID := account.ID(request.GetAccountId())
+	accountID := request.GetAccountId()
 	amount := int(request.GetAmount())
 	account, err := s.accountService.WithdrawMoneyFromAccount(ctx, accountID, amount)
 	if err != nil {
@@ -95,8 +94,8 @@ func (s *AccountGRPCServer) WithdrawMoney(ctx context.Context, request *proto.Wi
 }
 
 func (s *AccountGRPCServer) TransferMoney(ctx context.Context, request *proto.TransferMoneyRequest) (*proto.TransferMoneyResponse, error) {
-	fromAccountID := account.ID(request.GetFromAccountId())
-	toAccountID := account.ID(request.GetToAccountId())
+	fromAccountID := request.GetFromAccountId()
+	toAccountID := request.GetToAccountId()
 	amount := int(request.GetAmount())
 	account, err := s.accountService.TransferMoney(ctx, fromAccountID, toAccountID, amount)
 	if err != nil {
@@ -112,7 +111,7 @@ func (s *AccountGRPCServer) TransferMoney(ctx context.Context, request *proto.Tr
 }
 
 func (s *AccountGRPCServer) CloseAccount(ctx context.Context, request *proto.CloseAccountRequest) (*emptypb.Empty, error) {
-	accountID := account.ID(request.GetAccountId())
+	accountID := request.GetAccountId()
 	_, err := s.accountService.CloseAccount(ctx, accountID)
 	if err != nil {
 		return nil, &runtime.HTTPStatusError{HTTPStatus: 500, Err: err}

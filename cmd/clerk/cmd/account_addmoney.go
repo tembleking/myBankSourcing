@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tembleking/myBankSourcing/internal/factory"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
 // addMoneyCmd represents the addMoney command
@@ -23,7 +22,7 @@ var addMoneyCmd = &cobra.Command{
 		if err != nil {
 			panic(fmt.Errorf("invalid amount %s: %w", args[1], err))
 		}
-		account, err := factory.NewFactory().NewAccountService().AddMoneyToAccount(cmd.Context(), account.ID(args[0]), amount)
+		account, err := factory.NewFactory().NewAccountService().AddMoneyToAccount(cmd.Context(), args[0], amount)
 		if err != nil {
 			cmd.PrintErrln(err)
 			os.Exit(1)

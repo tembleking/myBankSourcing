@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tembleking/myBankSourcing/internal/factory"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
 // withdrawMoneyCmd represents the withdrawMoney command
@@ -23,7 +22,7 @@ var withdrawMoneyCmd = &cobra.Command{
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("invalid amount %s: %w", args[1], err))
 		}
-		updatedAccount, err := factory.NewFactory().NewAccountService().WithdrawMoneyFromAccount(cmd.Context(), account.ID(args[0]), amount)
+		updatedAccount, err := factory.NewFactory().NewAccountService().WithdrawMoneyFromAccount(cmd.Context(), args[0], amount)
 		if err != nil {
 			cmd.PrintErrln(err)
 			os.Exit(1)

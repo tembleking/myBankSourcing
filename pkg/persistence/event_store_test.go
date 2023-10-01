@@ -51,10 +51,10 @@ var _ = Describe("EventStore", func() {
 			EventName: "AmountAdded",
 			EventData: dataRecordInStore(),
 		}).Return(nil)
-
-		err := eventStore.AppendToStream(ctx, "aggregate-0", 1, []domain.Event{
+		anAggregate := fakeAggregate{}.withID("aggregate-0").withVersion(1).withEvents(
 			&account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
-		})
+		)
+		err := eventStore.AppendToStream(ctx, &anAggregate)
 		Expect(err).To(BeNil())
 	})
 
@@ -129,4 +129,49 @@ type stubClock struct {
 
 func (f *stubClock) Now() time.Time {
 	return time.Time{}
+}
+
+type fakeAggregate struct {
+	id      string
+	version uint64
+	events  []domain.Event
+}
+
+// Events implements domain.Aggregate.
+func (f *fakeAggregate) Events() []domain.Event {
+	return f.events
+}
+
+// ID implements domain.Aggregate.
+func (f *fakeAggregate) ID() string {
+	return f.id
+}
+
+// Version implements domain.Aggregate.
+func (f *fakeAggregate) Version() uint64 {
+	return f.version
+}
+
+func (f fakeAggregate) withID(id string) fakeAggregate {
+	return fakeAggregate{
+		id:      id,
+		version: f.version,
+		events:  f.events,
+	}
+}
+
+func (f fakeAggregate) withVersion(version uint64) fakeAggregate {
+	return fakeAggregate{
+		id:      f.id,
+		version: version,
+		events:  f.events,
+	}
+}
+
+func (f fakeAggregate) withEvents(events ...domain.Event) fakeAggregate {
+	return fakeAggregate{
+		id:      f.id,
+		version: f.version,
+		events:  events,
+	}
 }

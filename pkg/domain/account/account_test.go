@@ -18,7 +18,7 @@ var _ = Describe("Account", func() {
 		It("opens the account correctly", func() {
 			acc := account.OpenAccount("some-id")
 
-			Expect(acc.ID()).To(Equal(account.ID("some-id")))
+			Expect(acc.ID()).To(Equal("some-id"))
 			Expect(acc.IsOpen()).To(BeTrue())
 		})
 

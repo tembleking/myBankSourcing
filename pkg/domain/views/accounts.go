@@ -11,7 +11,7 @@ import (
 )
 
 type AccountView struct {
-	accountEvents map[account.ID]*account.Account
+	accountEvents map[string]*account.Account
 	rwMutex       sync.RWMutex
 }
 
@@ -63,7 +63,7 @@ func (a *AccountView) handleEvent(event persistence.StreamEvent) {
 }
 
 func NewAccountView(eventStore *persistence.EventStore) (*AccountView, error) {
-	a := &AccountView{accountEvents: map[account.ID]*account.Account{}}
+	a := &AccountView{accountEvents: map[string]*account.Account{}}
 	a.rwMutex.Lock()
 	defer a.rwMutex.Unlock()
 

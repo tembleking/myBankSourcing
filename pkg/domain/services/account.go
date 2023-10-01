@@ -18,9 +18,9 @@ type AccountService struct {
 }
 
 func (a *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
-	accountCreated := account.OpenAccount(account.ID(uuid.NewString()))
+	accountCreated := account.OpenAccount(uuid.NewString())
 
-	err := a.eventStore.AppendToStream(ctx, string(accountCreated.ID()), accountCreated.AggregateVersion(), accountCreated.Events())
+	err := a.eventStore.AppendToStream(ctx, accountCreated)
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -32,7 +32,7 @@ func (a *AccountService) ListAccounts(ctx context.Context) ([]*account.Account, 
 	return a.accountView.Accounts(), nil
 }
 
-func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
+func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID string, amount int) (*account.Account, error) {
 	account, err := a.getAccount(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -43,7 +43,7 @@ func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID accoun
 		return nil, fmt.Errorf("error adding money to account: %w", err)
 	}
 
-	err = a.eventStore.AppendToStream(ctx, string(account.ID()), account.AggregateVersion(), account.Events())
+	err = a.eventStore.AppendToStream(ctx, account)
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -51,7 +51,7 @@ func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID accoun
 	return account, nil
 }
 
-func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID account.ID, amount int) (*account.Account, error) {
+func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID string, amount int) (*account.Account, error) {
 	account, err := a.getAccount(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -62,7 +62,7 @@ func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 		return nil, fmt.Errorf("error withdrawing money from account: %w", err)
 	}
 
-	err = a.eventStore.AppendToStream(ctx, string(account.ID()), account.AggregateVersion(), account.Events())
+	err = a.eventStore.AppendToStream(ctx, account)
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -70,7 +70,7 @@ func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 	return account, nil
 }
 
-func (a *AccountService) CloseAccount(ctx context.Context, accountID account.ID) (*account.Account, error) {
+func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*account.Account, error) {
 	account, err := a.getAccount(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -81,7 +81,7 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID account.ID)
 		return nil, fmt.Errorf("error closing account: %w", err)
 	}
 
-	err = a.eventStore.AppendToStream(ctx, string(account.ID()), account.AggregateVersion(), account.Events())
+	err = a.eventStore.AppendToStream(ctx, account)
 	if err != nil {
 		return nil, fmt.Errorf("error saving account: %w", err)
 	}
@@ -89,7 +89,7 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID account.ID)
 	return account, nil
 }
 
-func (a *AccountService) TransferMoney(ctx context.Context, origin account.ID, destination account.ID, amountToTransfer int) (*account.Account, error) {
+func (a *AccountService) TransferMoney(ctx context.Context, origin string, destination string, amountToTransfer int) (*account.Account, error) {
 	originAccount, err := a.getAccount(ctx, origin)
 	if err != nil {
 		return nil, fmt.Errorf("error getting origin account: %w", err)
@@ -105,12 +105,12 @@ func (a *AccountService) TransferMoney(ctx context.Context, origin account.ID, d
 		return nil, fmt.Errorf("error transferring money: %w", err)
 	}
 
-	err = a.eventStore.AppendToStream(ctx, string(originAccount.ID()), originAccount.AggregateVersion(), originAccount.Events())
+	err = a.eventStore.AppendToStream(ctx, originAccount)
 	if err != nil {
 		return nil, fmt.Errorf("error saving from account: %w", err)
 	}
 
-	err = a.eventStore.AppendToStream(ctx, string(destinationAccount.ID()), destinationAccount.AggregateVersion(), destinationAccount.Events())
+	err = a.eventStore.AppendToStream(ctx, destinationAccount)
 	if err != nil {
 		return nil, fmt.Errorf("error saving to account: %w", err)
 	}
@@ -118,7 +118,7 @@ func (a *AccountService) TransferMoney(ctx context.Context, origin account.ID, d
 	return originAccount, nil
 }
 
-func (a *AccountService) getAccount(ctx context.Context, id account.ID) (*account.Account, error) {
+func (a *AccountService) getAccount(ctx context.Context, id string) (*account.Account, error) {
 	stream, err := a.eventStore.LoadEventStream(ctx, persistence.StreamName(id))
 	if err != nil {
 		return nil, fmt.Errorf("error loading event stream: %w", err)

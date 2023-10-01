@@ -4,12 +4,10 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-type ID string
-
 type Account struct {
 	domain.BaseAggregate
 
-	id      ID
+	id      string
 	isOpen  bool
 	balance int
 }
@@ -24,13 +22,13 @@ func NewAccount(events ...domain.Event) *Account {
 	return a
 }
 
-func (a *Account) ID() ID {
+func (a *Account) ID() string {
 	return a.id
 }
 
-func OpenAccount(id ID) *Account {
+func OpenAccount(id string) *Account {
 	a := NewAccount()
-	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.AggregateVersion()})
+	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.Version()})
 	return a
 }
 
@@ -43,7 +41,7 @@ func (a *Account) AddMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountAdded{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
+	a.Apply(&AmountAdded{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
 	return nil
 }
 
@@ -56,7 +54,7 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.AggregateVersion()})
+	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
 	return nil
 }
 
@@ -95,10 +93,10 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 	}
 
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(&TransferSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.AggregateVersion()})
+	a.Apply(&TransferSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.Version()})
 
 	newBalanceDestination := destination.Balance() + amount
-	destination.Apply(&TransferReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.AggregateVersion()})
+	destination.Apply(&TransferReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.Version()})
 
 	return nil
 }
@@ -110,6 +108,6 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
-	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.AggregateVersion()})
+	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.Version()})
 	return nil
 }

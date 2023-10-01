@@ -19,14 +19,15 @@ var _ = Describe("Transfers", func() {
 
 	BeforeEach(func() {
 		eventStore = persistence.NewEventStoreBuilder().Build()
-
-		err := eventStore.AppendToStream(context.Background(), "aggregate-0", 5, []domain.Event{
+		anAggregate := fakeAggregate{}.withID("some-account").withVersion(5).withEvents([]domain.Event{
 			&account.AccountOpened{AccountID: "some-account", AccountVersion: 0},
 			&account.AmountAdded{Quantity: 50, Balance: 50, AccountVersion: 1},
 			&account.AmountAdded{Quantity: 100, Balance: 150, AccountVersion: 2},
 			&account.TransferSent{Quantity: 50, Balance: 100, From: "some-account", To: "another-account", AccountVersion: 3},
 			&account.AmountWithdrawn{Quantity: 25, Balance: 75, AccountVersion: 4},
-		})
+		}...)
+
+		err := eventStore.AppendToStream(context.Background(), &anAggregate)
 		Expect(err).ToNot(HaveOccurred())
 	})
 

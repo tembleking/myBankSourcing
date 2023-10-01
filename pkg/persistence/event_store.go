@@ -78,13 +78,14 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamName StreamName)
 
 // AppendToStream appends a list of events to the event stream for a given aggregate id
 // returning an error if the expected version does not match the current version
-func (e *EventStore) AppendToStream(ctx context.Context, streamName string, lastExpectedVersionAfterEventsApplied uint64, events []domain.Event) error {
+func (e *EventStore) AppendToStream(ctx context.Context, aggregate domain.Aggregate) error {
+	events := aggregate.Events()
 	if len(events) == 0 {
 		return nil
 	}
 
 	storedStreamEvents := make([]StoredStreamEvent, 0, len(events))
-	version := lastExpectedVersionAfterEventsApplied - uint64(len(events))
+	version := aggregate.Version() - uint64(len(events))
 	for _, event := range events {
 		eventData, err := e.serializer.SerializeDomainEvent(event)
 		if err != nil {
@@ -93,7 +94,7 @@ func (e *EventStore) AppendToStream(ctx context.Context, streamName string, last
 
 		now := e.clock.Now().UTC()
 		storedStreamEvents = append(storedStreamEvents, StoredStreamEvent{
-			ID:         StreamID{StreamName: StreamName(streamName), StreamVersion: StreamVersion(version)},
+			ID:         StreamID{StreamName: StreamName(aggregate.ID()), StreamVersion: StreamVersion(version)},
 			EventName:  event.EventName(),
 			EventData:  eventData,
 			HappenedOn: now,

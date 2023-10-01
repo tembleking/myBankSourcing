@@ -14,7 +14,7 @@ func init() {
 }
 
 type AccountOpened struct {
-	AccountID      ID
+	AccountID      string
 	AccountVersion uint64
 }
 
@@ -27,7 +27,7 @@ func (a *AccountOpened) EventName() string {
 }
 
 type AmountAdded struct {
-	AccountID      ID
+	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
@@ -42,7 +42,7 @@ func (a *AmountAdded) EventName() string {
 }
 
 type AmountWithdrawn struct {
-	AccountID      ID
+	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
@@ -59,8 +59,8 @@ func (a *AmountWithdrawn) EventName() string {
 type TransferSent struct {
 	Quantity       int
 	Balance        int
-	From           ID
-	To             ID
+	From           string
+	To             string
 	AccountVersion uint64
 }
 
@@ -75,8 +75,8 @@ func (t *TransferSent) Version() uint64 {
 type TransferReceived struct {
 	Quantity       int
 	Balance        int
-	From           ID
-	To             ID
+	From           string
+	To             string
 	AccountVersion uint64
 }
 
@@ -89,7 +89,7 @@ func (t *TransferReceived) Version() uint64 {
 }
 
 type AccountClosed struct {
-	AccountID      ID
+	AccountID      string
 	AccountVersion uint64
 }
 

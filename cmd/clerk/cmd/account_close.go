@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tembleking/myBankSourcing/internal/factory"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
 // closeCmd represents the close command
@@ -17,7 +16,7 @@ var closeCmd = &cobra.Command{
 	Use:   "close",
 	Short: "Closes an account",
 	Run: func(cmd *cobra.Command, args []string) {
-		accountClosed, err := factory.NewFactory().NewAccountService().CloseAccount(cmd.Context(), account.ID(args[0]))
+		accountClosed, err := factory.NewFactory().NewAccountService().CloseAccount(cmd.Context(), args[0])
 		if err != nil {
 			cmd.PrintErrln(err)
 			os.Exit(1)
