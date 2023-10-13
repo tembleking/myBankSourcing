@@ -26,7 +26,7 @@ func (a *InMemoryAppendOnlyStore) appendEvent(event StoredStreamEvent) error {
 
 	currentVersion := StreamVersion(len(eventsByStream))
 	if currentVersion != event.ID.StreamVersion {
-		return &ErrUnexpectedVersion{Found: currentVersion, Expected: event.ID.StreamVersion}
+		return &ErrUnexpectedVersion{StreamName: event.ID.StreamName, Expected: event.ID.StreamVersion}
 	}
 
 	a.allEvents = append(a.allEvents, event)

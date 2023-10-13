@@ -1,4 +1,4 @@
-package surrealdb_test
+package sqlite_test
 
 import (
 	"context"
@@ -6,21 +6,24 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	surreal "github.com/surrealdb/surrealdb.go"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/surrealdb"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
-var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
+var _ = Describe("Sqlite AppendOnlyStore", func() {
 	var (
 		ctx   context.Context
-		store persistence.AppendOnlyStore
+		store *sqlite.AppendOnlyStore
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
 		store = setupStore()
+	})
+
+	AfterEach(func() {
+		store.Close()
 	})
 
 	It("should be able to append to an event stream", func() {
@@ -202,20 +205,14 @@ var _ = Describe("SurrealDB AppendOnlyStore", Serial, func() {
 	})
 })
 
-func setupStore() *surrealdb.AppendOnlyStore {
-	db, err := surreal.New("ws://localhost:8000/rpc")
+func setupStore() *sqlite.AppendOnlyStore {
+	db, err := sqlite.New(":memory:")
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 
-	_, err = db.Signin(map[string]string{"user": "root", "pass": "root"})
+	err = db.MigrateDB(context.Background())
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 
-	_, err = db.Use("ns", "db")
-	ExpectWithOffset(1, err).ToNot(HaveOccurred())
-
-	_, err = db.Delete("event")
-	ExpectWithOffset(1, err).ToNot(HaveOccurred())
-
-	return surrealdb.NewAppendOnlyStore(db)
+	return db
 }
 
 func eventsStored() []persistence.StoredStreamEvent {

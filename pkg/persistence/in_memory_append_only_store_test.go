@@ -49,15 +49,7 @@ var _ = Describe("InMemory / InMemoryAppendOnlyStore", func() {
 			Expect(err).To(BeNil())
 
 			err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data")})
-			Expect(err).To(MatchError(&persistence.ErrUnexpectedVersion{Found: 1, Expected: 0}))
-		})
-	})
-
-	When("the expected version is not met", func() {
-		It("should return an error", func() {
-			err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventName: "eventName", EventData: []byte("data")})
-
-			Expect(err).To(MatchError(&persistence.ErrUnexpectedVersion{Found: 0, Expected: 1}))
+			Expect(err).To(MatchError(&persistence.ErrUnexpectedVersion{StreamName: "aggregate-0", Expected: 0}))
 		})
 	})
 

@@ -3,7 +3,6 @@ package surrealdb
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -32,21 +31,21 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 }
 
 func (a *AppendOnlyStore) appendEvent(event persistence.StoredStreamEvent) error {
-	lastVersion, err := a.numberOfEventsInStream(event.ID.StreamName)
-	lastStreamVersion := persistence.StreamVersion(lastVersion)
-	if err != nil {
-		return fmt.Errorf("error getting number of events in stream: %w", err)
-	}
-	if lastStreamVersion != event.ID.StreamVersion {
-		return &persistence.ErrUnexpectedVersion{Found: lastStreamVersion, Expected: event.ID.StreamVersion}
-	}
-
 	result, err := a.db.Create("event", storedStreamEventToSurreal(event))
 	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return &persistence.ErrUnexpectedVersion{
+				StreamName: event.ID.StreamName,
+				Expected:   event.ID.StreamVersion,
+			}
+		}
 		return fmt.Errorf("error appending event: %w", err)
 	} else if result != nil {
 		if strings.Contains(gabs.Wrap(result).Index(0).Path("detail").String(), "already exists") {
-			return fmt.Errorf("event already exists")
+			return &persistence.ErrUnexpectedVersion{
+				StreamName: event.ID.StreamName,
+				Expected:   event.ID.StreamVersion,
+			}
 		}
 	}
 	return nil
@@ -103,18 +102,6 @@ func resultToStoredStreamEventSlice(result interface{}) ([]persistence.StoredStr
 		storedStreamEvents = append(storedStreamEvents, eventResponse.ToStoredStreamEvent())
 	}
 	return storedStreamEvents, nil
-}
-
-func (a *AppendOnlyStore) numberOfEventsInStream(streamName persistence.StreamName) (uint64, error) {
-	query := fmt.Sprintf(`select id.stream_name, count() from event where id.stream_name = '%s' group by id.stream_name;`, streamName)
-	result, err := a.db.Query(query, nil)
-	if err != nil {
-		return 0, fmt.Errorf("error getting stream version: %w", err)
-	}
-
-	count := gabs.Wrap(resultFromQuery(result)).Index(0).Path("count").String()
-	parseUint, _ := strconv.ParseUint(count, 10, 64)
-	return parseUint, nil
 }
 
 func (a *AppendOnlyStore) ReadUndispatchedRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {

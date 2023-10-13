@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	gohttp "net/http"
+	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/application/grpc"
 	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
@@ -20,7 +21,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/surrealdb"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 type Factory struct {
@@ -57,7 +58,7 @@ func (f *Factory) eventStore() *persistence.EventStore {
 
 func (f *Factory) appendOnlyStore() persistence.AppendOnlyStore {
 	return f.appendOnlyStoreField.GetOrInit(func() persistence.AppendOnlyStore {
-		return surrealdb.NewAppendOnlyStore(f.surrealDBInstance())
+		return f.sqliteInstance()
 	})
 }
 
@@ -81,6 +82,23 @@ func (f *Factory) surrealDBInstance() *surreal.DB {
 
 		return db
 	})
+}
+
+func (f *Factory) sqliteInstance() *sqlite.AppendOnlyStore {
+	appendOnlyStore, err := sqlite.New("file:///tmp/mybankdb.db3")
+	if err != nil {
+		panic(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = appendOnlyStore.MigrateDB(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return appendOnlyStore
 }
 
 func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {

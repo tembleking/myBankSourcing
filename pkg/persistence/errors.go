@@ -5,10 +5,10 @@ import (
 )
 
 type ErrUnexpectedVersion struct {
-	Found    StreamVersion
-	Expected StreamVersion
+	StreamName StreamName
+	Expected   StreamVersion
 }
 
 func (e *ErrUnexpectedVersion) Error() string {
-	return fmt.Sprintf("unexpected version: found %d, expected %d", e.Found, e.Expected)
+	return fmt.Sprintf("unexpected version for stream %s with version %d", e.StreamName, e.Expected)
 }
