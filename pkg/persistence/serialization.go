@@ -9,5 +9,5 @@ type DomainEventSerializer interface {
 }
 
 type DomainEventDeserializer interface {
-	DeserializeDomainEvent(data []byte) (domain.Event, error)
+	DeserializeDomainEvent(eventName string, data []byte) (domain.Event, error)
 }

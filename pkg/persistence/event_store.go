@@ -62,7 +62,7 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamName StreamName)
 
 	events := make([]StreamEvent, 0, len(records))
 	for _, record := range records {
-		event, err := e.deserializer.DeserializeDomainEvent(record.EventData)
+		event, err := e.deserializer.DeserializeDomainEvent(record.EventName, record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
@@ -134,7 +134,7 @@ func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
 
 	events := make([]StreamEvent, 0, len(records))
 	for _, record := range records {
-		event, err := e.deserializer.DeserializeDomainEvent(record.EventData)
+		event, err := e.deserializer.DeserializeDomainEvent(record.EventName, record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.ID.StreamName, record.ID.StreamVersion, err)
 		}

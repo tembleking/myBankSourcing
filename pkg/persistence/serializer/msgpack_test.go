@@ -19,9 +19,8 @@ var _ = Describe("Msgpack", func() {
 		Expect(serialize).ToNot(BeEmpty())
 		Expect(serialize).To(BeAssignableToTypeOf([]byte{}))
 
-		deserialize, err := ser.DeserializeDomainEvent(serialize)
+		deserialize, err := ser.DeserializeDomainEvent("AmountAdded", serialize)
 		Expect(err).ToNot(HaveOccurred())
-
 		Expect(deserialize).To(Equal(anEvent()))
 	})
 })

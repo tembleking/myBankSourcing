@@ -24,14 +24,14 @@ func (m *Msgpack) SerializeDomainEvent(event domain.Event) ([]byte, error) {
 	return data, nil
 }
 
-func (m *Msgpack) DeserializeDomainEvent(data []byte) (domain.Event, error) {
-	eventDataAsMap := make(map[string]map[string]any)
+func (m *Msgpack) DeserializeDomainEvent(eventName string, data []byte) (domain.Event, error) {
+	eventDataAsMap := make(map[string]any)
 	err := msgpack.Unmarshal(data, &eventDataAsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error deserializing event data map: %w", err)
 	}
 
-	event, err := structMapSerializer.DeserializeFromMap(eventDataAsMap)
+	event, err := structMapSerializer.DeserializeFromMap(eventName, eventDataAsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error deserializing event from map: %w", err)
 	}

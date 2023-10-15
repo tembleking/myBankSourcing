@@ -2,9 +2,11 @@ package serializer
 
 import (
 	"encoding/gob"
+
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-func RegisterSerializableType(t any) {
-	gob.Register(t)
-	registerTypeInStructSerializer(t)
+func RegisterSerializableEvent(event domain.Event) {
+	gob.RegisterName(event.EventName(), event)
+	registerEventInStructSerializer(event)
 }

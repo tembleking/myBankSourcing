@@ -5,12 +5,12 @@ import (
 )
 
 func init() {
-	serializer.RegisterSerializableType(&AccountOpened{})
-	serializer.RegisterSerializableType(&AmountAdded{})
-	serializer.RegisterSerializableType(&AmountWithdrawn{})
-	serializer.RegisterSerializableType(&TransferSent{})
-	serializer.RegisterSerializableType(&TransferReceived{})
-	serializer.RegisterSerializableType(&AccountClosed{})
+	serializer.RegisterSerializableEvent(&AccountOpened{})
+	serializer.RegisterSerializableEvent(&AmountAdded{})
+	serializer.RegisterSerializableEvent(&AmountWithdrawn{})
+	serializer.RegisterSerializableEvent(&TransferSent{})
+	serializer.RegisterSerializableEvent(&TransferReceived{})
+	serializer.RegisterSerializableEvent(&AccountClosed{})
 }
 
 type AccountOpened struct {
