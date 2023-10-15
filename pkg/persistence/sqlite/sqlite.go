@@ -157,8 +157,6 @@ CREATE TABLE IF NOT EXISTS events (
 	event_name TEXT NOT NULL, 
 	event_data BLOB NOT NULL, 
 	happened_on	TIMESTAMP NOT NULL,
-	dispatched INTEGER DEFAULT FALSE,
-	reserved_until TEXT DEFAULT CURRENT_TIMESTAMP,
 CONSTRAINT events_stream_unique UNIQUE (stream_name, stream_version)
 );
 
