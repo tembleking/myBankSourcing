@@ -12,16 +12,16 @@ type EventStoreBuilder struct {
 	clock           Clock
 }
 
-func NewEventStoreBuilder() *EventStoreBuilder {
+func NewEventStoreBuilder(appendOnlyStore AppendOnlyStore) *EventStoreBuilder {
 	defaultSerializer := &serializer.GoBinarySerializer{}
 	defaultDeserializer := &serializer.GoBinarySerializer{}
-	defaultAppendOnlyStore := NewInMemoryAppendOnlyStore()
+
 	defaultClock := clock.System{}
 
 	return &EventStoreBuilder{
 		serializer:      defaultSerializer,
 		deserializer:    defaultDeserializer,
-		appendOnlyStore: defaultAppendOnlyStore,
+		appendOnlyStore: appendOnlyStore,
 		clock:           defaultClock,
 	}
 }
@@ -47,6 +47,10 @@ func (b *EventStoreBuilder) WithClock(clock Clock) *EventStoreBuilder {
 }
 
 func (b *EventStoreBuilder) Build() *EventStore {
+	if b.appendOnlyStore == nil {
+		panic("append only store type not set")
+	}
+
 	return &EventStore{
 		serializer:      b.serializer,
 		deserializer:    b.deserializer,

@@ -9,6 +9,45 @@ consumes:
 produces:
   - application/json
 paths:
+  /api/account/v1/accounts:
+    get:
+      summary: Returns the list of open accounts
+      operationId: ClerkAPIService_ListAccounts
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/ListAccountsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - ClerkAPIService
+  /api/account/v1/open:
+    post:
+      summary: Creates a new account and returns it
+      operationId: ClerkAPIService_OpenAccount
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/OpenAccountResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties: {}
+      tags:
+        - ClerkAPIService
+      security:
+        - Bearer: []
   /api/account/v1/{accountId}:
     delete:
       summary: Close an account
@@ -135,45 +174,6 @@ paths:
               - amount
       tags:
         - ClerkAPIService
-  /api/account/v1/accounts:
-    get:
-      summary: Returns the list of open accounts
-      operationId: ClerkAPIService_ListAccounts
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/ListAccountsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      tags:
-        - ClerkAPIService
-  /api/account/v1/open:
-    post:
-      summary: Creates a new account and returns it
-      operationId: ClerkAPIService_OpenAccount
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/OpenAccountResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: body
-          in: body
-          required: true
-          schema:
-            type: object
-            properties: {}
-      tags:
-        - ClerkAPIService
-      security:
-        - Bearer: []
 definitions:
   Account:
     type: object

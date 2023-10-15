@@ -10,6 +10,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 var _ = Describe("Transfers", func() {
@@ -18,7 +19,7 @@ var _ = Describe("Transfers", func() {
 	)
 
 	BeforeEach(func() {
-		eventStore = persistence.NewEventStoreBuilder().Build()
+		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
 		anAggregate := fakeAggregate{}.withID("some-account").withVersion(5).withEvents([]domain.Event{
 			&account.AccountOpened{AccountID: "some-account", AccountVersion: 0},
 			&account.AmountAdded{Quantity: 50, Balance: 50, AccountVersion: 1},

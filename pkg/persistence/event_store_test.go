@@ -13,6 +13,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/mocks"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 var _ = Describe("EventStore", func() {
@@ -27,7 +28,7 @@ var _ = Describe("EventStore", func() {
 		ctx = context.Background()
 		ctrl = gomock.NewController(GinkgoT())
 		appendOnlyStore = mocks.NewMockAppendOnlyStore(ctrl)
-		eventStore = persistence.NewEventStoreBuilder().WithAppendOnlyStore(appendOnlyStore).WithClock(&stubClock{}).Build()
+		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).WithAppendOnlyStore(appendOnlyStore).WithClock(&stubClock{}).Build()
 	})
 
 	It("should be able to load an event stream", func() {
@@ -70,21 +71,6 @@ var _ = Describe("EventStore", func() {
 		Expect(err).To(BeNil())
 	})
 
-	When("asking for events by name", func() {
-		It("should be able to load events by name", func() {
-			appendOnlyStore.EXPECT().
-				ReadEventsByName(ctx, "AmountAdded").
-				Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore()}}, nil)
-
-			stream, err := eventStore.LoadEventsByName(ctx, "AmountAdded")
-			Expect(err).To(BeNil())
-			Expect(stream).To(Equal([]persistence.StreamEvent{{
-				ID:    persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1},
-				Event: &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
-			}}))
-		})
-	})
-
 	When("asking for all events", func() {
 		It("returns all events", func() {
 			appendOnlyStore.EXPECT().
@@ -97,32 +83,6 @@ var _ = Describe("EventStore", func() {
 				ID:    persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1},
 				Event: &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
 			}}))
-		})
-	})
-
-	When("fetching the undispatched events", func() {
-		It("returns the undispatched events", func() {
-			appendOnlyStore.EXPECT().
-				ReadUndispatchedRecords(ctx).
-				Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore()}}, nil)
-
-			stream, err := eventStore.LoadUndispatchedEvents(ctx)
-			Expect(err).To(BeNil())
-			Expect(stream).To(Equal([]persistence.StreamEvent{{
-				ID:    persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1},
-				Event: &account.AmountAdded{AccountID: "some-account", Quantity: 10, Balance: 10},
-			}}))
-		})
-	})
-
-	When("marking events as dispatched", func() {
-		It("marks the events as dispatched", func() {
-			appendOnlyStore.EXPECT().
-				MarkRecordsAsDispatched(ctx, []persistence.StreamID{{StreamName: "aggregate-0", StreamVersion: 1}}).
-				Return(nil)
-
-			err := eventStore.MarkEventsAsDispatched(ctx, persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1})
-			Expect(err).To(BeNil())
 		})
 	})
 })

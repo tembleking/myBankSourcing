@@ -16,16 +16,6 @@ type AppendOnlyStore interface {
 
 	// ReadRecords reads events within a single Stream by their names.
 	ReadRecords(ctx context.Context, streamName StreamName) ([]StoredStreamEvent, error)
-
-	// ReadEventsByName reads events by their names.
-	ReadEventsByName(ctx context.Context, eventName string) ([]StoredStreamEvent, error)
-
-	// ReadUndispatchedRecords reads all events that have not been dispatched.
-	// It should not return the same events twice, unless they have not been marked as dispatched after some time.
-	ReadUndispatchedRecords(ctx context.Context) ([]StoredStreamEvent, error)
-
-	// MarkRecordsAsDispatched marks the event as dispatched.
-	MarkRecordsAsDispatched(ctx context.Context, events ...StreamID) error
 }
 
 type StoredStreamEvent struct {

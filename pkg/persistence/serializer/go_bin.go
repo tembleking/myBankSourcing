@@ -31,12 +31,3 @@ func (g *GoBinarySerializer) DeserializeDomainEvent(data []byte) (domain.Event, 
 	}
 	return event, nil
 }
-
-func (g *GoBinarySerializer) Serialize(event map[string]string) ([]byte, error) {
-	var buf bytes.Buffer
-	err := gob.NewEncoder(&buf).Encode(&event)
-	if err != nil {
-		return nil, fmt.Errorf("error serializing map: %w", err)
-	}
-	return buf.Bytes(), nil
-}

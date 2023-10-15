@@ -8,6 +8,7 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 var _ = Describe("Account", func() {
@@ -16,7 +17,7 @@ var _ = Describe("Account", func() {
 	)
 
 	BeforeEach(func() {
-		eventStore := persistence.NewEventStoreBuilder().Build()
+		eventStore := persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
 		accountService = services.NewAccountService(eventStore)
 	})
 

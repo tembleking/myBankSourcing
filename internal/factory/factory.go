@@ -2,22 +2,17 @@ package factory
 
 import (
 	"context"
-	"fmt"
+
 	gohttp "net/http"
 	"time"
-
-	"github.com/tembleking/myBankSourcing/pkg/application/grpc"
-	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
-	"github.com/tembleking/myBankSourcing/pkg/broker"
-	"github.com/tembleking/myBankSourcing/pkg/outbox"
 
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	surreal "github.com/surrealdb/surrealdb.go"
-
 	"github.com/tembleking/myBankSourcing/internal/lazy"
+	"github.com/tembleking/myBankSourcing/pkg/application/grpc"
 	"github.com/tembleking/myBankSourcing/pkg/application/http"
+	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
@@ -25,12 +20,11 @@ import (
 )
 
 type Factory struct {
-	accountServiceField    lazy.Lazy[*services.AccountService]
-	eventStoreField        lazy.Lazy[*persistence.EventStore]
-	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
-	surrealDBInstanceField lazy.Lazy[*surreal.DB]
-	httpHandlerField       lazy.Lazy[gohttp.Handler]
-	grpcServerField        lazy.Lazy[*gogrpc.Server]
+	accountServiceField  lazy.Lazy[*services.AccountService]
+	eventStoreField      lazy.Lazy[*persistence.EventStore]
+	appendOnlyStoreField lazy.Lazy[persistence.AppendOnlyStore]
+	httpHandlerField     lazy.Lazy[gohttp.Handler]
+	grpcServerField      lazy.Lazy[*gogrpc.Server]
 }
 
 func NewFactory() *Factory {
@@ -47,10 +41,9 @@ func (f *Factory) NewAccountService() *services.AccountService {
 func (f *Factory) eventStore() *persistence.EventStore {
 	return f.eventStoreField.GetOrInit(func() *persistence.EventStore {
 		eventSerializer := &serializer.Msgpack{}
-		return persistence.NewEventStoreBuilder().
+		return persistence.NewEventStoreBuilder(f.appendOnlyStore()).
 			WithSerializer(eventSerializer).
 			WithDeserializer(eventSerializer).
-			WithAppendOnlyStore(f.appendOnlyStore()).
 			Build()
 	})
 
@@ -59,28 +52,6 @@ func (f *Factory) eventStore() *persistence.EventStore {
 func (f *Factory) appendOnlyStore() persistence.AppendOnlyStore {
 	return f.appendOnlyStoreField.GetOrInit(func() persistence.AppendOnlyStore {
 		return f.sqliteInstance()
-	})
-}
-
-func (f *Factory) surrealDBInstance() *surreal.DB {
-	return f.surrealDBInstanceField.GetOrInit(func() *surreal.DB {
-		db, err := surreal.New("ws://localhost:8000/rpc")
-		if err != nil {
-			panic(fmt.Errorf("error connecting to surrealdb: %w", err))
-		}
-		_, err = db.Signin(map[string]string{
-			"user": "root",
-			"pass": "root",
-		})
-		if err != nil {
-			panic(fmt.Errorf("error signing in to surrealdb: %w", err))
-		}
-		_, err = db.Use("ns", "db")
-		if err != nil {
-			panic(fmt.Errorf("error using namespace and database in surrealdb: %w", err))
-		}
-
-		return db
 	})
 }
 
@@ -116,10 +87,4 @@ func (f *Factory) NewGRPCServer() *gogrpc.Server {
 		pb.RegisterClerkAPIServiceServer(grpcServer, accountGRPCServer)
 		return grpcServer
 	})
-}
-
-func (f *Factory) NewTransactionalOutboxPublisher() *outbox.TransactionalOutbox {
-	return outbox.NewTransactionalOutboxBuilder(broker.NewInMemoryMessageBroker()).
-		WithAppendOnlyStore(f.appendOnlyStore()).
-		Build()
 }

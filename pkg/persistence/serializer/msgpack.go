@@ -38,12 +38,3 @@ func (m *Msgpack) DeserializeDomainEvent(data []byte) (domain.Event, error) {
 
 	return event, nil
 }
-
-func (m *Msgpack) Serialize(event map[string]string) ([]byte, error) {
-	data, err := msgpack.Marshal(event)
-	if err != nil {
-		return nil, fmt.Errorf("error serializing map: %w", err)
-	}
-
-	return data, nil
-}

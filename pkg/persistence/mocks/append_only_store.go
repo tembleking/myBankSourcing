@@ -88,21 +88,6 @@ func (mr *MockAppendOnlyStoreMockRecorder) ReadAllRecords(ctx interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadAllRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadAllRecords), ctx)
 }
 
-// ReadEventsByName mocks base method.
-func (m *MockAppendOnlyStore) ReadEventsByName(ctx context.Context, eventName string) ([]persistence.StoredStreamEvent, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadEventsByName", ctx, eventName)
-	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ReadEventsByName indicates an expected call of ReadEventsByName.
-func (mr *MockAppendOnlyStoreMockRecorder) ReadEventsByName(ctx, eventName interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadEventsByName", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadEventsByName), ctx, eventName)
-}
-
 // ReadRecords mocks base method.
 func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()

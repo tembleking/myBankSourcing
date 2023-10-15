@@ -59,8 +59,7 @@ func NewTransfersViewFrom(eventStore *persistence.EventStore) (*TransfersView, e
 }
 
 func loadViewFromEventStore(eventStore *persistence.EventStore, view *TransfersView) error {
-	event := account.TransferSent{}
-	events, err := eventStore.LoadEventsByName(context.Background(), event.EventName())
+	events, err := eventStore.LoadAllEvents(context.Background())
 	if err != nil {
 		return fmt.Errorf("error loading events: %w", err)
 	}

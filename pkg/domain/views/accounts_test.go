@@ -10,6 +10,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 var _ = Describe("Accounts", func() {
@@ -18,7 +19,7 @@ var _ = Describe("Accounts", func() {
 	)
 
 	BeforeEach(func() {
-		eventStore = persistence.NewEventStoreBuilder().Build()
+		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
 		anAggregate := fakeAggregate{}.withID("some-account").withVersion(5).withEvents([]domain.Event{
 			&account.AccountOpened{AccountID: "some-account", AccountVersion: 0},
 			&account.AmountAdded{AccountID: "some-account", Quantity: 50, Balance: 50, AccountVersion: 1},
@@ -63,6 +64,26 @@ var _ = Describe("Accounts", func() {
 			Expect(accounts[1].ID()).To(Equal("some-account"))
 			Expect(accounts[1].Balance()).To(Equal(75))
 			Expect(accounts[1].Version()).To(Equal(uint64(5)))
+		})
+
+		When("a delete account is published", func() {
+			It("deletes the account from the view", func() {
+				accountsView, err := views.NewAccountView(eventStore)
+				Expect(err).ToNot(HaveOccurred())
+
+				accountsView.Dispatch([]persistence.StreamEvent{
+					{ID: persistence.StreamID{StreamName: "another-account", StreamVersion: 0}, Event: &account.AccountOpened{AccountID: "another-account", AccountVersion: 0}},
+					{ID: persistence.StreamID{StreamName: "another-account", StreamVersion: 1}, Event: &account.TransferReceived{Quantity: 50, Balance: 50, From: "some-account", To: "another-account", AccountVersion: 1}},
+					{ID: persistence.StreamID{StreamName: "another-account", StreamVersion: 2}, Event: &account.AccountClosed{AccountID: "another-account", AccountVersion: 2}},
+				}...)
+
+				accounts := accountsView.Accounts()
+
+				Expect(accounts).To(HaveLen(1))
+				Expect(accounts[0].ID()).To(Equal("some-account"))
+				Expect(accounts[0].Balance()).To(Equal(75))
+				Expect(accounts[0].Version()).To(Equal(uint64(5)))
+			})
 		})
 	})
 })

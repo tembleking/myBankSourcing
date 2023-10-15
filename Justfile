@@ -39,28 +39,5 @@ test-build:
     go build ./...
 
 # Runs all tests
-test: db-launch rabbitmq-launch
-    go run github.com/onsi/ginkgo/v2/ginkgo -r -p
-
-# Launches the database in a docker container for development
-db-launch: db-kill
-    docker run --rm -d --pull always --name surrealdb -p 8000:8000 surrealdb/surrealdb:latest start --log trace --user root --pass root memory
-
-db-logs:
-    docker logs -f surrealdb
-
-db-kill:
-    docker rm -f surrealdb
-
-rabbitmq-launch: rabbitmq-kill
-    docker run -it --rm -d --name rabbitmq -p 5552:5552 -p 5672:5672 -p 15672:15672 \
-        -e RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS='-rabbitmq_stream advertised_host localhost -rabbit loopback_users "none"' \
-        rabbitmq:3-management
-    sleep 5
-    docker exec rabbitmq rabbitmq-plugins enable rabbitmq_stream_management
-
-rabbitmq-logs:
-    docker logs -f rabbitmq
-
-rabbitmq-kill:
-    docker rm -f rabbitmq
+test:
+    go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --cover

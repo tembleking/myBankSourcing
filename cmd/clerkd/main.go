@@ -33,9 +33,6 @@ func run() error {
 	wg.Add(1)
 	go serveGRPC(ctx, wg, factory)
 
-	wg.Add(1)
-	go runTransactionalOutboxPublisher(ctx, wg, factory)
-
 	wg.Wait()
 	return nil
 }
@@ -91,11 +88,4 @@ func serveHTTP(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(fmt.Errorf("error serving HTTP: %w", err))
 	}
-}
-
-func runTransactionalOutboxPublisher(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory) {
-	defer wg.Done()
-
-	publisher := factory.NewTransactionalOutboxPublisher()
-	_ = publisher
 }
