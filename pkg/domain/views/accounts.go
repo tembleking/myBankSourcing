@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"sync"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
@@ -12,22 +11,9 @@ import (
 
 type AccountView struct {
 	accountEvents map[string]*account.Account
-	rwMutex       sync.RWMutex
-}
-
-func (a *AccountView) Dispatch(events ...persistence.StreamEvent) {
-	a.rwMutex.Lock()
-	defer a.rwMutex.Unlock()
-
-	for _, event := range events {
-		a.handleEvent(event)
-	}
 }
 
 func (a *AccountView) Accounts() []*account.Account {
-	a.rwMutex.RLock()
-	defer a.rwMutex.RUnlock()
-
 	result := make([]*account.Account, 0, len(a.accountEvents))
 
 	for _, account := range a.accountEvents {
@@ -64,8 +50,6 @@ func (a *AccountView) handleEvent(event persistence.StreamEvent) {
 
 func NewAccountView(eventStore *persistence.EventStore) (*AccountView, error) {
 	a := &AccountView{accountEvents: map[string]*account.Account{}}
-	a.rwMutex.Lock()
-	defer a.rwMutex.Unlock()
 
 	events, err := eventStore.LoadAllEvents(context.Background())
 	if err != nil {

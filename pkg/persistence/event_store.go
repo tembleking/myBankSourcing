@@ -8,24 +8,20 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mocks/$GOFILE -package=mocks
-type EventDispatcher interface {
-	Dispatch(events ...StreamEvent)
-}
-
 type Clock interface {
 	Now() time.Time
 }
 
-type StreamName string
-type StreamVersion uint64
-
-type StreamID struct {
-	// StreamName is commonly the aggregate id, but can be any value as long as it is unique for an event stream
-	StreamName StreamName
-	// StreamVersion is the version of the last event in the stream
-	StreamVersion StreamVersion
-}
+type (
+	StreamName    string
+	StreamVersion uint64
+	StreamID      struct {
+		// StreamName is commonly the aggregate id, but can be any value as long as it is unique for an event stream
+		StreamName StreamName
+		// StreamVersion is the version of the last event in the stream
+		StreamVersion StreamVersion
+	}
+)
 
 func (s *StreamID) Equal(other StreamID) bool {
 	return s.StreamName == other.StreamName && s.StreamVersion == other.StreamVersion
