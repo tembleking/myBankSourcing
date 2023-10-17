@@ -1,10 +1,13 @@
 package domain
 
+import "fmt"
+
 // TODO convert the aggregate into an interface
 
 type Aggregate interface {
 	ID() string
 	Events() []Event
+	ClearEvents()
 	Version() uint64
 }
 
@@ -15,14 +18,16 @@ type BaseAggregate struct {
 }
 
 // Apply applies the event by calling the on-event function and saves them, so they can then be returned by Events
-func (a *BaseAggregate) Apply(event Event) {
+func (a *BaseAggregate) Apply(event Event) error {
 	if event.Version() != a.Version() {
-		return
+		return fmt.Errorf("event version '%d' does not match aggregate version '%d'", event.Version(), a.Version())
 	}
 
 	a.OnEventFunc(event)
 	a.events = append(a.events, event)
 	a.version++
+
+	return nil
 }
 
 // Events returns the applied events

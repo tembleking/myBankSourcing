@@ -16,7 +16,10 @@ func NewAccount(events ...domain.Event) *Account {
 	a := &Account{}
 	a.OnEventFunc = a.onEvent
 	for _, event := range events {
-		a.Apply(event)
+		err := a.Apply(event)
+		if err != nil {
+			panic(err)
+		}
 	}
 	a.ClearEvents()
 	return a
@@ -41,8 +44,7 @@ func (a *Account) AddMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountAdded{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
-	return nil
+	return a.Apply(&AmountAdded{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
 }
 
 func (a *Account) WithdrawMoney(amount int) error {
@@ -54,8 +56,7 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
-	return nil
+	return a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
 }
 
 func (a *Account) Balance() int {
@@ -93,10 +94,14 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 	}
 
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(&TransferSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.Version()})
+	if err := a.Apply(&TransferSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.Version()}); err != nil {
+		return err
+	}
 
 	newBalanceDestination := destination.Balance() + amount
-	destination.Apply(&TransferReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.Version()})
+	if err := destination.Apply(&TransferReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.Version()}); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -108,6 +113,5 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
-	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.Version()})
-	return nil
+	return a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.Version()})
 }

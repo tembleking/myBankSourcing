@@ -26,10 +26,7 @@ var closeCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
-			accounts, err := factory.NewFactory().NewAccountService().ListAccounts(cmd.Context())
-			if err != nil {
-				panic(err)
-			}
+			accounts := factory.NewFactory().NewAccountView().Accounts()
 
 			ids := make([]string, len(accounts))
 			for i, account := range accounts {

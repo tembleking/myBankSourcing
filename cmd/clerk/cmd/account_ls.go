@@ -14,10 +14,7 @@ var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists the accounts created",
 	Run: func(cmd *cobra.Command, args []string) {
-		accounts, err := factory.NewFactory().NewAccountService().ListAccounts(cmd.Context())
-		if err != nil {
-			panic(err)
-		}
+		accounts := factory.NewFactory().NewAccountView().Accounts()
 
 		for _, account := range accounts {
 			cmd.Printf("Account ID: %s, Balance: %d\n", account.ID(), account.Balance())

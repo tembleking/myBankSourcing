@@ -13,18 +13,24 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/application/grpc"
 	"github.com/tembleking/myBankSourcing/pkg/application/http"
 	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
+	"github.com/tembleking/myBankSourcing/pkg/domain"
+	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
+	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	persistenceaccount "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 type Factory struct {
-	accountServiceField  lazy.Lazy[*services.AccountService]
-	eventStoreField      lazy.Lazy[*persistence.EventStore]
-	appendOnlyStoreField lazy.Lazy[persistence.AppendOnlyStore]
-	httpHandlerField     lazy.Lazy[gohttp.Handler]
-	grpcServerField      lazy.Lazy[*gogrpc.Server]
+	accountServiceField    lazy.Lazy[*services.AccountService]
+	eventStoreField        lazy.Lazy[*persistence.EventStore]
+	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
+	httpHandlerField       lazy.Lazy[gohttp.Handler]
+	grpcServerField        lazy.Lazy[*gogrpc.Server]
+	accountViewField       lazy.Lazy[*views.AccountView]
+	accountRepositoryField lazy.Lazy[domain.Repository[*account.Account]]
 }
 
 func NewFactory() *Factory {
@@ -34,7 +40,23 @@ func NewFactory() *Factory {
 func (f *Factory) NewAccountService() *services.AccountService {
 	return f.accountServiceField.GetOrInit(func() *services.AccountService {
 		eventStore := f.eventStore()
-		return services.NewAccountService(eventStore)
+		return services.NewAccountService(eventStore, f.accountRepository())
+	})
+}
+
+func (f *Factory) accountRepository() domain.Repository[*account.Account] {
+	return f.accountRepositoryField.GetOrInit(func() domain.Repository[*account.Account] {
+		return persistenceaccount.NewRepository(f.eventStore())
+	})
+}
+
+func (f *Factory) NewAccountView() *views.AccountView {
+	return f.accountViewField.GetOrInit(func() *views.AccountView {
+		accountView, err := views.NewAccountView(f.eventStore())
+		if err != nil {
+			panic(err)
+		}
+		return accountView
 	})
 }
 
@@ -74,13 +96,14 @@ func (f *Factory) sqliteInstance() *sqlite.AppendOnlyStore {
 
 func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {
 	return f.httpHandlerField.GetOrInit(func() gohttp.Handler {
-		return http.NewHTTPServer(ctx, f.NewAccountService())
+		return http.NewHTTPServer(ctx, f.NewAccountService(), f.NewAccountView())
 	})
 }
 
 func (f *Factory) NewGRPCServer() *gogrpc.Server {
+
 	return f.grpcServerField.GetOrInit(func() *gogrpc.Server {
-		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService())
+		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService(), f.NewAccountView())
 		grpcServer := gogrpc.NewServer()
 		reflection.Register(grpcServer)
 

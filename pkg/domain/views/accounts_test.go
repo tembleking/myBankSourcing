@@ -68,6 +68,10 @@ func (f *fakeAggregate) Version() uint64 {
 	return f.version
 }
 
+func (f *fakeAggregate) ClearEvents() {
+	f.events = nil
+}
+
 func (f fakeAggregate) withID(id string) fakeAggregate {
 	return fakeAggregate{
 		id:      id,

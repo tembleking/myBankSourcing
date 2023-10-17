@@ -74,6 +74,7 @@ func (e *EventStore) LoadEventStream(ctx context.Context, streamName StreamName)
 
 // AppendToStream appends a list of events to the event stream for a given aggregate id
 // returning an error if the expected version does not match the current version
+// FIXME: This should only save one aggregate
 func (e *EventStore) AppendToStream(ctx context.Context, aggregates ...domain.Aggregate) error {
 	storedStreamEvents := []StoredStreamEvent{}
 

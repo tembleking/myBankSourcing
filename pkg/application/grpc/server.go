@@ -9,15 +9,18 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/application/proto"
 	"github.com/tembleking/myBankSourcing/pkg/domain/services"
+	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 )
 
 type AccountGRPCServer struct {
 	accountService *services.AccountService
+	accountView    *views.AccountView
 }
 
-func NewAccountGRPCServer(accountService *services.AccountService) *AccountGRPCServer {
+func NewAccountGRPCServer(accountService *services.AccountService, accountView *views.AccountView) *AccountGRPCServer {
 	return &AccountGRPCServer{
 		accountService: accountService,
+		accountView:    accountView,
 	}
 }
 
@@ -36,11 +39,7 @@ func (s *AccountGRPCServer) OpenAccount(ctx context.Context, empty *emptypb.Empt
 }
 
 func (s *AccountGRPCServer) ListAccounts(ctx context.Context, empty *emptypb.Empty) (*proto.ListAccountsResponse, error) {
-	accounts, err := s.accountService.ListAccounts(ctx)
-	if err != nil {
-		return nil, &runtime.HTTPStatusError{HTTPStatus: 500, Err: err}
-	}
-
+	accounts := s.accountView.Accounts()
 	protoAccounts := make([]*proto.Account, len(accounts))
 	for i, account := range accounts {
 		protoAccounts[i] = &proto.Account{
