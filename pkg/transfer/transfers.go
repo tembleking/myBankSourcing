@@ -1,11 +1,12 @@
-package views
+package transfer
 
 import (
 	"context"
 	"fmt"
 	"sync"
 
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/account"
+
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 

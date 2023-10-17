@@ -1,4 +1,4 @@
-package services_test
+package account_test
 
 import (
 	"context"
@@ -7,22 +7,21 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
-	"github.com/tembleking/myBankSourcing/pkg/domain/services"
+	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
-var _ = Describe("Account", func() {
+var _ = Describe("Account Service", func() {
 	var (
-		accountService    *services.AccountService
+		accountService    *account.AccountService
 		accountRepository *fakeAccountRepository
 	)
 
 	BeforeEach(func(ctx context.Context) {
 		accountRepository = &fakeAccountRepository{accounts: map[string]*account.Account{}}
 		eventStore := persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
-		accountService = services.NewAccountService(eventStore, accountRepository)
+		accountService = account.NewAccountService(eventStore, accountRepository)
 	})
 
 	It("opens the account", func(ctx context.Context) {

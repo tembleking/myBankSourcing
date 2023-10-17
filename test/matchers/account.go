@@ -3,10 +3,11 @@ package matchers
 import (
 	"fmt"
 
+	"github.com/tembleking/myBankSourcing/pkg/account"
+
 	"github.com/onsi/gomega/gcustom"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 )
 
 func BeAnAccountEqualsTo(expected *account.Account) gcustom.CustomGomegaMatcher {

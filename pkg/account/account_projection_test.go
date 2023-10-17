@@ -1,4 +1,4 @@
-package views_test
+package account_test
 
 import (
 	"context"
@@ -6,9 +6,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
-	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
@@ -34,7 +33,7 @@ var _ = Describe("Accounts", func() {
 
 	When("there are multiple AccountOpened events saved", func() {
 		It("returns the transfers found", func() {
-			accountsView, err := views.NewAccountView(eventStore)
+			accountsView, err := account.NewAccountView(eventStore)
 			Expect(err).ToNot(HaveOccurred())
 
 			accounts := accountsView.Accounts()

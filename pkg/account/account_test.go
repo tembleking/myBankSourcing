@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
+	"github.com/tembleking/myBankSourcing/pkg/account"
 )
 
 var _ = Describe("Account", func() {
@@ -24,15 +24,11 @@ var _ = Describe("Account", func() {
 
 		When("performing any action on the account", func() {
 			It("fails if the account is not open", func() {
-				err := acc.AddMoney(50)
-
-				Expect(err).To(MatchError(account.ErrAccountIsClosed))
+				Expect(acc.AddMoney(50)).To(MatchError(account.ErrAccountIsClosed))
 			})
 
 			It("fails if the account is not open", func() {
-				err := acc.WithdrawMoney(50)
-
-				Expect(err).To(MatchError(account.ErrAccountIsClosed))
+				Expect(acc.WithdrawMoney(50)).To(MatchError(account.ErrAccountIsClosed))
 			})
 		})
 	})
@@ -63,9 +59,7 @@ var _ = Describe("Account", func() {
 
 			When("trying to add a negative amount", func() {
 				It("fails", func() {
-					err := acc.AddMoney(-1)
-
-					Expect(err).To(MatchError(account.ErrAddMoneyQuantityCannotBeNegative))
+					Expect(acc.AddMoney(-1)).To(MatchError(account.ErrAddMoneyQuantityCannotBeNegative))
 				})
 			})
 		})
@@ -124,9 +118,7 @@ var _ = Describe("Account", func() {
 			It("returns an error", func() {
 				amount := 101
 
-				err := origin.TransferMoney(amount, destination)
-
-				Expect(err).To(MatchError(account.ErrBalanceIsNotEnoughForTransfer))
+				Expect(origin.TransferMoney(amount, destination)).To(MatchError(account.ErrBalanceIsNotEnoughForTransfer))
 			})
 		})
 	})
@@ -149,20 +141,11 @@ var _ = Describe("Account", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(acc.IsOpen()).To(BeFalse())
 
-			err = acc.AddMoney(50)
-			Expect(err).To(MatchError(account.ErrAccountIsClosed))
-
-			err = acc.WithdrawMoney(50)
-			Expect(err).To(MatchError(account.ErrAccountIsClosed))
-
-			err = acc.TransferMoney(50, account.OpenAccount("some-other-id"))
-			Expect(err).To(MatchError(account.ErrAccountIsClosed))
-
-			err = account.OpenAccount("some-other-id").TransferMoney(50, acc)
-			Expect(err).To(MatchError(account.ErrAccountIsClosed))
-
-			err = acc.CloseAccount()
-			Expect(err).To(MatchError(account.ErrAccountIsClosed))
+			Expect(acc.AddMoney(50)).To(MatchError(account.ErrAccountIsClosed))
+			Expect(acc.WithdrawMoney(50)).To(MatchError(account.ErrAccountIsClosed))
+			Expect(acc.TransferMoney(50, account.OpenAccount("some-other-id"))).To(MatchError(account.ErrAccountIsClosed))
+			Expect(account.OpenAccount("some-other-id").TransferMoney(50, acc)).To(MatchError(account.ErrAccountIsClosed))
+			Expect(acc.CloseAccount()).To(MatchError(account.ErrAccountIsClosed))
 		})
 	})
 })

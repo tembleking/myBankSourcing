@@ -2,9 +2,10 @@ package factory
 
 import (
 	"context"
-
 	gohttp "net/http"
 	"time"
+
+	"github.com/tembleking/myBankSourcing/pkg/account"
 
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -14,22 +15,18 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/application/http"
 	pb "github.com/tembleking/myBankSourcing/pkg/application/proto"
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
-	"github.com/tembleking/myBankSourcing/pkg/domain/services"
-	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	persistenceaccount "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 type Factory struct {
-	accountServiceField    lazy.Lazy[*services.AccountService]
+	accountServiceField    lazy.Lazy[*account.AccountService]
 	eventStoreField        lazy.Lazy[*persistence.EventStore]
 	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
 	httpHandlerField       lazy.Lazy[gohttp.Handler]
 	grpcServerField        lazy.Lazy[*gogrpc.Server]
-	accountViewField       lazy.Lazy[*views.AccountView]
+	accountViewField       lazy.Lazy[*account.AccountProjection]
 	accountRepositoryField lazy.Lazy[domain.Repository[*account.Account]]
 }
 
@@ -37,22 +34,22 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f *Factory) NewAccountService() *services.AccountService {
-	return f.accountServiceField.GetOrInit(func() *services.AccountService {
+func (f *Factory) NewAccountService() *account.AccountService {
+	return f.accountServiceField.GetOrInit(func() *account.AccountService {
 		eventStore := f.eventStore()
-		return services.NewAccountService(eventStore, f.accountRepository())
+		return account.NewAccountService(eventStore, f.accountRepository())
 	})
 }
 
 func (f *Factory) accountRepository() domain.Repository[*account.Account] {
 	return f.accountRepositoryField.GetOrInit(func() domain.Repository[*account.Account] {
-		return persistenceaccount.NewRepository(f.eventStore())
+		return account.NewRepository(f.eventStore())
 	})
 }
 
-func (f *Factory) NewAccountView() *views.AccountView {
-	return f.accountViewField.GetOrInit(func() *views.AccountView {
-		accountView, err := views.NewAccountView(f.eventStore())
+func (f *Factory) NewAccountView() *account.AccountProjection {
+	return f.accountViewField.GetOrInit(func() *account.AccountProjection {
+		accountView, err := account.NewAccountView(f.eventStore())
 		if err != nil {
 			panic(err)
 		}

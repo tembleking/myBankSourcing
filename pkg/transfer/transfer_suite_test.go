@@ -1,4 +1,4 @@
-package account_test
+package transfer_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestAccount(t *testing.T) {
+func TestTransfer(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Account Suite")
+	RunSpecs(t, "Transfer Suite")
 }

@@ -7,17 +7,16 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/application/proto"
-	"github.com/tembleking/myBankSourcing/pkg/domain/services"
-	"github.com/tembleking/myBankSourcing/pkg/domain/views"
 )
 
 type AccountGRPCServer struct {
-	accountService *services.AccountService
-	accountView    *views.AccountView
+	accountService *account.AccountService
+	accountView    *account.AccountProjection
 }
 
-func NewAccountGRPCServer(accountService *services.AccountService, accountView *views.AccountView) *AccountGRPCServer {
+func NewAccountGRPCServer(accountService *account.AccountService, accountView *account.AccountProjection) *AccountGRPCServer {
 	return &AccountGRPCServer{
 		accountService: accountService,
 		accountView:    accountView,

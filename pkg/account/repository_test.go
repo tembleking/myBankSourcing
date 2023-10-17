@@ -7,10 +7,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	accountpersistence "github.com/tembleking/myBankSourcing/pkg/persistence/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 	"github.com/tembleking/myBankSourcing/test/matchers"
 )
@@ -19,7 +18,7 @@ var _ = Describe("Repository", func() {
 	var repository domain.Repository[*account.Account]
 
 	BeforeEach(func() {
-		repository = accountpersistence.NewRepository(persistence.NewEventStoreBuilder(sqlite.InMemory()).Build())
+		repository = account.NewRepository(persistence.NewEventStoreBuilder(sqlite.InMemory()).Build())
 	})
 
 	It("saves an account and retrieves it", func(ctx context.Context) {

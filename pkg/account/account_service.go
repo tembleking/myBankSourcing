@@ -1,4 +1,4 @@
-package services
+package account
 
 import (
 	"context"
@@ -7,17 +7,16 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/domain/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
 type AccountService struct {
 	eventStore        *persistence.EventStore
-	accountRepository domain.Repository[*account.Account]
+	accountRepository domain.Repository[*Account]
 }
 
-func (a *AccountService) OpenAccount(ctx context.Context) (*account.Account, error) {
-	accountCreated := account.OpenAccount(uuid.NewString())
+func (a *AccountService) OpenAccount(ctx context.Context) (*Account, error) {
+	accountCreated := OpenAccount(uuid.NewString())
 
 	err := a.accountRepository.Save(ctx, accountCreated)
 	if err != nil {
@@ -27,7 +26,7 @@ func (a *AccountService) OpenAccount(ctx context.Context) (*account.Account, err
 	return accountCreated, err
 }
 
-func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID string, amount int) (*account.Account, error) {
+func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -43,7 +42,7 @@ func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID string
 	return account, err
 }
 
-func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID string, amount int) (*account.Account, error) {
+func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -59,7 +58,7 @@ func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 	return account, err
 }
 
-func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*account.Account, error) {
+func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -75,7 +74,7 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*a
 	return account, err
 }
 
-func (a *AccountService) TransferMoney(ctx context.Context, origin string, destination string, amountToTransfer int) (*account.Account, error) {
+func (a *AccountService) TransferMoney(ctx context.Context, origin string, destination string, amountToTransfer int) (*Account, error) {
 	originAccount, err := a.accountRepository.GetByID(ctx, origin)
 	if err != nil {
 		return nil, fmt.Errorf("error getting origin account: %w", err)
@@ -99,7 +98,7 @@ func (a *AccountService) TransferMoney(ctx context.Context, origin string, desti
 	return originAccount, err
 }
 
-func NewAccountService(eventStore *persistence.EventStore, accountRepository domain.Repository[*account.Account]) *AccountService {
+func NewAccountService(eventStore *persistence.EventStore, accountRepository domain.Repository[*Account]) *AccountService {
 	return &AccountService{
 		eventStore:        eventStore,
 		accountRepository: accountRepository,
