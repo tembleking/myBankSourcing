@@ -26,7 +26,7 @@ type Factory struct {
 	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
 	httpHandlerField       lazy.Lazy[gohttp.Handler]
 	grpcServerField        lazy.Lazy[*gogrpc.Server]
-	accountViewField       lazy.Lazy[*account.AccountProjection]
+	accountProjectionField lazy.Lazy[*account.AccountProjection]
 	accountRepositoryField lazy.Lazy[domain.Repository[*account.Account]]
 }
 
@@ -47,13 +47,13 @@ func (f *Factory) accountRepository() domain.Repository[*account.Account] {
 	})
 }
 
-func (f *Factory) NewAccountView() *account.AccountProjection {
-	return f.accountViewField.GetOrInit(func() *account.AccountProjection {
-		accountView, err := account.NewAccountView(f.eventStore())
+func (f *Factory) NewAccountProjection() *account.AccountProjection {
+	return f.accountProjectionField.GetOrInit(func() *account.AccountProjection {
+		accountProjection, err := account.NewAccountProjection(f.eventStore())
 		if err != nil {
 			panic(err)
 		}
-		return accountView
+		return accountProjection
 	})
 }
 
@@ -93,14 +93,14 @@ func (f *Factory) sqliteInstance() *sqlite.AppendOnlyStore {
 
 func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {
 	return f.httpHandlerField.GetOrInit(func() gohttp.Handler {
-		return http.NewHTTPServer(ctx, f.NewAccountService(), f.NewAccountView())
+		return http.NewHTTPServer(ctx, f.NewAccountService(), f.NewAccountProjection())
 	})
 }
 
 func (f *Factory) NewGRPCServer() *gogrpc.Server {
 
 	return f.grpcServerField.GetOrInit(func() *gogrpc.Server {
-		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService(), f.NewAccountView())
+		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService(), f.NewAccountProjection())
 		grpcServer := gogrpc.NewServer()
 		reflection.Register(grpcServer)
 

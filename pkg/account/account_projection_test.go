@@ -26,10 +26,10 @@ var _ = Describe("Accounts", func() {
 
 	When("there are multiple AccountOpened events saved", func() {
 		It("returns the accounts found", func() {
-			accountsView, err := account.NewAccountView(eventStore)
+			accountsProjection, err := account.NewAccountProjection(eventStore)
 			Expect(err).ToNot(HaveOccurred())
 
-			accounts := accountsView.Accounts()
+			accounts := accountsProjection.Accounts()
 
 			Expect(accounts).To(HaveLen(1))
 			Expect(accounts[0].ID()).To(Equal("some-account"))

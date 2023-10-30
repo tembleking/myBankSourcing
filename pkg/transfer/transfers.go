@@ -16,18 +16,18 @@ type Transfer struct {
 	Quantity int
 }
 
-type TransfersView struct {
+type TransfersProjection struct {
 	rwMutex   sync.RWMutex
 	transfers []Transfer
 }
 
-func (v *TransfersView) Transfers() []Transfer {
+func (v *TransfersProjection) Transfers() []Transfer {
 	v.rwMutex.RLock()
 	defer v.rwMutex.RUnlock()
 	return v.transfers
 }
 
-func (v *TransfersView) handleEvent(event persistence.StreamEvent) {
+func (v *TransfersProjection) handleEvent(event persistence.StreamEvent) {
 	if transferSent, ok := event.Event.(*account.TransferSent); ok {
 		v.transfers = append(v.transfers, Transfer{
 			From:     string(transferSent.From),
@@ -37,26 +37,26 @@ func (v *TransfersView) handleEvent(event persistence.StreamEvent) {
 	}
 }
 
-func NewTransfersViewFrom(eventStore *persistence.EventStore) (*TransfersView, error) {
-	view := &TransfersView{}
-	view.rwMutex.Lock()
-	defer view.rwMutex.Unlock()
+func NewTransfersProjectionFrom(eventStore *persistence.EventStore) (*TransfersProjection, error) {
+	projection := &TransfersProjection{}
+	projection.rwMutex.Lock()
+	defer projection.rwMutex.Unlock()
 
-	err := loadViewFromEventStore(eventStore, view)
+	err := loadProjectionFromEventStore(eventStore, projection)
 	if err != nil {
-		return nil, fmt.Errorf("error loading view from event store: %w", err)
+		return nil, fmt.Errorf("error loading projection from event store: %w", err)
 	}
 
-	return view, nil
+	return projection, nil
 }
 
-func loadViewFromEventStore(eventStore *persistence.EventStore, view *TransfersView) error {
+func loadProjectionFromEventStore(eventStore *persistence.EventStore, projection *TransfersProjection) error {
 	events, err := eventStore.LoadAllEvents(context.Background())
 	if err != nil {
 		return fmt.Errorf("error loading events: %w", err)
 	}
 	for _, event := range events {
-		view.handleEvent(event)
+		projection.handleEvent(event)
 	}
 	return nil
 }

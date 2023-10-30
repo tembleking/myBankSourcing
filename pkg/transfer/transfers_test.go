@@ -35,10 +35,10 @@ var _ = Describe("Transfers", func() {
 
 	When("there are multiple TransferSent events saved", func() {
 		It("returns the transfers found", func() {
-			transfersView, err := transfer.NewTransfersViewFrom(eventStore)
+			transfersProjection, err := transfer.NewTransfersProjectionFrom(eventStore)
 			Expect(err).ToNot(HaveOccurred())
 
-			transfers := transfersView.Transfers()
+			transfers := transfersProjection.Transfers()
 
 			Expect(transfers).To(ConsistOf(
 				transfer.Transfer{From: "some-account", To: "another-account", Quantity: 50},

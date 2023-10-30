@@ -12,14 +12,14 @@ import (
 )
 
 type AccountGRPCServer struct {
-	accountService *account.AccountService
-	accountView    *account.AccountProjection
+	accountService    *account.AccountService
+	accountProjection *account.AccountProjection
 }
 
-func NewAccountGRPCServer(accountService *account.AccountService, accountView *account.AccountProjection) *AccountGRPCServer {
+func NewAccountGRPCServer(accountService *account.AccountService, accountProjection *account.AccountProjection) *AccountGRPCServer {
 	return &AccountGRPCServer{
-		accountService: accountService,
-		accountView:    accountView,
+		accountService:    accountService,
+		accountProjection: accountProjection,
 	}
 }
 
@@ -38,7 +38,7 @@ func (s *AccountGRPCServer) OpenAccount(ctx context.Context, empty *emptypb.Empt
 }
 
 func (s *AccountGRPCServer) ListAccounts(ctx context.Context, empty *emptypb.Empty) (*proto.ListAccountsResponse, error) {
-	accounts := s.accountView.Accounts()
+	accounts := s.accountProjection.Accounts()
 	protoAccounts := make([]*proto.Account, len(accounts))
 	for i, account := range accounts {
 		protoAccounts[i] = &proto.Account{
