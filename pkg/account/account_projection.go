@@ -33,7 +33,7 @@ func (a *AccountProjection) handleEvent(event domain.Event) {
 		a.accountEvents[e.AccountID] = NewAccount(e)
 	case *AccountClosed:
 		delete(a.accountEvents, e.AccountID)
-	case *AmountAdded:
+	case *AmountDeposited:
 		_ = a.accountEvents[e.AccountID].Apply(e)
 		a.accountEvents[e.AccountID].ClearEvents()
 	case *AmountWithdrawn:

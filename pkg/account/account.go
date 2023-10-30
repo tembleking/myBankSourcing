@@ -1,6 +1,8 @@
 package account
 
 import (
+	"fmt"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
@@ -29,22 +31,25 @@ func (a *Account) ID() string {
 	return a.id
 }
 
-func OpenAccount(id string) *Account {
+func OpenAccount(id string) (*Account, error) {
+	if id == "" {
+		return nil, fmt.Errorf("id must not be empty")
+	}
 	a := NewAccount()
-	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.Version()})
-	return a
+	err := a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.Version()})
+	return a, err
 }
 
-func (a *Account) AddMoney(amount int) error {
+func (a *Account) DepositMoney(amount int) error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
 	}
 	if amount < 0 {
-		return ErrAddMoneyQuantityCannotBeNegative
+		return ErrDepositMoneyQuantityCannotBeNegative
 	}
 
 	newBalance := a.Balance() + amount
-	return a.Apply(&AmountAdded{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
+	return a.Apply(&AmountDeposited{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
 }
 
 func (a *Account) WithdrawMoney(amount int) error {
@@ -68,7 +73,7 @@ func (a *Account) onEvent(event domain.Event) {
 	case *AccountOpened:
 		a.id = event.AccountID
 		a.isOpen = true
-	case *AmountAdded:
+	case *AmountDeposited:
 		a.balance = event.Balance
 	case *AmountWithdrawn:
 		a.balance = event.Balance

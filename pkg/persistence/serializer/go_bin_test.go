@@ -39,7 +39,7 @@ var _ = Describe("GoBinary", func() {
 })
 
 func anEvent() domain.Event {
-	return &account.AmountAdded{
+	return &account.AmountDeposited{
 		Quantity: 50,
 		Balance:  134,
 	}

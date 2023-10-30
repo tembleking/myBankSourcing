@@ -16,25 +16,27 @@ type AccountService struct {
 }
 
 func (a *AccountService) OpenAccount(ctx context.Context) (*Account, error) {
-	accountCreated := OpenAccount(uuid.NewString())
-
-	err := a.accountRepository.Save(ctx, accountCreated)
+	accountCreated, err := OpenAccount(uuid.NewString())
 	if err != nil {
+		return nil, fmt.Errorf("error opening account: %w", err)
+	}
+
+	if err := a.accountRepository.Save(ctx, accountCreated); err != nil {
 		return nil, fmt.Errorf("error saving created account: %w", err)
 	}
 
 	return accountCreated, err
 }
 
-func (a *AccountService) AddMoneyToAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
+func (a *AccountService) DepositMoneyIntoAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
 	}
 
-	err = account.AddMoney(amount)
+	err = account.DepositMoney(amount)
 	if err != nil {
-		return nil, fmt.Errorf("error adding money to account: %w", err)
+		return nil, fmt.Errorf("error depositing money to account: %w", err)
 	}
 
 	err = a.accountRepository.Save(ctx, account)

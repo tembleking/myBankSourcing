@@ -3,7 +3,6 @@ package account_test
 import (
 	"context"
 
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 	"github.com/tembleking/myBankSourcing/test/matchers"
+	"github.com/tembleking/myBankSourcing/test/mother"
 )
 
 var _ = Describe("Repository", func() {
@@ -22,25 +22,15 @@ var _ = Describe("Repository", func() {
 	})
 
 	It("saves an account and retrieves it", func(ctx context.Context) {
-		id := uuid.NewString()
-		acc := account.OpenAccount(id)
-		Expect(acc.AddMoney(50)).ToNot(HaveOccurred())
-		Expect(acc.WithdrawMoney(20)).ToNot(HaveOccurred())
-		Expect(acc.WithdrawMoney(30)).ToNot(HaveOccurred())
-		Expect(acc.CloseAccount()).ToNot(HaveOccurred())
+		acc := mother.AccountOpenWithMovements()
 
 		Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())
-		Expect(repository.GetByID(ctx, id)).To(matchers.BeAnAccountEqualsTo(acc))
-		Expect(repository.GetByID(ctx, id)).To(matchers.BeAggregateWithTheSameVersionAs(acc))
+		Expect(repository.GetByID(ctx, "some-account")).To(matchers.BeAnAccountEqualsTo(acc))
+		Expect(repository.GetByID(ctx, "some-account")).To(matchers.BeAggregateWithTheSameVersionAs(acc))
 	})
 
 	It("saves the same account multiple times and is idempotent", func(ctx context.Context) {
-		id := uuid.NewString()
-		acc := account.OpenAccount(id)
-		Expect(acc.AddMoney(50)).ToNot(HaveOccurred())
-		Expect(acc.WithdrawMoney(20)).ToNot(HaveOccurred())
-		Expect(acc.WithdrawMoney(30)).ToNot(HaveOccurred())
-		Expect(acc.CloseAccount()).ToNot(HaveOccurred())
+		acc := mother.AccountOpenWithMovements()
 
 		Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())
 		Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())

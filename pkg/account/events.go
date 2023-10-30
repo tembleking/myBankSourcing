@@ -6,7 +6,7 @@ import (
 
 func init() {
 	serializer.RegisterSerializableEvent(&AccountOpened{})
-	serializer.RegisterSerializableEvent(&AmountAdded{})
+	serializer.RegisterSerializableEvent(&AmountDeposited{})
 	serializer.RegisterSerializableEvent(&AmountWithdrawn{})
 	serializer.RegisterSerializableEvent(&TransferSent{})
 	serializer.RegisterSerializableEvent(&TransferReceived{})
@@ -26,18 +26,18 @@ func (a *AccountOpened) EventName() string {
 	return "AccountOpened"
 }
 
-type AmountAdded struct {
+type AmountDeposited struct {
 	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
 }
 
-func (a *AmountAdded) Version() uint64 {
+func (a *AmountDeposited) Version() uint64 {
 	return a.AccountVersion
 }
 
-func (a *AmountAdded) EventName() string {
+func (a *AmountDeposited) EventName() string {
 	return "AmountAdded"
 }
 

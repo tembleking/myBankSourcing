@@ -61,7 +61,7 @@ func (s *AccountGRPCServer) AddMoney(ctx context.Context, request *proto.AddMone
 		return nil, &runtime.HTTPStatusError{HTTPStatus: 400, Err: fmt.Errorf("amount must be greater than 0")}
 	}
 
-	account, err := s.accountService.AddMoneyToAccount(ctx, accountID, amount)
+	account, err := s.accountService.DepositMoneyIntoAccount(ctx, accountID, amount)
 	if err != nil {
 		return nil, &runtime.HTTPStatusError{HTTPStatus: 500, Err: err}
 	}

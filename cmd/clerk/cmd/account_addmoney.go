@@ -22,7 +22,7 @@ var addMoneyCmd = &cobra.Command{
 		if err != nil {
 			panic(fmt.Errorf("invalid amount %s: %w", args[1], err))
 		}
-		account, err := factory.NewFactory().NewAccountService().AddMoneyToAccount(cmd.Context(), args[0], amount)
+		account, err := factory.NewFactory().NewAccountService().DepositMoneyIntoAccount(cmd.Context(), args[0], amount)
 		if err != nil {
 			cmd.PrintErrln(err)
 			os.Exit(1)

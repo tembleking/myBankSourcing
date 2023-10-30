@@ -39,7 +39,7 @@ var _ = Describe("Account Service", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		amount := 100
-		accountUpdated, err := accountService.AddMoneyToAccount(ctx, accountCreated.ID(), amount)
+		accountUpdated, err := accountService.DepositMoneyIntoAccount(ctx, accountCreated.ID(), amount)
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(accountUpdated.Balance()).To(Equal(amount))
@@ -50,7 +50,7 @@ var _ = Describe("Account Service", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		amount := 100
-		_, err = accountService.AddMoneyToAccount(ctx, accountCreated.ID(), amount)
+		_, err = accountService.DepositMoneyIntoAccount(ctx, accountCreated.ID(), amount)
 		Expect(err).ToNot(HaveOccurred())
 
 		amount = 25
@@ -78,7 +78,7 @@ var _ = Describe("Account Service", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		amountToAdd := 100
-		_, err = accountService.AddMoneyToAccount(ctx, firstAccount.ID(), amountToAdd)
+		_, err = accountService.DepositMoneyIntoAccount(ctx, firstAccount.ID(), amountToAdd)
 		Expect(err).ToNot(HaveOccurred())
 
 		amountToTransfer := 25
