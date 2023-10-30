@@ -11,6 +11,7 @@ import (
 )
 
 type Transfer struct {
+	ID       string
 	From     string
 	To       string
 	Quantity int
@@ -28,8 +29,9 @@ func (v *TransfersProjection) Transfers() []Transfer {
 }
 
 func (v *TransfersProjection) handleEvent(event persistence.StreamEvent) {
-	if transferSent, ok := event.Event.(*account.TransferSent); ok {
+	if transferSent, ok := event.Event.(*account.TransferRequested); ok {
 		v.transfers = append(v.transfers, Transfer{
+			ID:       transferSent.TransferID,
 			From:     string(transferSent.From),
 			To:       string(transferSent.To),
 			Quantity: transferSent.Quantity,

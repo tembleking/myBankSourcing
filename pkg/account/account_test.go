@@ -3,6 +3,7 @@ package account_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 )
@@ -115,14 +116,23 @@ var _ = Describe("Account", func() {
 			)
 		})
 
-		It("transfers the money correctly", func() {
+		It("doesn't return any transference before it's actually created", func() {
+			Expect(origin.Transfers()).To(BeEmpty())
+		})
+
+		It("transfers the money correctly, but doesn't update the other account yet", func() {
 			amount := 50
 
 			err := origin.TransferMoney(amount, destination)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(origin.Balance()).To(Equal(50))
-			Expect(destination.Balance()).To(Equal(80))
+			Expect(destination.Balance()).To(Equal(30))
+			Expect(origin.Transfers()).To(ConsistOf(MatchFields(IgnoreExtras, Fields{
+				"TransferID": Not(BeEmpty()),
+				"Amount":     Equal(amount),
+				"ToAccount":  Equal("destination"),
+			})))
 		})
 
 		When("the origin account has less money than the amount to transfer", func() {
@@ -155,7 +165,6 @@ var _ = Describe("Account", func() {
 			Expect(acc.DepositMoney(50)).To(MatchError(account.ErrAccountIsClosed))
 			Expect(acc.WithdrawMoney(50)).To(MatchError(account.ErrAccountIsClosed))
 			Expect(acc.TransferMoney(50, otherAccount)).To(MatchError(account.ErrAccountIsClosed))
-			Expect(otherAccount.TransferMoney(50, acc)).To(MatchError(account.ErrAccountIsClosed))
 			Expect(acc.CloseAccount()).To(MatchError(account.ErrAccountIsClosed))
 		})
 	})

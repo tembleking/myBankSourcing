@@ -39,7 +39,7 @@ func (a *AccountProjection) handleEvent(event domain.Event) {
 	case *AmountWithdrawn:
 		_ = a.accountEvents[e.AccountID].Apply(e)
 		a.accountEvents[e.AccountID].ClearEvents()
-	case *TransferSent:
+	case *TransferRequested:
 		_ = a.accountEvents[e.From].Apply(e)
 		a.accountEvents[e.From].ClearEvents()
 	case *TransferReceived:

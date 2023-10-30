@@ -3,15 +3,23 @@ package account
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
+
+type Transfer struct {
+	TransferID string
+	Amount     int
+	ToAccount  string
+}
 
 type Account struct {
 	domain.BaseAggregate
 
-	id      string
-	isOpen  bool
-	balance int
+	id        string
+	isOpen    bool
+	balance   int
+	transfers []Transfer
 }
 
 func NewAccount(events ...domain.Event) *Account {
@@ -77,8 +85,13 @@ func (a *Account) onEvent(event domain.Event) {
 		a.balance = event.Balance
 	case *AmountWithdrawn:
 		a.balance = event.Balance
-	case *TransferSent:
+	case *TransferRequested:
 		a.balance = event.Balance
+		a.transfers = append(a.transfers, Transfer{
+			TransferID: event.TransferID,
+			Amount:     event.Quantity,
+			ToAccount:  event.To,
+		})
 	case *TransferReceived:
 		a.balance = event.Balance
 	case *AccountClosed:
@@ -91,24 +104,24 @@ func (a *Account) IsOpen() bool {
 }
 
 func (a *Account) TransferMoney(amount int, destination *Account) error {
-	if !a.IsOpen() || !destination.IsOpen() {
+	if !a.IsOpen() {
 		return ErrAccountIsClosed
 	}
 	if amount > a.Balance() {
 		return ErrBalanceIsNotEnoughForTransfer
 	}
 
+	transferID := uuid.NewString()
 	newBalanceOrigin := a.Balance() - amount
-	if err := a.Apply(&TransferSent{Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.Version()}); err != nil {
-		return err
-	}
-
-	newBalanceDestination := destination.Balance() + amount
-	if err := destination.Apply(&TransferReceived{Quantity: amount, Balance: newBalanceDestination, From: a.ID(), To: destination.ID(), AccountVersion: destination.Version()}); err != nil {
+	if err := a.Apply(&TransferRequested{TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.Version()}); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (a *Account) Transfers() []Transfer {
+	return a.transfers
 }
 
 func (a *Account) CloseAccount() error {

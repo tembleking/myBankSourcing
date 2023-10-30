@@ -25,7 +25,7 @@ var _ = Describe("Transfers", func() {
 			&account.AccountOpened{AccountID: "some-account", AccountVersion: 0},
 			&account.AmountDeposited{Quantity: 50, Balance: 50, AccountVersion: 1},
 			&account.AmountDeposited{Quantity: 100, Balance: 150, AccountVersion: 2},
-			&account.TransferSent{Quantity: 50, Balance: 100, From: "some-account", To: "another-account", AccountVersion: 3},
+			&account.TransferRequested{Quantity: 50, Balance: 100, From: "some-account", To: "another-account", AccountVersion: 3},
 			&account.AmountWithdrawn{Quantity: 25, Balance: 75, AccountVersion: 4},
 		}...)
 
