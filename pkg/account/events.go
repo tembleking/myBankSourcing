@@ -18,6 +18,10 @@ type AccountOpened struct {
 	AccountVersion uint64
 }
 
+func (a *AccountOpened) AggregateID() string {
+	return a.AccountID
+}
+
 func (a *AccountOpened) Version() uint64 {
 	return a.AccountVersion
 }
@@ -33,6 +37,10 @@ type AmountDeposited struct {
 	AccountVersion uint64
 }
 
+func (a *AmountDeposited) AggregateID() string {
+	return a.AccountID
+}
+
 func (a *AmountDeposited) Version() uint64 {
 	return a.AccountVersion
 }
@@ -46,6 +54,10 @@ type AmountWithdrawn struct {
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
+}
+
+func (a *AmountWithdrawn) AggregateID() string {
+	return a.AccountID
 }
 
 func (a *AmountWithdrawn) Version() uint64 {
@@ -65,6 +77,10 @@ type TransferRequested struct {
 	AccountVersion uint64
 }
 
+func (t *TransferRequested) AggregateID() string {
+	return t.From
+}
+
 func (t *TransferRequested) EventName() string {
 	return "TransferRequested"
 }
@@ -74,11 +90,16 @@ func (t *TransferRequested) Version() uint64 {
 }
 
 type TransferReceived struct {
+	TransferID     string
 	Quantity       int
 	Balance        int
 	From           string
 	To             string
 	AccountVersion uint64
+}
+
+func (t *TransferReceived) AggregateID() string {
+	return t.To
 }
 
 func (t *TransferReceived) EventName() string {
@@ -92,6 +113,10 @@ func (t *TransferReceived) Version() uint64 {
 type AccountClosed struct {
 	AccountID      string
 	AccountVersion uint64
+}
+
+func (a *AccountClosed) AggregateID() string {
+	return a.AccountID
 }
 
 func (a *AccountClosed) EventName() string {

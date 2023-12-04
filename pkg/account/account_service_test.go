@@ -103,7 +103,5 @@ func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*accoun
 // Save implements domain.Repository.
 func (f *fakeAccountRepository) Save(ctx context.Context, aggregate *account.Account) error {
 	f.accounts[aggregate.ID()] = aggregate
-	aggregate.ClearEvents()
-
 	return nil
 }

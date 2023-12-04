@@ -34,17 +34,13 @@ func (a *AccountProjection) handleEvent(event domain.Event) {
 	case *AccountClosed:
 		delete(a.accountEvents, e.AccountID)
 	case *AmountDeposited:
-		_ = a.accountEvents[e.AccountID].Apply(e)
-		a.accountEvents[e.AccountID].ClearEvents()
+		a.accountEvents[e.AccountID].LoadFromHistory(e)
 	case *AmountWithdrawn:
-		_ = a.accountEvents[e.AccountID].Apply(e)
-		a.accountEvents[e.AccountID].ClearEvents()
+		a.accountEvents[e.AccountID].LoadFromHistory(e)
 	case *TransferRequested:
-		_ = a.accountEvents[e.From].Apply(e)
-		a.accountEvents[e.From].ClearEvents()
+		a.accountEvents[e.From].LoadFromHistory(e)
 	case *TransferReceived:
-		_ = a.accountEvents[e.To].Apply(e)
-		a.accountEvents[e.To].ClearEvents()
+		a.accountEvents[e.To].LoadFromHistory(e)
 	}
 }
 

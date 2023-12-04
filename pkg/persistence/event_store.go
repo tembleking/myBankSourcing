@@ -96,12 +96,12 @@ func (e *EventStore) AppendToStream(ctx context.Context, aggregates ...domain.Ag
 }
 
 func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]StoredStreamEvent, error) {
-	events := aggregate.Events()
+	events := aggregate.UncommittedEvents()
 	if len(events) == 0 {
 		return nil, nil
 	}
 
-	storedStreamEvents := make([]StoredStreamEvent, 0, len(aggregate.Events()))
+	storedStreamEvents := make([]StoredStreamEvent, 0, len(aggregate.UncommittedEvents()))
 	version := aggregate.Version() - uint64(len(events))
 	for _, event := range events {
 		eventData, err := e.serializer.SerializeDomainEvent(event)

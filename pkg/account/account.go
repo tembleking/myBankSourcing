@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
@@ -25,13 +26,7 @@ type Account struct {
 func NewAccount(events ...domain.Event) *Account {
 	a := &Account{}
 	a.OnEventFunc = a.onEvent
-	for _, event := range events {
-		err := a.Apply(event)
-		if err != nil {
-			panic(err)
-		}
-	}
-	a.ClearEvents()
+	a.LoadFromHistory(events...)
 	return a
 }
 
@@ -44,8 +39,8 @@ func OpenAccount(id string) (*Account, error) {
 		return nil, fmt.Errorf("id must not be empty")
 	}
 	a := NewAccount()
-	err := a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.Version()})
-	return a, err
+	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.NextVersion()})
+	return a, nil
 }
 
 func (a *Account) DepositMoney(amount int) error {
@@ -57,7 +52,8 @@ func (a *Account) DepositMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	return a.Apply(&AmountDeposited{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
+	a.Apply(&AmountDeposited{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion()})
+	return nil
 }
 
 func (a *Account) WithdrawMoney(amount int) error {
@@ -69,7 +65,8 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	return a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.Version()})
+	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion()})
+	return nil
 }
 
 func (a *Account) Balance() int {
@@ -113,10 +110,7 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 
 	transferID := uuid.NewString()
 	newBalanceOrigin := a.Balance() - amount
-	if err := a.Apply(&TransferRequested{TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.Version()}); err != nil {
-		return err
-	}
-
+	a.Apply(&TransferRequested{TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.NextVersion()})
 	return nil
 }
 
@@ -131,5 +125,6 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
-	return a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.Version()})
+	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.NextVersion()})
+	return nil
 }

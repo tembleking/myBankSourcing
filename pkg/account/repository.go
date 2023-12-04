@@ -33,7 +33,6 @@ func (r *Repository) Save(ctx context.Context, aggregate *Account) error {
 	if err != nil {
 		return fmt.Errorf("unable to append to event store: %w", err)
 	}
-	aggregate.ClearEvents()
 	return nil
 }
 

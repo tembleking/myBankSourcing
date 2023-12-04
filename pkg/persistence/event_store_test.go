@@ -110,17 +110,18 @@ type fakeAggregate struct {
 	events  []domain.Event
 }
 
-// Events implements domain.Aggregate.
-func (f *fakeAggregate) Events() []domain.Event {
+func (f *fakeAggregate) LoadFromHistory(events ...domain.Event) {
+	// do nothing
+}
+
+func (f *fakeAggregate) UncommittedEvents() []domain.Event {
 	return f.events
 }
 
-// ID implements domain.Aggregate.
 func (f *fakeAggregate) ID() string {
 	return f.id
 }
 
-// Version implements domain.Aggregate.
 func (f *fakeAggregate) Version() uint64 {
 	return f.version
 }

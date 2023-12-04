@@ -29,10 +29,12 @@ var _ = Describe("Repository", func() {
 		Expect(repository.GetByID(ctx, "some-account")).To(matchers.BeAggregateWithTheSameVersionAs(acc))
 	})
 
-	It("saves the same account multiple times and is idempotent", func(ctx context.Context) {
-		acc := mother.AccountOpenWithMovements()
+	When("saving the account multiple times", func() {
+		It("returns an error", func(ctx context.Context) {
+			acc := mother.AccountOpenWithMovements()
 
-		Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())
-		Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())
+			Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())
+			Expect(repository.Save(ctx, acc)).To(HaveOccurred())
+		})
 	})
 })
