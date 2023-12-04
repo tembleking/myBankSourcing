@@ -25,7 +25,7 @@ var _ = Describe("Repository", func() {
 		acc := mother.AccountOpenWithMovements()
 
 		Expect(repository.Save(ctx, acc)).ToNot(HaveOccurred())
-		Expect(repository.GetByID(ctx, "some-account")).To(matchers.BeAnAccountEqualsTo(acc))
+		Expect(repository.GetByID(ctx, "some-account")).To(matchers.BeAnEntityEqualTo(acc))
 		Expect(repository.GetByID(ctx, "some-account")).To(matchers.BeAggregateWithTheSameVersionAs(acc))
 	})
 

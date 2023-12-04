@@ -3,14 +3,12 @@ package matchers
 import (
 	"fmt"
 
-	"github.com/tembleking/myBankSourcing/pkg/account"
-
 	"github.com/onsi/gomega/gcustom"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-func BeAnAccountEqualsTo(expected *account.Account) gcustom.CustomGomegaMatcher {
+func BeAnEntityEqualTo(expected domain.Entity) gcustom.CustomGomegaMatcher {
 	return gcustom.MakeMatcher(func(actual interface{}) (success bool, err error) {
 		if expected == nil {
 			return actual == nil, nil
@@ -20,12 +18,12 @@ func BeAnAccountEqualsTo(expected *account.Account) gcustom.CustomGomegaMatcher 
 			return false, nil
 		}
 
-		if actualAccount, ok := actual.(*account.Account); ok {
-			return expected.SameEntityAs(actualAccount), nil
+		if actualEntity, ok := actual.(domain.Entity); ok {
+			return expected.SameEntityAs(actualEntity), nil
 		}
 
 		return false, nil
-	}).WithMessage(fmt.Sprintf("expected account to be equal to %#v", expected))
+	}).WithMessage(fmt.Sprintf("expected entity to be equal to %#v", expected))
 }
 
 func BeAggregateWithTheSameVersionAs(expected domain.Aggregate) gcustom.CustomGomegaMatcher {
