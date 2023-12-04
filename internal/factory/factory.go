@@ -75,7 +75,7 @@ func (f *Factory) appendOnlyStore() persistence.AppendOnlyStore {
 }
 
 func (f *Factory) sqliteInstance() *sqlite.AppendOnlyStore {
-	appendOnlyStore, err := sqlite.New("file:///tmp/mybankdb.db3")
+	appendOnlyStore, err := sqlite.New("file:///tmp/mybankdb.sqlite")
 	if err != nil {
 		panic(err)
 	}

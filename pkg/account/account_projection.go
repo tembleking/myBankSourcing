@@ -30,17 +30,11 @@ func (a *AccountProjection) Accounts() []*Account {
 func (a *AccountProjection) handleEvent(event domain.Event) {
 	switch e := event.(type) {
 	case *AccountOpened:
-		a.accountEvents[e.AccountID] = NewAccount(e)
+		a.accountEvents[e.AggregateID()] = NewAccount(e)
 	case *AccountClosed:
 		delete(a.accountEvents, e.AccountID)
-	case *AmountDeposited:
-		a.accountEvents[e.AccountID].LoadFromHistory(e)
-	case *AmountWithdrawn:
-		a.accountEvents[e.AccountID].LoadFromHistory(e)
-	case *TransferRequested:
-		a.accountEvents[e.From].LoadFromHistory(e)
-	case *TransferReceived:
-		a.accountEvents[e.To].LoadFromHistory(e)
+	case *AmountDeposited, *AmountWithdrawn, *TransferRequested, *TransferReceived:
+		a.accountEvents[e.AggregateID()].LoadFromHistory(e)
 	}
 }
 

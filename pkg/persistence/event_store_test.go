@@ -105,17 +105,14 @@ func (f *stubClock) Now() time.Time {
 }
 
 type fakeAggregate struct {
+	domain.BaseAggregate
 	id      string
 	version uint64
-	events  []domain.Event
 }
 
-func (f *fakeAggregate) LoadFromHistory(events ...domain.Event) {
-	// do nothing
-}
-
-func (f *fakeAggregate) UncommittedEvents() []domain.Event {
-	return f.events
+func (f *fakeAggregate) SameEntityAs(other domain.Entity) bool {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (f *fakeAggregate) ID() string {
@@ -126,15 +123,10 @@ func (f *fakeAggregate) Version() uint64 {
 	return f.version
 }
 
-func (f *fakeAggregate) ClearEvents() {
-	f.events = nil
-}
-
 func (f fakeAggregate) withID(id string) fakeAggregate {
 	return fakeAggregate{
 		id:      id,
 		version: f.version,
-		events:  f.events,
 	}
 }
 
@@ -142,14 +134,16 @@ func (f fakeAggregate) withVersion(version uint64) fakeAggregate {
 	return fakeAggregate{
 		id:      f.id,
 		version: version,
-		events:  f.events,
 	}
 }
 
 func (f fakeAggregate) withEvents(events ...domain.Event) fakeAggregate {
-	return fakeAggregate{
+	aggregate := fakeAggregate{
 		id:      f.id,
 		version: f.version,
-		events:  events,
 	}
+	for _, event := range events {
+		aggregate.Apply(event)
+	}
+	return aggregate
 }

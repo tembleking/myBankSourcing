@@ -1,11 +1,13 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 // TODO convert the aggregate into an interface
 
 type Aggregate interface {
-	ID() string
+	Entity
 	UncommittedEvents() []Event
 	LoadFromHistory(events ...Event)
 	Version() uint64
@@ -31,7 +33,9 @@ func (a *BaseAggregate) LoadFromHistory(events ...Event) {
 
 func (a *BaseAggregate) apply(event Event, isNew bool) {
 	a.updateMetadata(event)
-	a.OnEventFunc(event)
+	if a.OnEventFunc != nil {
+		a.OnEventFunc(event)
+	}
 
 	if isNew {
 		a.events = append(a.events, event)

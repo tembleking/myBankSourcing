@@ -48,29 +48,25 @@ var _ = Describe("Transfers", func() {
 })
 
 type fakeAggregate struct {
+	domain.BaseAggregate
 	id      string
 	version uint64
 	events  []domain.Event
 }
 
-func (f *fakeAggregate) LoadFromHistory(events ...domain.Event) {
-	// do nothing
-}
-
-func (f *fakeAggregate) UncommittedEvents() []domain.Event {
-	return f.events
-}
-
+// ID implements domain.Aggregate.
 func (f *fakeAggregate) ID() string {
 	return f.id
 }
 
+// Version implements domain.Aggregate.
 func (f *fakeAggregate) Version() uint64 {
 	return f.version
 }
 
-func (f *fakeAggregate) ClearEvents() {
-	f.events = nil
+func (f *fakeAggregate) SameEntityAs(other domain.Entity) bool {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (f fakeAggregate) withID(id string) fakeAggregate {
@@ -90,9 +86,13 @@ func (f fakeAggregate) withVersion(version uint64) fakeAggregate {
 }
 
 func (f fakeAggregate) withEvents(events ...domain.Event) fakeAggregate {
-	return fakeAggregate{
+	aggregate := fakeAggregate{
 		id:      f.id,
 		version: f.version,
 		events:  events,
 	}
+	for _, event := range events {
+		aggregate.Apply(event)
+	}
+	return aggregate
 }

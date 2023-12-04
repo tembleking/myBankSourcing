@@ -108,11 +108,11 @@ var _ = Describe("Account", func() {
 		BeforeEach(func() {
 			origin = account.NewAccount(
 				&account.AccountOpened{AccountID: "origin", AccountVersion: 0},
-				&account.AmountDeposited{Balance: 100, Quantity: 100, AccountVersion: 1},
+				&account.AmountDeposited{AccountID: "origin", Balance: 100, Quantity: 100, AccountVersion: 1},
 			)
 			destination = account.NewAccount(
 				&account.AccountOpened{AccountID: "destination", AccountVersion: 0},
-				&account.AmountDeposited{Balance: 30, Quantity: 30, AccountVersion: 1},
+				&account.AmountDeposited{AccountID: "destination", Balance: 30, Quantity: 30, AccountVersion: 1},
 			)
 		})
 

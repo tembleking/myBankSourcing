@@ -2,6 +2,7 @@ package account
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -14,13 +15,32 @@ type Transfer struct {
 	ToAccount  string
 }
 
+func (t *Transfer) ID() string {
+	return t.TransferID
+}
+
+func (t *Transfer) SameEntityAs(other domain.Entity) bool {
+	if otherTransfer, ok := other.(*Transfer); ok {
+		return t.ID() == otherTransfer.ID() && t.Amount == otherTransfer.Amount && t.ToAccount == otherTransfer.ToAccount
+	}
+	return false
+}
+
 type Account struct {
 	domain.BaseAggregate
 
-	id        string
 	isOpen    bool
 	balance   int
 	transfers []Transfer
+}
+
+func (a *Account) SameEntityAs(other domain.Entity) bool {
+	if otherAccount, ok := other.(*Account); ok {
+		return a.ID() == otherAccount.ID() && a.Version() == otherAccount.Version() && a.IsOpen() == otherAccount.IsOpen() && a.Balance() == otherAccount.Balance() && slices.EqualFunc(a.transfers, otherAccount.transfers, func(a, b Transfer) bool {
+			return a.SameEntityAs(&b)
+		})
+	}
+	return false
 }
 
 func NewAccount(events ...domain.Event) *Account {
@@ -28,10 +48,6 @@ func NewAccount(events ...domain.Event) *Account {
 	a.OnEventFunc = a.onEvent
 	a.LoadFromHistory(events...)
 	return a
-}
-
-func (a *Account) ID() string {
-	return a.id
 }
 
 func OpenAccount(id string) (*Account, error) {
@@ -76,7 +92,6 @@ func (a *Account) Balance() int {
 func (a *Account) onEvent(event domain.Event) {
 	switch event := event.(type) {
 	case *AccountOpened:
-		a.id = event.AccountID
 		a.isOpen = true
 	case *AmountDeposited:
 		a.balance = event.Balance
