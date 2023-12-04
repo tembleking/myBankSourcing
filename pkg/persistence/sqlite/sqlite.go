@@ -15,7 +15,7 @@ import (
 const (
 	// https://www.sqlite.org/rescode.html#constraint
 	sqliteErrorConstraint = 19
-	//https://www.sqlite.org/rescode.html#constraint_unique
+	// https://www.sqlite.org/rescode.html#constraint_unique
 	sqliteErrorConstraintUnique = 2067
 )
 
@@ -62,7 +62,6 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 
 // ReadAllRecords implements persistence.AppendOnlyStore.
 func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
-
 	rows, err := a.db.QueryContext(ctx, `SELECT stream_name, stream_version, event_name, event_data, happened_on FROM events;`)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)

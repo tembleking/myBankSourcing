@@ -58,7 +58,6 @@ func serveGRPC(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory
 	if err != nil {
 		panic(fmt.Errorf("error serving GRPC: %w", err))
 	}
-
 }
 
 func serveHTTP(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory) {

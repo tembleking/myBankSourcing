@@ -72,7 +72,6 @@ func (s *AccountGRPCServer) AddMoney(ctx context.Context, request *proto.AddMone
 			Balance: int64(account.Balance()),
 		},
 	}, nil
-
 }
 
 func (s *AccountGRPCServer) WithdrawMoney(ctx context.Context, request *proto.WithdrawMoneyRequest) (*proto.WithdrawMoneyResponse, error) {

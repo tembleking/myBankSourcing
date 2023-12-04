@@ -97,8 +97,7 @@ func dataRecordInStore() []byte {
 	return data
 }
 
-type stubClock struct {
-}
+type stubClock struct{}
 
 func (f *stubClock) Now() time.Time {
 	return time.Time{}
@@ -111,7 +110,7 @@ type fakeAggregate struct {
 }
 
 func (f *fakeAggregate) SameEntityAs(other domain.Entity) bool {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

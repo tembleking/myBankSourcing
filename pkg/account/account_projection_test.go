@@ -13,9 +13,7 @@ import (
 )
 
 var _ = Describe("Accounts", func() {
-	var (
-		eventStore *persistence.EventStore
-	)
+	var eventStore *persistence.EventStore
 
 	BeforeEach(func() {
 		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()

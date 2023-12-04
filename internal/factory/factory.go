@@ -65,7 +65,6 @@ func (f *Factory) eventStore() *persistence.EventStore {
 			WithDeserializer(eventSerializer).
 			Build()
 	})
-
 }
 
 func (f *Factory) appendOnlyStore() persistence.AppendOnlyStore {
@@ -98,7 +97,6 @@ func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {
 }
 
 func (f *Factory) NewGRPCServer() *gogrpc.Server {
-
 	return f.grpcServerField.GetOrInit(func() *gogrpc.Server {
 		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService(), f.NewAccountProjection())
 		grpcServer := gogrpc.NewServer()

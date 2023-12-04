@@ -36,9 +36,13 @@ type Account struct {
 
 func (a *Account) SameEntityAs(other domain.Entity) bool {
 	if otherAccount, ok := other.(*Account); ok {
-		return a.ID() == otherAccount.ID() && a.Version() == otherAccount.Version() && a.IsOpen() == otherAccount.IsOpen() && a.Balance() == otherAccount.Balance() && slices.EqualFunc(a.transfers, otherAccount.transfers, func(a, b Transfer) bool {
-			return a.SameEntityAs(&b)
-		})
+		return a.ID() == otherAccount.ID() &&
+			a.Version() == otherAccount.Version() &&
+			a.IsOpen() == otherAccount.IsOpen() &&
+			a.Balance() == otherAccount.Balance() &&
+			slices.EqualFunc(a.transfers, otherAccount.transfers, func(a, b Transfer) bool {
+				return a.SameEntityAs(&b)
+			})
 	}
 	return false
 }

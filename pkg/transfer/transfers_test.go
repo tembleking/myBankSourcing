@@ -15,9 +15,7 @@ import (
 )
 
 var _ = Describe("Transfers", func() {
-	var (
-		eventStore *persistence.EventStore
-	)
+	var eventStore *persistence.EventStore
 
 	BeforeEach(func() {
 		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
@@ -65,7 +63,7 @@ func (f *fakeAggregate) Version() uint64 {
 }
 
 func (f *fakeAggregate) SameEntityAs(other domain.Entity) bool {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
