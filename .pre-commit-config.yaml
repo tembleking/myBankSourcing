@@ -1,18 +1,22 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
--   repo: local
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: local
     hooks:
-    - id: check
-      name: check
-      entry: just check
-      language: system
-      pass_filenames: false
-       
+      - id: check
+        name: check
+        entry: just check
+        language: system
+        pass_filenames: false
+      - id: check_vulns
+        pass_filenames: false
+        name: Check vulnerabilities
+        entry: trivy fs . --exit-code 1 --ignore-unfixed --quiet
+        language: system
