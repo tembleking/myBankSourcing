@@ -59,7 +59,7 @@ func (f *Factory) NewAccountProjection() *account.Projection {
 
 func (f *Factory) eventStore() *persistence.EventStore {
 	return f.eventStoreField.GetOrInit(func() *persistence.EventStore {
-		eventSerializer := &serializer.Msgpack{}
+		eventSerializer := &serializer.JSON{}
 		return persistence.NewEventStoreBuilder(f.appendOnlyStore()).
 			WithSerializer(eventSerializer).
 			WithDeserializer(eventSerializer).

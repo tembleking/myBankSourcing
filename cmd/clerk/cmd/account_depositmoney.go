@@ -13,10 +13,10 @@ import (
 	"github.com/tembleking/myBankSourcing/internal/factory"
 )
 
-// addMoneyCmd represents the addMoney command
-var addMoneyCmd = &cobra.Command{
-	Use:   "addMoney",
-	Short: "Adds money to an account",
+// depositMoneyCmd represents the addMoney command
+var depositMoneyCmd = &cobra.Command{
+	Use:   "depositMoney",
+	Short: "Deposits money to an account",
 	Run: func(cmd *cobra.Command, args []string) {
 		amount, err := strconv.Atoi(args[1])
 		if err != nil {
@@ -28,7 +28,7 @@ var addMoneyCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		cmd.Printf("Account ID: %s, Added: %d, Balance: %d\n", account.ID(), amount, account.Balance())
+		cmd.Printf("Account ID: %s, Deposited: %d, Balance: %d\n", account.ID(), amount, account.Balance())
 	},
 	Args: cobra.MinimumNArgs(2),
 	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -47,7 +47,7 @@ var addMoneyCmd = &cobra.Command{
 }
 
 func init() {
-	accountCmd.AddCommand(addMoneyCmd)
+	accountCmd.AddCommand(depositMoneyCmd)
 
 	// Here you will define your flags and configuration settings.
 
