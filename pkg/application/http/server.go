@@ -11,7 +11,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/application/proto"
 )
 
-func NewHTTPServer(ctx context.Context, accountService *account.AccountService, accountProjection *account.AccountProjection) http.Handler {
+func NewHTTPServer(ctx context.Context, accountService *account.AccountService, accountProjection *account.Projection) http.Handler {
 	mux := runtime.NewServeMux()
 	err := proto.RegisterClerkAPIServiceHandlerServer(ctx, mux, grpc.NewAccountGRPCServer(accountService, accountProjection))
 	if err != nil {

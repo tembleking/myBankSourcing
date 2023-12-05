@@ -9,11 +9,11 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
-type AccountProjection struct {
+type Projection struct {
 	accountEvents map[string]*Account
 }
 
-func (a *AccountProjection) Accounts() []*Account {
+func (a *Projection) Accounts() []*Account {
 	result := make([]*Account, 0, len(a.accountEvents))
 
 	for _, account := range a.accountEvents {
@@ -27,7 +27,7 @@ func (a *AccountProjection) Accounts() []*Account {
 	return result
 }
 
-func (a *AccountProjection) handleEvent(event domain.Event) {
+func (a *Projection) handleEvent(event domain.Event) {
 	switch e := event.(type) {
 	case *AccountOpened:
 		a.accountEvents[e.AggregateID()] = NewAccount(e)
@@ -38,8 +38,8 @@ func (a *AccountProjection) handleEvent(event domain.Event) {
 	}
 }
 
-func NewAccountProjection(eventStore *persistence.EventStore) (*AccountProjection, error) {
-	a := &AccountProjection{accountEvents: map[string]*Account{}}
+func NewAccountProjection(eventStore *persistence.EventStore) (*Projection, error) {
+	a := &Projection{accountEvents: map[string]*Account{}}
 
 	events, err := eventStore.LoadAllEvents(context.Background())
 	if err != nil {

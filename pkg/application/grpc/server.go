@@ -13,10 +13,10 @@ import (
 
 type AccountGRPCServer struct {
 	accountService    *account.AccountService
-	accountProjection *account.AccountProjection
+	accountProjection *account.Projection
 }
 
-func NewAccountGRPCServer(accountService *account.AccountService, accountProjection *account.AccountProjection) *AccountGRPCServer {
+func NewAccountGRPCServer(accountService *account.AccountService, accountProjection *account.Projection) *AccountGRPCServer {
 	return &AccountGRPCServer{
 		accountService:    accountService,
 		accountProjection: accountProjection,

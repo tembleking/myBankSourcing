@@ -26,7 +26,7 @@ type Factory struct {
 	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
 	httpHandlerField       lazy.Lazy[gohttp.Handler]
 	grpcServerField        lazy.Lazy[*gogrpc.Server]
-	accountProjectionField lazy.Lazy[*account.AccountProjection]
+	accountProjectionField lazy.Lazy[*account.Projection]
 	accountRepositoryField lazy.Lazy[domain.Repository[*account.Account]]
 }
 
@@ -47,8 +47,8 @@ func (f *Factory) accountRepository() domain.Repository[*account.Account] {
 	})
 }
 
-func (f *Factory) NewAccountProjection() *account.AccountProjection {
-	return f.accountProjectionField.GetOrInit(func() *account.AccountProjection {
+func (f *Factory) NewAccountProjection() *account.Projection {
+	return f.accountProjectionField.GetOrInit(func() *account.Projection {
 		accountProjection, err := account.NewAccountProjection(f.eventStore())
 		if err != nil {
 			panic(err)
