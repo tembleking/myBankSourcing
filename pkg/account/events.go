@@ -1,6 +1,8 @@
 package account
 
 import (
+	"time"
+
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 
@@ -16,6 +18,7 @@ func init() {
 type AccountOpened struct {
 	AccountID      string
 	AccountVersion uint64
+	Timestamp      time.Time
 }
 
 func (a *AccountOpened) AggregateID() string {
@@ -30,11 +33,16 @@ func (a *AccountOpened) EventName() string {
 	return "AccountOpened"
 }
 
+func (a *AccountOpened) HappenedOn() time.Time {
+	return a.Timestamp
+}
+
 type AmountDeposited struct {
 	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
+	Timestamp      time.Time
 }
 
 func (a *AmountDeposited) AggregateID() string {
@@ -49,11 +57,16 @@ func (a *AmountDeposited) EventName() string {
 	return "AmountAdded"
 }
 
+func (a *AmountDeposited) HappenedOn() time.Time {
+	return a.Timestamp
+}
+
 type AmountWithdrawn struct {
 	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
+	Timestamp      time.Time
 }
 
 func (a *AmountWithdrawn) AggregateID() string {
@@ -68,6 +81,10 @@ func (a *AmountWithdrawn) EventName() string {
 	return "AmountWithdrawn"
 }
 
+func (a *AmountWithdrawn) HappenedOn() time.Time {
+	return a.Timestamp
+}
+
 type TransferRequested struct {
 	TransferID     string
 	Quantity       int
@@ -75,6 +92,7 @@ type TransferRequested struct {
 	From           string
 	To             string
 	AccountVersion uint64
+	Timestamp      time.Time
 }
 
 func (t *TransferRequested) AggregateID() string {
@@ -89,6 +107,10 @@ func (t *TransferRequested) Version() uint64 {
 	return t.AccountVersion
 }
 
+func (a *TransferRequested) HappenedOn() time.Time {
+	return a.Timestamp
+}
+
 type TransferReceived struct {
 	TransferID     string
 	Quantity       int
@@ -96,6 +118,7 @@ type TransferReceived struct {
 	From           string
 	To             string
 	AccountVersion uint64
+	Timestamp      time.Time
 }
 
 func (t *TransferReceived) AggregateID() string {
@@ -110,9 +133,14 @@ func (t *TransferReceived) Version() uint64 {
 	return t.AccountVersion
 }
 
+func (a *TransferReceived) HappenedOn() time.Time {
+	return a.Timestamp
+}
+
 type AccountClosed struct {
 	AccountID      string
 	AccountVersion uint64
+	Timestamp      time.Time
 }
 
 func (a *AccountClosed) AggregateID() string {
@@ -125,4 +153,8 @@ func (a *AccountClosed) EventName() string {
 
 func (a *AccountClosed) Version() uint64 {
 	return a.AccountVersion
+}
+
+func (a *AccountClosed) HappenedOn() time.Time {
+	return a.Timestamp
 }

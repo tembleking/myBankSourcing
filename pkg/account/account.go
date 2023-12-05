@@ -59,7 +59,7 @@ func OpenAccount(id string) (*Account, error) {
 		return nil, fmt.Errorf("id must not be empty")
 	}
 	a := NewAccount()
-	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.NextVersion()})
+	a.Apply(&AccountOpened{AccountID: id, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return a, nil
 }
 
@@ -72,7 +72,7 @@ func (a *Account) DepositMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountDeposited{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion()})
+	a.Apply(&AmountDeposited{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
 
@@ -85,7 +85,7 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion()})
+	a.Apply(&AmountWithdrawn{AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
 
@@ -129,7 +129,7 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 
 	transferID := uuid.NewString()
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(&TransferRequested{TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.NextVersion()})
+	a.Apply(&TransferRequested{TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
 
@@ -144,6 +144,6 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
-	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.NextVersion()})
+	a.Apply(&AccountClosed{AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }

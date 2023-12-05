@@ -2,7 +2,6 @@ package persistence_test
 
 import (
 	"context"
-	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 
@@ -29,7 +28,7 @@ var _ = Describe("EventStore", func() {
 		ctx = context.Background()
 		ctrl = gomock.NewController(GinkgoT())
 		appendOnlyStore = mocks.NewMockAppendOnlyStore(ctrl)
-		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).WithAppendOnlyStore(appendOnlyStore).WithClock(&stubClock{}).Build()
+		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).WithAppendOnlyStore(appendOnlyStore).Build()
 	})
 
 	It("should be able to load an event stream", func() {
@@ -95,12 +94,6 @@ func dataRecordInStore() []byte {
 	)
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 	return data
-}
-
-type stubClock struct{}
-
-func (f *stubClock) Now() time.Time {
-	return time.Time{}
 }
 
 type fakeAggregate struct {

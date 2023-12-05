@@ -8,10 +8,6 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
-type Clock interface {
-	Now() time.Time
-}
-
 type (
 	StreamName    string
 	StreamVersion uint64
@@ -46,7 +42,6 @@ type EventStore struct {
 	serializer      DomainEventSerializer
 	deserializer    DomainEventDeserializer
 	appendOnlyStore AppendOnlyStore
-	clock           Clock
 }
 
 // LoadEventStream loads all events for a given aggregate id
@@ -109,12 +104,11 @@ func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]St
 			return nil, fmt.Errorf("error serializing event: %w", err)
 		}
 
-		now := e.clock.Now().UTC()
 		storedStreamEvents = append(storedStreamEvents, StoredStreamEvent{
 			ID:         StreamID{StreamName: StreamName(aggregate.ID()), StreamVersion: StreamVersion(version)},
 			EventName:  event.EventName(),
 			EventData:  eventData,
-			HappenedOn: now,
+			HappenedOn: event.HappenedOn(),
 		})
 
 		version++
