@@ -3,13 +3,20 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
 
+	. "github.com/go-jet/jet/v2/sqlite"
+	"github.com/golang-migrate/migrate/v4"
+	migratesqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/sqlgen/model"
+	. "github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/sqlgen/table"
 )
 
 const (
@@ -23,95 +30,106 @@ type AppendOnlyStore struct {
 	db *sql.DB
 }
 
-// Append implements persistence.AppendOnlyStore.
 func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.StoredStreamEvent) error {
 	if len(events) == 0 {
 		return nil
 	}
 
-	tx, err := a.db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("error beginning transaction: %w", err)
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
+	return a.doAtomically(ctx, func(tx *sql.Tx) error {
+		insertStmt := Events.INSERT(Events.StreamName, Events.StreamVersion, Events.EventName, Events.EventData, Events.HappenedOn)
+		for _, event := range events {
+			insertStmt.MODEL(model.Events{
+				StreamName:    string(event.ID.StreamName),
+				StreamVersion: int32(event.ID.StreamVersion),
+				EventName:     event.EventName,
+				EventData:     event.EventData,
+				HappenedOn:    event.HappenedOn,
+			})
+		}
 
-	stmt, err := tx.PrepareContext(ctx, "INSERT INTO events (stream_name, stream_version, event_name, event_data, happened_on) VALUES (?, ?, ?, ?, ?);")
-	if err != nil {
-		return fmt.Errorf("error creating the prepared statement: %w", err)
-	}
-	defer stmt.Close()
-
-	for _, event := range events {
-		_, err = stmt.Exec(event.ID.StreamName, event.ID.StreamVersion, event.EventName, event.EventData, event.HappenedOn)
-		var sqliteError sqlite3.Error
-		if err != nil {
-			if errors.As(err, &sqliteError) && sqliteError.Code == sqliteErrorConstraint && sqliteError.ExtendedCode == sqliteErrorConstraintUnique {
-				return &persistence.ErrUnexpectedVersion{
-					StreamName: event.ID.StreamName,
-					Expected:   event.ID.StreamVersion,
-				}
+		if _, err := insertStmt.ExecContext(ctx, tx); err != nil {
+			if isErrorUniqueConstraintViolation(err) {
+				return persistence.ErrUnexpectedVersion
 			}
 			return fmt.Errorf("unable to push stored stream event into the sqlite append only store: %w", err)
 		}
-	}
 
-	return tx.Commit()
+		return nil
+	})
 }
 
-// ReadAllRecords implements persistence.AppendOnlyStore.
+func isErrorUniqueConstraintViolation(err error) bool {
+	var sqliteError sqlite3.Error
+	return errors.As(err, &sqliteError) &&
+		sqliteError.Code == sqliteErrorConstraint &&
+		sqliteError.ExtendedCode == sqliteErrorConstraintUnique
+}
+
 func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
-	rows, err := a.db.QueryContext(ctx, `SELECT stream_name, stream_version, event_name, event_data, happened_on FROM events;`)
+	var dbEvents []model.Events
+	err := Events.SELECT(Events.AllColumns).QueryContext(ctx, a.db, &dbEvents)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
 	}
 
-	events := []persistence.StoredStreamEvent{}
-	for rows.Next() {
-		event := persistence.StoredStreamEvent{
-			ID: persistence.StreamID{},
-		}
-		err := rows.Scan(
-			&event.ID.StreamName,
-			&event.ID.StreamVersion,
-			&event.EventName,
-			&event.EventData,
-			&event.HappenedOn,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("error retrieving the events: %w", err)
-		}
-		events = append(events, event)
+	var events []persistence.StoredStreamEvent
+	for _, event := range dbEvents {
+		events = append(events, modelEventToPersistence(event))
 	}
 	return events, nil
 }
 
-// ReadRecords implements persistence.AppendOnlyStore.
 func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
-	rows, err := a.db.QueryContext(ctx, `SELECT stream_name, stream_version, event_name, event_data, happened_on FROM events WHERE stream_name = ?;`, streamName)
+	var dbEvents []model.Events
+	err := Events.SELECT(Events.AllColumns).WHERE(Events.StreamName.EQ(String(string(streamName)))).QueryContext(ctx, a.db, &dbEvents)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
 	}
 
-	events := []persistence.StoredStreamEvent{}
-	for rows.Next() {
-		event := persistence.StoredStreamEvent{
-			ID: persistence.StreamID{},
-		}
-		err := rows.Scan(
-			&event.ID.StreamName,
-			&event.ID.StreamVersion,
-			&event.EventName,
-			&event.EventData,
-			&event.HappenedOn,
-		)
-		if err != nil {
-			panic(err)
-		}
-		events = append(events, event)
+	var events []persistence.StoredStreamEvent
+	for _, event := range dbEvents {
+		events = append(events, modelEventToPersistence(event))
 	}
 	return events, nil
+}
+
+func modelEventToPersistence(dbEvent model.Events) persistence.StoredStreamEvent {
+	return persistence.StoredStreamEvent{
+		ID: persistence.StreamID{
+			StreamName:    persistence.StreamName(dbEvent.StreamName),
+			StreamVersion: persistence.StreamVersion(dbEvent.StreamVersion),
+		},
+		EventName:  dbEvent.EventName,
+		EventData:  dbEvent.EventData,
+		HappenedOn: dbEvent.HappenedOn,
+	}
+}
+
+//go:embed internal/migrations
+var migrations embed.FS
+
+func (a *AppendOnlyStore) MigrateDB(ctx context.Context) (err error) {
+	driver, err := migratesqlite3.WithInstance(a.db, &migratesqlite3.Config{})
+	if err != nil {
+		return fmt.Errorf("unable to create migration driver: %w", err)
+	}
+
+	fs, err := iofs.New(migrations, "internal/migrations")
+	if err != nil {
+		return fmt.Errorf("unable to create migration fs: %w", err)
+	}
+
+	instance, err := migrate.NewWithInstance("iofs", fs, "sqlite3", driver)
+	if err != nil {
+		return fmt.Errorf("unable to create migration instance: %w", err)
+	}
+
+	err = instance.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("unable to migrate: %w", err)
+	}
+
+	return nil
 }
 
 func New(connectionString string) (*AppendOnlyStore, error) {
@@ -139,35 +157,31 @@ func InMemory() *AppendOnlyStore {
 	return db
 }
 
-func (s *AppendOnlyStore) MigrateDB(ctx context.Context) (err error) {
-	tx, err := s.db.BeginTx(ctx, nil)
+func (a *AppendOnlyStore) doAtomically(ctx context.Context, function func(tx *sql.Tx) error) (err error) {
+	tx, err := a.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
-		return fmt.Errorf("unable to begin transaction: %w", err)
+		err = fmt.Errorf("unable to begin transaction: %w", err)
+		return
 	}
+
 	defer func() {
-		_ = tx.Rollback()
+		if panicMsg := recover(); panicMsg != nil {
+			_ = tx.Rollback()
+			panic(panicMsg)
+		}
+
+		if err != nil {
+			rollbackErr := tx.Rollback()
+			err = errors.Join(err, rollbackErr)
+			return
+		}
+		err = tx.Commit()
 	}()
 
-	_, err = tx.ExecContext(ctx, `
-CREATE TABLE IF NOT EXISTS events (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	stream_name TEXT NOT NULL, 
-	stream_version INTEGER NOT NULL, 
-	event_name TEXT NOT NULL, 
-	event_data BLOB NOT NULL, 
-	happened_on	TIMESTAMP NOT NULL,
-CONSTRAINT events_stream_unique UNIQUE (stream_name, stream_version)
-);
-
-CREATE INDEX IF NOT EXISTS stream_name_version_idx ON events (stream_name, stream_version);
-`)
-	if err != nil {
-		return fmt.Errorf("unable to apply migrations: %w", err)
-	}
-
-	return tx.Commit()
+	err = function(tx)
+	return
 }
 
-func (s *AppendOnlyStore) Close() error {
-	return s.db.Close()
+func (a *AppendOnlyStore) Close() error {
+	return a.db.Close()
 }

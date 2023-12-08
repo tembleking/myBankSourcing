@@ -12,7 +12,6 @@ type Repository struct {
 	eventStore *persistence.EventStore
 }
 
-// GetByID implements domain.Repository.
 func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {
 	events, err := r.eventStore.LoadEventStream(ctx, persistence.StreamName(id))
 	if err != nil {
@@ -27,7 +26,6 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {
 	return NewAccount(domainEvents...), err
 }
 
-// Save implements domain.Repository.
 func (r *Repository) Save(ctx context.Context, aggregate *Account) error {
 	err := r.eventStore.AppendToStream(ctx, aggregate)
 	if err != nil {

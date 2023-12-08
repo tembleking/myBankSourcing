@@ -92,7 +92,6 @@ type fakeAccountRepository struct {
 	accounts map[string]*account.Account
 }
 
-// GetByID implements domain.Repository.
 func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*account.Account, error) {
 	if account, ok := f.accounts[id]; ok {
 		return account, nil
@@ -100,7 +99,6 @@ func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*accoun
 	return nil, fmt.Errorf("not found")
 }
 
-// Save implements domain.Repository.
 func (f *fakeAccountRepository) Save(ctx context.Context, aggregate *account.Account) error {
 	f.accounts[aggregate.ID()] = aggregate
 	return nil

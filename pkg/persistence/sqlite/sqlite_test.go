@@ -52,7 +52,7 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 			Expect(err).To(BeNil())
 
 			err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data")})
-			Expect(err).To(MatchError("unexpected version for stream aggregate-0 with version 0"))
+			Expect(err).To(MatchError(persistence.ErrUnexpectedVersion))
 		})
 	})
 

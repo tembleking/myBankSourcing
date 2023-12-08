@@ -52,12 +52,10 @@ type fakeAggregate struct {
 	events  []domain.Event
 }
 
-// ID implements domain.Aggregate.
 func (f *fakeAggregate) ID() string {
 	return f.id
 }
 
-// Version implements domain.Aggregate.
 func (f *fakeAggregate) Version() uint64 {
 	return f.version
 }
