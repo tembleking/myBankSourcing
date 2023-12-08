@@ -3,12 +3,11 @@ package persistence_test
 import (
 	"context"
 
-	"github.com/tembleking/myBankSourcing/pkg/account"
-
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.uber.org/mock/gomock"
 
+	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/mocks"

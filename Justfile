@@ -9,7 +9,7 @@ check: generate lint test-build test
 
 # Generate mocks
 generate: build-proto generate-sql
-    go install github.com/golang/mock/mockgen@latest
+    go install go.uber.org/mock/mockgen@latest
     find . -type d -name "mocks" | xargs rm -rf
     go generate ./...
 
