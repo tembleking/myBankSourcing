@@ -19,11 +19,7 @@ func init() {
 	structMapSerializer = &structMapSerializing{registeredTypes: map[string]any{}}
 }
 
-func registerEventInStructSerializer(value domain.Event) {
-	structMapSerializer.Register(value)
-}
-
-func (s *structMapSerializing) SerializeToMap(event domain.Event) (map[string]any, error) {
+func (s *structMapSerializing) serializeToMap(event domain.Event) (map[string]any, error) {
 	result := map[string]any{}
 	err := mapstructure.Decode(event, &result)
 	if err != nil {
@@ -32,7 +28,7 @@ func (s *structMapSerializing) SerializeToMap(event domain.Event) (map[string]an
 	return result, nil
 }
 
-func (s *structMapSerializing) DeserializeFromMap(eventName string, data map[string]any) (domain.Event, error) {
+func (s *structMapSerializing) deserializeFromMap(eventName string, data map[string]any) (domain.Event, error) {
 	if _, ok := s.registeredTypes[eventName]; !ok {
 		return nil, fmt.Errorf("error deserializing from map, type not registered: %s", eventName)
 	}
@@ -45,7 +41,7 @@ func (s *structMapSerializing) DeserializeFromMap(eventName string, data map[str
 	return event.(domain.Event), nil
 }
 
-func (s *structMapSerializing) Register(value domain.Event) {
+func (s *structMapSerializing) register(value domain.Event) {
 	reflectValue := reflect.ValueOf(value)
 	for {
 		if reflectValue.Kind() == reflect.Ptr {

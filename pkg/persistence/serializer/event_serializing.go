@@ -8,5 +8,5 @@ import (
 
 func RegisterSerializableEvent(event domain.Event) {
 	gob.RegisterName(event.EventName(), event)
-	registerEventInStructSerializer(event)
+	structMapSerializer.register(event)
 }

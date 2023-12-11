@@ -10,7 +10,7 @@ import (
 type JSON struct{}
 
 func (m *JSON) SerializeDomainEvent(event domain.Event) ([]byte, error) {
-	eventData, err := structMapSerializer.SerializeToMap(event)
+	eventData, err := structMapSerializer.serializeToMap(event)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing event to map: %w", err)
 	}
@@ -30,7 +30,7 @@ func (m *JSON) DeserializeDomainEvent(eventName string, data []byte) (domain.Eve
 		return nil, fmt.Errorf("error deserializing event data map: %w", err)
 	}
 
-	event, err := structMapSerializer.DeserializeFromMap(eventName, eventDataAsMap)
+	event, err := structMapSerializer.deserializeFromMap(eventName, eventDataAsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error deserializing event from map: %w", err)
 	}
