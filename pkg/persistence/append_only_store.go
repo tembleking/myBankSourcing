@@ -19,8 +19,9 @@ type AppendOnlyStore interface {
 }
 
 type StoredStreamEvent struct {
-	ID         StreamID
-	EventName  string
-	EventData  []byte
-	HappenedOn time.Time
+	ID          StreamID
+	EventName   string
+	EventData   []byte
+	HappenedOn  time.Time
+	ContentType string
 }

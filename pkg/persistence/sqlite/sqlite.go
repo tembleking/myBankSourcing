@@ -35,7 +35,7 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 		return nil
 	}
 
-	insertStmt := Event.INSERT(Event.StreamName, Event.StreamVersion, Event.EventName, Event.EventData, Event.HappenedOn)
+	insertStmt := Event.INSERT(Event.StreamName, Event.StreamVersion, Event.EventName, Event.EventData, Event.HappenedOn, Event.ContentType)
 	for _, event := range events {
 		insertStmt.MODEL(model.Event{
 			StreamName:    string(event.ID.StreamName),
@@ -43,6 +43,7 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 			EventName:     event.EventName,
 			EventData:     event.EventData,
 			HappenedOn:    event.HappenedOn,
+			ContentType:   event.ContentType,
 		})
 	}
 
@@ -94,9 +95,10 @@ func modelEventToPersistence(dbEvent model.Event) persistence.StoredStreamEvent 
 			StreamName:    persistence.StreamName(dbEvent.StreamName),
 			StreamVersion: persistence.StreamVersion(dbEvent.StreamVersion),
 		},
-		EventName:  dbEvent.EventName,
-		EventData:  dbEvent.EventData,
-		HappenedOn: dbEvent.HappenedOn,
+		EventName:   dbEvent.EventName,
+		EventData:   dbEvent.EventData,
+		HappenedOn:  dbEvent.HappenedOn,
+		ContentType: dbEvent.ContentType,
 	}
 }
 

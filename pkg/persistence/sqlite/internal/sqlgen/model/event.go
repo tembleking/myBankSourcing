@@ -17,4 +17,5 @@ type Event struct {
 	EventName     string
 	EventData     []byte
 	HappenedOn    time.Time
+	ContentType   string
 }

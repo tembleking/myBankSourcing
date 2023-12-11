@@ -6,6 +6,7 @@ import (
 
 type DomainEventSerializer interface {
 	SerializeDomainEvent(events domain.Event) ([]byte, error)
+	ContentType() string
 }
 
 type DomainEventDeserializer interface {

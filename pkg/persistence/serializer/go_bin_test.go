@@ -36,6 +36,10 @@ var _ = Describe("GoBinary", func() {
 
 		Expect(first).To(Equal(second))
 	})
+
+	It("returns the content type", func() {
+		Expect(ser.ContentType()).To(Equal("application/x-gob"))
+	})
 })
 
 func anEvent() domain.Event {

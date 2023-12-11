@@ -23,6 +23,10 @@ func (m *JSON) SerializeDomainEvent(event domain.Event) ([]byte, error) {
 	return data, nil
 }
 
+func (m *JSON) ContentType() string {
+	return "application/json"
+}
+
 func (m *JSON) DeserializeDomainEvent(eventName string, data []byte) (domain.Event, error) {
 	eventDataAsMap := make(map[string]any)
 	err := json.Unmarshal(data, &eventDataAsMap)

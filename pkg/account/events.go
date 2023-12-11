@@ -54,7 +54,7 @@ func (a *AmountDeposited) Version() uint64 {
 }
 
 func (a *AmountDeposited) EventName() string {
-	return "AmountAdded"
+	return "AmountDeposited"
 }
 
 func (a *AmountDeposited) HappenedOn() time.Time {

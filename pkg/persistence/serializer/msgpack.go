@@ -24,6 +24,10 @@ func (m *Msgpack) SerializeDomainEvent(event domain.Event) ([]byte, error) {
 	return data, nil
 }
 
+func (m *Msgpack) ContentType() string {
+	return "application/x-msgpack"
+}
+
 func (m *Msgpack) DeserializeDomainEvent(eventName string, data []byte) (domain.Event, error) {
 	eventDataAsMap := make(map[string]any)
 	err := msgpack.Unmarshal(data, &eventDataAsMap)

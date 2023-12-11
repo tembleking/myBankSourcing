@@ -32,7 +32,7 @@ var _ = Describe("EventStore", func() {
 
 	It("should be able to load an event stream", func() {
 		appendOnlyStore.EXPECT().ReadRecords(ctx, persistence.StreamName("aggregate-0")).Return(
-			[]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore()}},
+			[]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore(), EventName: "AmountDeposited"}},
 			nil,
 		)
 
@@ -49,14 +49,16 @@ var _ = Describe("EventStore", func() {
 		appendOnlyStore.EXPECT().Append(
 			ctx,
 			persistence.StoredStreamEvent{
-				ID:        persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0},
-				EventName: "AmountAdded",
-				EventData: dataRecordInStore(),
+				ID:          persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0},
+				EventName:   "AmountDeposited",
+				EventData:   dataRecordInStore(),
+				ContentType: "application/json",
 			},
 			persistence.StoredStreamEvent{
-				ID:        persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0},
-				EventName: "AmountAdded",
-				EventData: dataRecordInStore(),
+				ID:          persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0},
+				EventName:   "AmountDeposited",
+				EventData:   dataRecordInStore(),
+				ContentType: "application/json",
 			},
 		).Return(nil)
 
@@ -74,7 +76,7 @@ var _ = Describe("EventStore", func() {
 		It("returns all events", func() {
 			appendOnlyStore.EXPECT().
 				ReadAllRecords(ctx).
-				Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore()}}, nil)
+				Return([]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore(), EventName: "AmountDeposited"}}, nil)
 
 			stream, err := eventStore.LoadAllEvents(ctx)
 			Expect(err).To(BeNil())
@@ -87,7 +89,7 @@ var _ = Describe("EventStore", func() {
 })
 
 func dataRecordInStore() []byte {
-	serializer := &serializer.GoBinarySerializer{}
+	serializer := &serializer.JSON{}
 	data, err := serializer.SerializeDomainEvent(
 		&account.AmountDeposited{AccountID: "some-account", Quantity: 10, Balance: 10},
 	)

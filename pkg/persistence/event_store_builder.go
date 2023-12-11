@@ -11,8 +11,8 @@ type EventStoreBuilder struct {
 }
 
 func NewEventStoreBuilder(appendOnlyStore AppendOnlyStore) *EventStoreBuilder {
-	defaultSerializer := &serializer.GoBinarySerializer{}
-	defaultDeserializer := &serializer.GoBinarySerializer{}
+	defaultSerializer := &serializer.JSON{}
+	defaultDeserializer := &serializer.JSON{}
 
 	return &EventStoreBuilder{
 		serializer:      defaultSerializer,
