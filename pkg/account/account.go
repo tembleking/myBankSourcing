@@ -47,10 +47,9 @@ func (a *Account) SameEntityAs(other domain.Entity) bool {
 	return false
 }
 
-func NewAccount(events ...domain.Event) *Account {
+func NewAccount() *Account {
 	a := &Account{}
 	a.OnEventFunc = a.onEvent
-	a.LoadFromHistory(events...)
 	return a
 }
 

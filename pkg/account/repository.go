@@ -17,7 +17,9 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {
 		return nil, fmt.Errorf("unable to retrieve events from event store: %w", err)
 	}
 
-	return NewAccount(events...), err
+	account := NewAccount()
+	account.LoadFromHistory(events...)
+	return account, err
 }
 
 func (r *Repository) Save(ctx context.Context, aggregate *Account) error {
