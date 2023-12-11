@@ -11,9 +11,9 @@ import (
 	"github.com/go-jet/jet/v2/sqlite"
 )
 
-var Events = newEventsTable("", "events", "")
+var Event = newEventTable("", "event", "")
 
-type eventsTable struct {
+type eventTable struct {
 	sqlite.Table
 
 	// Columns
@@ -27,40 +27,40 @@ type eventsTable struct {
 	MutableColumns sqlite.ColumnList
 }
 
-type EventsTable struct {
-	eventsTable
+type EventTable struct {
+	eventTable
 
-	EXCLUDED eventsTable
+	EXCLUDED eventTable
 }
 
-// AS creates new EventsTable with assigned alias
-func (a EventsTable) AS(alias string) *EventsTable {
-	return newEventsTable(a.SchemaName(), a.TableName(), alias)
+// AS creates new EventTable with assigned alias
+func (a EventTable) AS(alias string) *EventTable {
+	return newEventTable(a.SchemaName(), a.TableName(), alias)
 }
 
-// Schema creates new EventsTable with assigned schema name
-func (a EventsTable) FromSchema(schemaName string) *EventsTable {
-	return newEventsTable(schemaName, a.TableName(), a.Alias())
+// Schema creates new EventTable with assigned schema name
+func (a EventTable) FromSchema(schemaName string) *EventTable {
+	return newEventTable(schemaName, a.TableName(), a.Alias())
 }
 
-// WithPrefix creates new EventsTable with assigned table prefix
-func (a EventsTable) WithPrefix(prefix string) *EventsTable {
-	return newEventsTable(a.SchemaName(), prefix+a.TableName(), a.TableName())
+// WithPrefix creates new EventTable with assigned table prefix
+func (a EventTable) WithPrefix(prefix string) *EventTable {
+	return newEventTable(a.SchemaName(), prefix+a.TableName(), a.TableName())
 }
 
-// WithSuffix creates new EventsTable with assigned table suffix
-func (a EventsTable) WithSuffix(suffix string) *EventsTable {
-	return newEventsTable(a.SchemaName(), a.TableName()+suffix, a.TableName())
+// WithSuffix creates new EventTable with assigned table suffix
+func (a EventTable) WithSuffix(suffix string) *EventTable {
+	return newEventTable(a.SchemaName(), a.TableName()+suffix, a.TableName())
 }
 
-func newEventsTable(schemaName, tableName, alias string) *EventsTable {
-	return &EventsTable{
-		eventsTable: newEventsTableImpl(schemaName, tableName, alias),
-		EXCLUDED:    newEventsTableImpl("", "excluded", ""),
+func newEventTable(schemaName, tableName, alias string) *EventTable {
+	return &EventTable{
+		eventTable: newEventTableImpl(schemaName, tableName, alias),
+		EXCLUDED:   newEventTableImpl("", "excluded", ""),
 	}
 }
 
-func newEventsTableImpl(schemaName, tableName, alias string) eventsTable {
+func newEventTableImpl(schemaName, tableName, alias string) eventTable {
 	var (
 		StreamNameColumn    = sqlite.StringColumn("stream_name")
 		StreamVersionColumn = sqlite.IntegerColumn("stream_version")
@@ -71,7 +71,7 @@ func newEventsTableImpl(schemaName, tableName, alias string) eventsTable {
 		mutableColumns      = sqlite.ColumnList{StreamNameColumn, StreamVersionColumn, EventNameColumn, EventDataColumn, HappenedOnColumn}
 	)
 
-	return eventsTable{
+	return eventTable{
 		Table: sqlite.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns

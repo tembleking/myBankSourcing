@@ -35,27 +35,28 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 		return nil
 	}
 
-	return a.doAtomically(ctx, func(tx *sql.Tx) error {
-		insertStmt := Events.INSERT(Events.StreamName, Events.StreamVersion, Events.EventName, Events.EventData, Events.HappenedOn)
-		for _, event := range events {
-			insertStmt.MODEL(model.Events{
-				StreamName:    string(event.ID.StreamName),
-				StreamVersion: int32(event.ID.StreamVersion),
-				EventName:     event.EventName,
-				EventData:     event.EventData,
-				HappenedOn:    event.HappenedOn,
-			})
-		}
+	insertStmt := Event.INSERT(Event.StreamName, Event.StreamVersion, Event.EventName, Event.EventData, Event.HappenedOn)
+	for _, event := range events {
+		insertStmt.MODEL(model.Event{
+			StreamName:    string(event.ID.StreamName),
+			StreamVersion: int32(event.ID.StreamVersion),
+			EventName:     event.EventName,
+			EventData:     event.EventData,
+			HappenedOn:    event.HappenedOn,
+		})
+	}
 
-		if _, err := insertStmt.ExecContext(ctx, tx); err != nil {
-			if isErrorUniqueConstraintViolation(err) {
-				return persistence.ErrUnexpectedVersion
-			}
-			return fmt.Errorf("unable to push stored stream event into the sqlite append only store: %w", err)
-		}
-
-		return nil
+	err := a.doAtomically(ctx, func(tx *sql.Tx) error {
+		_, err := insertStmt.ExecContext(ctx, tx)
+		return err
 	})
+	if isErrorUniqueConstraintViolation(err) {
+		return persistence.ErrUnexpectedVersion
+	}
+	if err != nil {
+		return fmt.Errorf("unable to push stored stream event into the sqlite append only store: %w", err)
+	}
+	return nil
 }
 
 func isErrorUniqueConstraintViolation(err error) bool {
@@ -66,22 +67,16 @@ func isErrorUniqueConstraintViolation(err error) bool {
 }
 
 func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
-	var dbEvents []model.Events
-	err := Events.SELECT(Events.AllColumns).QueryContext(ctx, a.db, &dbEvents)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
-	}
-
-	var events []persistence.StoredStreamEvent
-	for _, event := range dbEvents {
-		events = append(events, modelEventToPersistence(event))
-	}
-	return events, nil
+	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns))
 }
 
 func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
-	var dbEvents []model.Events
-	err := Events.SELECT(Events.AllColumns).WHERE(Events.StreamName.EQ(String(string(streamName)))).QueryContext(ctx, a.db, &dbEvents)
+	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns).WHERE(Event.StreamName.EQ(String(string(streamName)))))
+}
+
+func (a *AppendOnlyStore) readRecodsWithQuery(ctx context.Context, query SelectStatement) ([]persistence.StoredStreamEvent, error) {
+	var dbEvents []model.Event
+	err := query.QueryContext(ctx, a.db, &dbEvents)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
 	}
@@ -93,7 +88,7 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName persistenc
 	return events, nil
 }
 
-func modelEventToPersistence(dbEvent model.Events) persistence.StoredStreamEvent {
+func modelEventToPersistence(dbEvent model.Event) persistence.StoredStreamEvent {
 	return persistence.StoredStreamEvent{
 		ID: persistence.StreamID{
 			StreamName:    persistence.StreamName(dbEvent.StreamName),

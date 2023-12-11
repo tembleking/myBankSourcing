@@ -51,5 +51,5 @@ generate-sql:
     go install github.com/go-jet/jet/v2/cmd/jet@latest
     go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
     migrate -path pkg/persistence/sqlite/internal/migrations -database sqlite3:///tmp/db.db up
-    jet -source sqlite -dsn file:///tmp/db.db -path pkg/persistence/sqlite/internal/sqlgen
+    jet -source sqlite -dsn file:///tmp/db.db -path pkg/persistence/sqlite/internal/sqlgen -ignore-tables schema_migrations
     rm /tmp/db.db

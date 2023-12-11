@@ -7,7 +7,14 @@
 
 package model
 
-type SchemaMigrations struct {
-	Version *string
-	Dirty   *bool
+import (
+	"time"
+)
+
+type Event struct {
+	StreamName    string
+	StreamVersion int32
+	EventName     string
+	EventData     []byte
+	HappenedOn    time.Time
 }
