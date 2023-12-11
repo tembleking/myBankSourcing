@@ -13,7 +13,7 @@ import (
 
 type Event struct {
 	StreamName    string
-	StreamVersion int32
+	StreamVersion string
 	EventName     string
 	EventData     []byte
 	HappenedOn    time.Time

@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"strconv"
 
 	. "github.com/go-jet/jet/v2/sqlite"
 	"github.com/golang-migrate/migrate/v4"
@@ -39,7 +40,7 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 	for _, event := range events {
 		insertStmt.MODEL(model.Event{
 			StreamName:    string(event.ID.StreamName),
-			StreamVersion: int32(event.ID.StreamVersion),
+			StreamVersion: strconv.FormatUint(event.ID.StreamVersion, 10),
 			EventName:     event.EventName,
 			EventData:     event.EventData,
 			HappenedOn:    event.HappenedOn,
@@ -84,22 +85,31 @@ func (a *AppendOnlyStore) readRecodsWithQuery(ctx context.Context, query SelectS
 
 	var events []persistence.StoredStreamEvent
 	for _, event := range dbEvents {
-		events = append(events, modelEventToPersistence(event))
+		storedStreamEvent, err := modelEventToPersistence(event)
+		if err != nil {
+			return nil, fmt.Errorf("unable to convert model event to persistence event: %w", err)
+		}
+		events = append(events, storedStreamEvent)
 	}
 	return events, nil
 }
 
-func modelEventToPersistence(dbEvent model.Event) persistence.StoredStreamEvent {
+func modelEventToPersistence(dbEvent model.Event) (persistence.StoredStreamEvent, error) {
+	streamVersion, err := strconv.ParseUint(dbEvent.StreamVersion, 10, 64)
+	if err != nil {
+		return persistence.StoredStreamEvent{}, fmt.Errorf("error parsing stream version '%s' to uint64: %w", dbEvent.StreamVersion, err)
+	}
+
 	return persistence.StoredStreamEvent{
 		ID: persistence.StreamID{
 			StreamName:    dbEvent.StreamName,
-			StreamVersion: uint64(dbEvent.StreamVersion),
+			StreamVersion: streamVersion,
 		},
 		EventName:   dbEvent.EventName,
 		EventData:   dbEvent.EventData,
 		HappenedOn:  dbEvent.HappenedOn,
 		ContentType: dbEvent.ContentType,
-	}
+	}, nil
 }
 
 //go:embed internal/migrations

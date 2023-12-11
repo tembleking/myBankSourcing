@@ -18,7 +18,7 @@ type eventTable struct {
 
 	// Columns
 	StreamName    sqlite.ColumnString
-	StreamVersion sqlite.ColumnInteger
+	StreamVersion sqlite.ColumnString
 	EventName     sqlite.ColumnString
 	EventData     sqlite.ColumnString
 	HappenedOn    sqlite.ColumnTimestamp
@@ -64,7 +64,7 @@ func newEventTable(schemaName, tableName, alias string) *EventTable {
 func newEventTableImpl(schemaName, tableName, alias string) eventTable {
 	var (
 		StreamNameColumn    = sqlite.StringColumn("stream_name")
-		StreamVersionColumn = sqlite.IntegerColumn("stream_version")
+		StreamVersionColumn = sqlite.StringColumn("stream_version")
 		EventNameColumn     = sqlite.StringColumn("event_name")
 		EventDataColumn     = sqlite.StringColumn("event_data")
 		HappenedOnColumn    = sqlite.TimestampColumn("happened_on")
