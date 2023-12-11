@@ -5,7 +5,6 @@ go 1.21
 require (
 	github.com/go-jet/jet/v2 v2.10.1
 	github.com/golang-migrate/migrate/v4 v4.16.2
-	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0
 	github.com/mattn/go-sqlite3 v1.14.17
@@ -15,6 +14,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/mock v0.3.0
+	golang.org/x/sync v0.3.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
