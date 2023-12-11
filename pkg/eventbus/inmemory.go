@@ -19,19 +19,23 @@ func (i *InMemory) Publish(ctx context.Context, events ...domain.Event) error {
 	defer i.mutex.RUnlock()
 
 	for _, event := range events {
-		group, ctx := errgroup.WithContext(ctx)
-		for _, listener := range i.listeners {
-			listener := listener
-			group.Go(func() error {
-				return listener.OnEvent(ctx, event)
-			})
-		}
-		if err := group.Wait(); err != nil {
+		if err := i.sendEventToListeners(ctx, event); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (i *InMemory) sendEventToListeners(ctx context.Context, event domain.Event) error {
+	group, ctx := errgroup.WithContext(ctx)
+	for _, listener := range i.listeners {
+		listener := listener
+		group.Go(func() error {
+			return listener.OnEvent(ctx, event)
+		})
+	}
+	return group.Wait()
 }
 
 func (i *InMemory) Subscribe(ctx context.Context, listener domain.EventListener) error {
