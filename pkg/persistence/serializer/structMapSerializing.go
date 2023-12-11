@@ -1,10 +1,9 @@
 package serializer
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
-
-	"github.com/mitchellh/mapstructure"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
@@ -21,7 +20,7 @@ func init() {
 
 func (s *structMapSerializing) serializeToMap(event domain.Event) (map[string]any, error) {
 	result := map[string]any{}
-	err := mapstructure.Decode(event, &result)
+	err := decode(event, &result)
 	if err != nil {
 		return nil, fmt.Errorf("error serializing event %s to map: %w", event.EventName(), err)
 	}
@@ -34,7 +33,7 @@ func (s *structMapSerializing) deserializeFromMap(eventName string, data map[str
 	}
 
 	event := reflect.New(reflect.TypeOf(s.registeredTypes[eventName])).Interface()
-	err := mapstructure.Decode(data, event)
+	err := decode(data, event)
 	if err != nil {
 		return nil, fmt.Errorf("error deserializing type %s from map: %w", eventName, err)
 	}
@@ -51,4 +50,13 @@ func (s *structMapSerializing) register(value domain.Event) {
 		break
 	}
 	s.registeredTypes[value.EventName()] = reflectValue.Interface()
+}
+
+func decode(input any, output any) error {
+	data, err := json.Marshal(input)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, output)
 }

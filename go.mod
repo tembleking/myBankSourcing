@@ -8,7 +8,6 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0
 	github.com/mattn/go-sqlite3 v1.14.17
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.12.1
 	github.com/onsi/gomega v1.27.10
 	github.com/spf13/cobra v1.7.0

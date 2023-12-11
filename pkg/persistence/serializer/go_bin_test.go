@@ -1,6 +1,8 @@
 package serializer_test
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -44,7 +46,10 @@ var _ = Describe("GoBinary", func() {
 
 func anEvent() domain.Event {
 	return &account.AmountDeposited{
-		Quantity: 50,
-		Balance:  134,
+		AccountID:      "accountID",
+		Quantity:       50,
+		Balance:        134,
+		AccountVersion: 2,
+		Timestamp:      time.Date(2023, time.December, 25, 01, 02, 03, 12345, time.UTC),
 	}
 }
