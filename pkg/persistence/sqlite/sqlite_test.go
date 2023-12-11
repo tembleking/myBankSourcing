@@ -63,10 +63,10 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 		data, err := store.ReadRecords(ctx, "aggregate-0")
 		Expect(err).To(BeNil())
 		Expect(data).To(HaveLen(1))
-		Expect(data[0].ID.StreamName).To(Equal(persistence.StreamName("aggregate-0")))
+		Expect(data[0].ID.StreamName).To(Equal("aggregate-0"))
 		Expect(data[0].EventName).To(Equal("eventName"))
 		Expect(data[0].EventData).To(Equal([]byte("data")))
-		Expect(data[0].ID.StreamVersion).To(Equal(persistence.StreamVersion(0)))
+		Expect(data[0].ID.StreamVersion).To(Equal(uint64(0)))
 	})
 
 	It("should return all the events", func() {

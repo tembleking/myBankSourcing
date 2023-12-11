@@ -31,7 +31,7 @@ var _ = Describe("EventStore", func() {
 	})
 
 	It("should be able to load an event stream", func() {
-		appendOnlyStore.EXPECT().ReadRecords(ctx, persistence.StreamName("aggregate-0")).Return(
+		appendOnlyStore.EXPECT().ReadRecords(ctx, "aggregate-0").Return(
 			[]persistence.StoredStreamEvent{{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventData: dataRecordInStore(), EventName: "AmountDeposited"}},
 			nil,
 		)
@@ -39,10 +39,9 @@ var _ = Describe("EventStore", func() {
 		stream, err := eventStore.LoadEventStream(ctx, "aggregate-0")
 
 		Expect(err).To(BeNil())
-		Expect(stream).To(Equal([]persistence.StreamEvent{{
-			ID:    persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1},
-			Event: &account.AmountDeposited{AccountID: "some-account", Quantity: 10, Balance: 10},
-		}}))
+		Expect(stream).To(Equal([]domain.Event{
+			&account.AmountDeposited{AccountID: "some-account", Quantity: 10, Balance: 10},
+		}))
 	})
 
 	It("should be able to append to an event stream", func() {
@@ -80,10 +79,9 @@ var _ = Describe("EventStore", func() {
 
 			stream, err := eventStore.LoadAllEvents(ctx)
 			Expect(err).To(BeNil())
-			Expect(stream).To(Equal([]persistence.StreamEvent{{
-				ID:    persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1},
-				Event: &account.AmountDeposited{AccountID: "some-account", Quantity: 10, Balance: 10},
-			}}))
+			Expect(stream).To(Equal([]domain.Event{
+				&account.AmountDeposited{AccountID: "some-account", Quantity: 10, Balance: 10},
+			}))
 		})
 	})
 })

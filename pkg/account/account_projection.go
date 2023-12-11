@@ -46,7 +46,7 @@ func NewAccountProjection(eventStore *persistence.EventStore) (*Projection, erro
 		return nil, fmt.Errorf("error loading all events: %w", err)
 	}
 	for _, event := range events {
-		a.handleEvent(event.Event)
+		a.handleEvent(event)
 	}
 
 	return a, nil

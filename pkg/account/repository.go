@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
@@ -13,17 +12,12 @@ type Repository struct {
 }
 
 func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {
-	events, err := r.eventStore.LoadEventStream(ctx, persistence.StreamName(id))
+	events, err := r.eventStore.LoadEventStream(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve events from event store: %w", err)
 	}
 
-	domainEvents := make([]domain.Event, 0, len(events))
-	for _, event := range events {
-		domainEvents = append(domainEvents, event.Event)
-	}
-
-	return NewAccount(domainEvents...), err
+	return NewAccount(events...), err
 }
 
 func (r *Repository) Save(ctx context.Context, aggregate *Account) error {

@@ -71,8 +71,8 @@ func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.Sto
 	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns))
 }
 
-func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
-	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns).WHERE(Event.StreamName.EQ(String(string(streamName)))))
+func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName string) ([]persistence.StoredStreamEvent, error) {
+	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns).WHERE(Event.StreamName.EQ(String(streamName))))
 }
 
 func (a *AppendOnlyStore) readRecodsWithQuery(ctx context.Context, query SelectStatement) ([]persistence.StoredStreamEvent, error) {
@@ -92,8 +92,8 @@ func (a *AppendOnlyStore) readRecodsWithQuery(ctx context.Context, query SelectS
 func modelEventToPersistence(dbEvent model.Event) persistence.StoredStreamEvent {
 	return persistence.StoredStreamEvent{
 		ID: persistence.StreamID{
-			StreamName:    persistence.StreamName(dbEvent.StreamName),
-			StreamVersion: persistence.StreamVersion(dbEvent.StreamVersion),
+			StreamName:    dbEvent.StreamName,
+			StreamVersion: uint64(dbEvent.StreamVersion),
 		},
 		EventName:   dbEvent.EventName,
 		EventData:   dbEvent.EventData,

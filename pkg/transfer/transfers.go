@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
-
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
@@ -28,8 +28,8 @@ func (v *TransfersProjection) Transfers() []Transfer {
 	return v.transfers
 }
 
-func (v *TransfersProjection) handleEvent(event persistence.StreamEvent) {
-	if transferSent, ok := event.Event.(*account.TransferRequested); ok {
+func (v *TransfersProjection) handleEvent(event domain.Event) {
+	if transferSent, ok := event.(*account.TransferRequested); ok {
 		v.transfers = append(v.transfers, Transfer{
 			ID:       transferSent.TransferID,
 			From:     string(transferSent.From),

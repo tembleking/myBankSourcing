@@ -74,7 +74,7 @@ func (mr *MockAppendOnlyStoreMockRecorder) ReadAllRecords(ctx any) *gomock.Call 
 }
 
 // ReadRecords mocks base method.
-func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, streamName persistence.StreamName) ([]persistence.StoredStreamEvent, error) {
+func (m *MockAppendOnlyStore) ReadRecords(ctx context.Context, streamName string) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReadRecords", ctx, streamName)
 	ret0, _ := ret[0].([]persistence.StoredStreamEvent)

@@ -3,36 +3,9 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
-
-type (
-	StreamName    string
-	StreamVersion uint64
-	StreamID      struct {
-		// StreamName is commonly the aggregate id, but can be any value as long as it is unique for an event stream
-		StreamName StreamName
-		// StreamVersion is the version of the last event in the stream
-		StreamVersion StreamVersion
-	}
-)
-
-func (s *StreamID) Equal(other StreamID) bool {
-	return s.StreamName == other.StreamName && s.StreamVersion == other.StreamVersion
-}
-
-type StreamEvent struct {
-	// ID is the id of the event stream
-	ID StreamID
-
-	// Event is the deserialized event
-	Event domain.Event
-
-	// HappenedOn is the time the event happened
-	HappenedOn time.Time
-}
 
 // EventStore is a store for events that can be used to load and save domain events.
 // It is a wrapper around an AppendOnlyStore that handles serialization and deserialization of events.
@@ -45,23 +18,19 @@ type EventStore struct {
 }
 
 // LoadEventStream loads all events for a given aggregate id
-func (e *EventStore) LoadEventStream(ctx context.Context, streamName StreamName) ([]StreamEvent, error) {
+func (e *EventStore) LoadEventStream(ctx context.Context, streamName string) ([]domain.Event, error) {
 	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
 
-	events := make([]StreamEvent, 0, len(records))
+	events := make([]domain.Event, 0, len(records))
 	for _, record := range records {
 		event, err := e.deserializer.DeserializeDomainEvent(record.EventName, record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event: %w", err)
 		}
-		events = append(events, StreamEvent{
-			ID:         record.ID,
-			Event:      event,
-			HappenedOn: record.HappenedOn,
-		})
+		events = append(events, event)
 	}
 
 	return events, nil
@@ -105,7 +74,7 @@ func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]St
 		}
 
 		storedStreamEvents = append(storedStreamEvents, StoredStreamEvent{
-			ID:          StreamID{StreamName: StreamName(aggregate.ID()), StreamVersion: StreamVersion(version)},
+			ID:          StreamID{StreamName: aggregate.ID(), StreamVersion: version},
 			EventName:   event.EventName(),
 			EventData:   eventData,
 			HappenedOn:  event.HappenedOn(),
@@ -118,23 +87,19 @@ func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]St
 	return storedStreamEvents, nil
 }
 
-func (e *EventStore) LoadAllEvents(ctx context.Context) ([]StreamEvent, error) {
+func (e *EventStore) LoadAllEvents(ctx context.Context) ([]domain.Event, error) {
 	records, err := e.appendOnlyStore.ReadAllRecords(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
 
-	events := make([]StreamEvent, 0, len(records))
+	events := make([]domain.Event, 0, len(records))
 	for _, record := range records {
 		event, err := e.deserializer.DeserializeDomainEvent(record.EventName, record.EventData)
 		if err != nil {
 			return nil, fmt.Errorf("error deserializing event '%s' for stream '%s' in version '%d': %w", record.EventName, record.ID.StreamName, record.ID.StreamVersion, err)
 		}
-		events = append(events, StreamEvent{
-			ID:         record.ID,
-			Event:      event,
-			HappenedOn: record.HappenedOn,
-		})
+		events = append(events, event)
 	}
 
 	return events, nil
