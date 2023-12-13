@@ -87,3 +87,56 @@ func (mr *MockAppendOnlyStoreMockRecorder) ReadRecords(ctx, streamName any) *gom
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadRecords", reflect.TypeOf((*MockAppendOnlyStore)(nil).ReadRecords), ctx, streamName)
 }
+
+// MockReadOnlyStore is a mock of ReadOnlyStore interface.
+type MockReadOnlyStore struct {
+	ctrl     *gomock.Controller
+	recorder *MockReadOnlyStoreMockRecorder
+}
+
+// MockReadOnlyStoreMockRecorder is the mock recorder for MockReadOnlyStore.
+type MockReadOnlyStoreMockRecorder struct {
+	mock *MockReadOnlyStore
+}
+
+// NewMockReadOnlyStore creates a new mock instance.
+func NewMockReadOnlyStore(ctrl *gomock.Controller) *MockReadOnlyStore {
+	mock := &MockReadOnlyStore{ctrl: ctrl}
+	mock.recorder = &MockReadOnlyStoreMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockReadOnlyStore) EXPECT() *MockReadOnlyStoreMockRecorder {
+	return m.recorder
+}
+
+// ReadAllRecords mocks base method.
+func (m *MockReadOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadAllRecords", ctx)
+	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadAllRecords indicates an expected call of ReadAllRecords.
+func (mr *MockReadOnlyStoreMockRecorder) ReadAllRecords(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadAllRecords", reflect.TypeOf((*MockReadOnlyStore)(nil).ReadAllRecords), ctx)
+}
+
+// ReadRecords mocks base method.
+func (m *MockReadOnlyStore) ReadRecords(ctx context.Context, streamName string) ([]persistence.StoredStreamEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadRecords", ctx, streamName)
+	ret0, _ := ret[0].([]persistence.StoredStreamEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadRecords indicates an expected call of ReadRecords.
+func (mr *MockReadOnlyStoreMockRecorder) ReadRecords(ctx, streamName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadRecords", reflect.TypeOf((*MockReadOnlyStore)(nil).ReadRecords), ctx, streamName)
+}

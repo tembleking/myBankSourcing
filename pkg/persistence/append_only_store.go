@@ -11,6 +11,10 @@ type AppendOnlyStore interface {
 	// It returns an error if the expected version does not match the current version.
 	Append(ctx context.Context, events ...StoredStreamEvent) error
 
+	ReadOnlyStore
+}
+
+type ReadOnlyStore interface {
 	// ReadAllRecords reads all events in the store.
 	ReadAllRecords(ctx context.Context) ([]StoredStreamEvent, error)
 
