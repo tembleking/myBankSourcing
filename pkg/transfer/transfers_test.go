@@ -3,6 +3,8 @@ package transfer_test
 import (
 	"context"
 
+	. "github.com/onsi/gomega/gstruct"
+
 	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/transfer"
 
@@ -19,15 +21,7 @@ var _ = Describe("Transfers", func() {
 
 	BeforeEach(func() {
 		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
-		anAggregate := fakeAggregate{}.withID("some-account").withVersion(5).withEvents([]domain.Event{
-			&account.AccountOpened{AccountID: "some-account", AccountVersion: 0},
-			&account.AmountDeposited{Quantity: 50, Balance: 50, AccountVersion: 1},
-			&account.AmountDeposited{Quantity: 100, Balance: 150, AccountVersion: 2},
-			&account.TransferRequested{Quantity: 50, Balance: 100, From: "some-account", To: "another-account", AccountVersion: 3},
-			&account.AmountWithdrawn{Quantity: 25, Balance: 75, AccountVersion: 4},
-		}...)
-
-		err := eventStore.AppendToStream(context.Background(), &anAggregate)
+		err := eventStore.AppendToStream(context.Background(), someAggregate())
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -38,57 +32,25 @@ var _ = Describe("Transfers", func() {
 
 			transfers := transfersProjection.Transfers()
 
-			Expect(transfers).To(ConsistOf(
-				transfer.Transfer{From: "some-account", To: "another-account", Quantity: 50},
-			))
+			Expect(transfers).To(ConsistOf(MatchFields(IgnoreExtras, Fields{
+				"From":     Equal("some-account"),
+				"To":       Equal("another-account"),
+				"Quantity": Equal(50),
+			})))
 		})
 	})
 })
 
-type fakeAggregate struct {
-	domain.BaseAggregate
-	id      string
-	version uint64
-	events  []domain.Event
-}
+func someAggregate() domain.Aggregate {
+	aggregate, err := account.OpenAccount("some-account")
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+	anotherAggregate, err := account.OpenAccount("another-account")
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 
-func (f *fakeAggregate) ID() string {
-	return f.id
-}
+	ExpectWithOffset(1, aggregate.DepositMoney(50)).To(Succeed())
+	ExpectWithOffset(1, aggregate.DepositMoney(100)).To(Succeed())
+	ExpectWithOffset(1, aggregate.TransferMoney(50, anotherAggregate)).To(Succeed())
+	ExpectWithOffset(1, aggregate.WithdrawMoney(50)).To(Succeed())
 
-func (f *fakeAggregate) Version() uint64 {
-	return f.version
-}
-
-func (f *fakeAggregate) SameEntityAs(other domain.Entity) bool {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (f fakeAggregate) withID(id string) fakeAggregate {
-	return fakeAggregate{
-		id:      id,
-		version: f.version,
-		events:  f.events,
-	}
-}
-
-func (f fakeAggregate) withVersion(version uint64) fakeAggregate {
-	return fakeAggregate{
-		id:      f.id,
-		version: version,
-		events:  f.events,
-	}
-}
-
-func (f fakeAggregate) withEvents(events ...domain.Event) fakeAggregate {
-	aggregate := fakeAggregate{
-		id:      f.id,
-		version: f.version,
-		events:  events,
-	}
-	for _, event := range events {
-		aggregate.Apply(event)
-	}
 	return aggregate
 }

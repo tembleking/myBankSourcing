@@ -25,15 +25,19 @@ type TransfersProjection struct {
 func (v *TransfersProjection) Transfers() []Transfer {
 	v.rwMutex.RLock()
 	defer v.rwMutex.RUnlock()
+
 	return v.transfers
 }
 
 func (v *TransfersProjection) handleEvent(event domain.Event) {
+	v.rwMutex.Lock()
+	defer v.rwMutex.Unlock()
+
 	if transferSent, ok := event.(*account.TransferRequested); ok {
 		v.transfers = append(v.transfers, Transfer{
 			ID:       transferSent.TransferID,
-			From:     string(transferSent.From),
-			To:       string(transferSent.To),
+			From:     transferSent.From,
+			To:       transferSent.To,
 			Quantity: transferSent.Quantity,
 		})
 	}
@@ -41,8 +45,6 @@ func (v *TransfersProjection) handleEvent(event domain.Event) {
 
 func NewTransfersProjectionFrom(eventStore *persistence.EventStore) (*TransfersProjection, error) {
 	projection := &TransfersProjection{}
-	projection.rwMutex.Lock()
-	defer projection.rwMutex.Unlock()
 
 	err := loadProjectionFromEventStore(eventStore, projection)
 	if err != nil {
