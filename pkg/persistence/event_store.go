@@ -75,6 +75,7 @@ func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]St
 
 		storedStreamEvents = append(storedStreamEvents, StoredStreamEvent{
 			ID:          StreamID{StreamName: aggregate.ID(), StreamVersion: version},
+			EventID:     event.EventID(),
 			EventName:   event.EventName(),
 			EventData:   eventData,
 			HappenedOn:  event.HappenedOn(),

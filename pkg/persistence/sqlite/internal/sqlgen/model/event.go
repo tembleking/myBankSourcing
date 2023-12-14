@@ -12,8 +12,10 @@ import (
 )
 
 type Event struct {
+	RowID         *int32 `sql:"primary_key"`
 	StreamName    string
 	StreamVersion string
+	EventID       string
 	EventName     string
 	EventData     []byte
 	HappenedOn    time.Time

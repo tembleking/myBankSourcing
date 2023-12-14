@@ -16,6 +16,7 @@ func init() {
 }
 
 type AccountOpened struct {
+	ID             string
 	AccountID      string
 	AccountVersion uint64
 	Timestamp      time.Time
@@ -29,6 +30,10 @@ func (a *AccountOpened) Version() uint64 {
 	return a.AccountVersion
 }
 
+func (a *AccountOpened) EventID() string {
+	return a.ID
+}
+
 func (a *AccountOpened) EventName() string {
 	return "AccountOpened"
 }
@@ -38,6 +43,7 @@ func (a *AccountOpened) HappenedOn() time.Time {
 }
 
 type AmountDeposited struct {
+	ID             string
 	AccountID      string
 	Quantity       int
 	Balance        int
@@ -53,6 +59,10 @@ func (a *AmountDeposited) Version() uint64 {
 	return a.AccountVersion
 }
 
+func (a *AmountDeposited) EventID() string {
+	return a.ID
+}
+
 func (a *AmountDeposited) EventName() string {
 	return "AmountDeposited"
 }
@@ -62,6 +72,7 @@ func (a *AmountDeposited) HappenedOn() time.Time {
 }
 
 type AmountWithdrawn struct {
+	ID             string
 	AccountID      string
 	Quantity       int
 	Balance        int
@@ -77,6 +88,10 @@ func (a *AmountWithdrawn) Version() uint64 {
 	return a.AccountVersion
 }
 
+func (a *AmountWithdrawn) EventID() string {
+	return a.ID
+}
+
 func (a *AmountWithdrawn) EventName() string {
 	return "AmountWithdrawn"
 }
@@ -86,6 +101,7 @@ func (a *AmountWithdrawn) HappenedOn() time.Time {
 }
 
 type TransferRequested struct {
+	ID             string
 	TransferID     string
 	Quantity       int
 	Balance        int
@@ -99,6 +115,10 @@ func (t *TransferRequested) AggregateID() string {
 	return t.From
 }
 
+func (t *TransferRequested) EventID() string {
+	return t.ID
+}
+
 func (t *TransferRequested) EventName() string {
 	return "TransferRequested"
 }
@@ -107,11 +127,12 @@ func (t *TransferRequested) Version() uint64 {
 	return t.AccountVersion
 }
 
-func (a *TransferRequested) HappenedOn() time.Time {
-	return a.Timestamp
+func (t *TransferRequested) HappenedOn() time.Time {
+	return t.Timestamp
 }
 
 type TransferReceived struct {
+	ID             string
 	TransferID     string
 	Quantity       int
 	Balance        int
@@ -125,6 +146,10 @@ func (t *TransferReceived) AggregateID() string {
 	return t.To
 }
 
+func (t *TransferReceived) EventID() string {
+	return t.ID
+}
+
 func (t *TransferReceived) EventName() string {
 	return "TransferReceived"
 }
@@ -133,11 +158,12 @@ func (t *TransferReceived) Version() uint64 {
 	return t.AccountVersion
 }
 
-func (a *TransferReceived) HappenedOn() time.Time {
-	return a.Timestamp
+func (t *TransferReceived) HappenedOn() time.Time {
+	return t.Timestamp
 }
 
 type AccountClosed struct {
+	ID             string
 	AccountID      string
 	AccountVersion uint64
 	Timestamp      time.Time
@@ -145,6 +171,10 @@ type AccountClosed struct {
 
 func (a *AccountClosed) AggregateID() string {
 	return a.AccountID
+}
+
+func (a *AccountClosed) EventID() string {
+	return a.ID
 }
 
 func (a *AccountClosed) EventName() string {

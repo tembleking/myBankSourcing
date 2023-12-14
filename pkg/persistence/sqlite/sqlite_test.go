@@ -26,23 +26,23 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 	})
 
 	It("should be able to append to an event stream", func() {
-		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data"), ContentType: "some-content-type"})
+		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventID: "event0", EventName: "eventName", EventData: []byte("data"), ContentType: "some-content-type"})
 		Expect(err).To(BeNil())
 	})
 
 	It("should be able to append to multiple event streams", func() {
-		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data"), ContentType: "some-content-type"})
+		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventID: "event0", EventName: "eventName", EventData: []byte("data"), ContentType: "some-content-type"})
 		Expect(err).To(BeNil())
 
-		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data"), ContentType: "some-content-type"})
+		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventID: "event1", EventName: "eventName", EventData: []byte("data"), ContentType: "some-content-type"})
 		Expect(err).To(BeNil())
 	})
 
 	It("should be able to append to multiple events to an event stream", func() {
-		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data1"), ContentType: "some-content-type"})
+		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventID: "event0", EventName: "eventName", EventData: []byte("data1"), ContentType: "some-content-type"})
 		Expect(err).To(BeNil())
 
-		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventName: "eventName", EventData: []byte("data2"), ContentType: "some-content-type"})
+		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 1}, EventID: "event1", EventName: "eventName", EventData: []byte("data2"), ContentType: "some-content-type"})
 		Expect(err).To(BeNil())
 	})
 
@@ -70,26 +70,26 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 	})
 
 	It("should return all the events", func() {
-		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data0"), ContentType: "some-content-type-0"})
+		err := store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventID: "event0", EventName: "eventName", EventData: []byte("data0"), ContentType: "some-content-type-0"})
 		Expect(err).To(BeNil())
-		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventName: "eventNameToIgnore", EventData: []byte("data1"), ContentType: "some-content-type-1"})
+		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventID: "event1", EventName: "eventNameToIgnore", EventData: []byte("data1"), ContentType: "some-content-type-1"})
 		Expect(err).To(BeNil())
-		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data2-0"), ContentType: "some-content-type-0"})
+		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 0}, EventID: "event2", EventName: "eventName", EventData: []byte("data2-0"), ContentType: "some-content-type-0"})
 		Expect(err).To(BeNil())
-		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 1}, EventName: "eventName", EventData: []byte("data2-1"), ContentType: "some-content-type-1"})
+		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 1}, EventID: "event3", EventName: "eventName", EventData: []byte("data2-1"), ContentType: "some-content-type-1"})
 		Expect(err).To(BeNil())
-		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"})
+		err = store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventID: "event4", EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"})
 		Expect(err).To(BeNil())
 
 		data, err := store.ReadAllRecords(ctx)
 		Expect(err).To(BeNil())
 		Expect(data).To(HaveLen(5))
 		Expect(data).To(Equal([]persistence.StoredStreamEvent{
-			{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data0"), ContentType: "some-content-type-0"},
-			{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventName: "eventNameToIgnore", EventData: []byte("data1"), ContentType: "some-content-type-1"},
-			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 0}, EventName: "eventName", EventData: []byte("data2-0"), ContentType: "some-content-type-0"},
-			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 1}, EventName: "eventName", EventData: []byte("data2-1"), ContentType: "some-content-type-1"},
-			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"},
+			{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventID: "event0", EventName: "eventName", EventData: []byte("data0"), ContentType: "some-content-type-0"},
+			{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventID: "event1", EventName: "eventNameToIgnore", EventData: []byte("data1"), ContentType: "some-content-type-1"},
+			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 0}, EventID: "event2", EventName: "eventName", EventData: []byte("data2-0"), ContentType: "some-content-type-0"},
+			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 1}, EventID: "event3", EventName: "eventName", EventData: []byte("data2-1"), ContentType: "some-content-type-1"},
+			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventID: "event4", EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"},
 		}))
 	})
 })

@@ -29,6 +29,7 @@ type StreamID struct {
 
 type StoredStreamEvent struct {
 	ID          StreamID
+	EventID     string
 	EventName   string
 	EventData   []byte
 	HappenedOn  time.Time

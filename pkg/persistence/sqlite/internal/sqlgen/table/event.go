@@ -17,8 +17,10 @@ type eventTable struct {
 	sqlite.Table
 
 	// Columns
+	RowID         sqlite.ColumnInteger
 	StreamName    sqlite.ColumnString
 	StreamVersion sqlite.ColumnString
+	EventID       sqlite.ColumnString
 	EventName     sqlite.ColumnString
 	EventData     sqlite.ColumnString
 	HappenedOn    sqlite.ColumnTimestamp
@@ -63,22 +65,26 @@ func newEventTable(schemaName, tableName, alias string) *EventTable {
 
 func newEventTableImpl(schemaName, tableName, alias string) eventTable {
 	var (
+		RowIDColumn         = sqlite.IntegerColumn("row_id")
 		StreamNameColumn    = sqlite.StringColumn("stream_name")
 		StreamVersionColumn = sqlite.StringColumn("stream_version")
+		EventIDColumn       = sqlite.StringColumn("event_id")
 		EventNameColumn     = sqlite.StringColumn("event_name")
 		EventDataColumn     = sqlite.StringColumn("event_data")
 		HappenedOnColumn    = sqlite.TimestampColumn("happened_on")
 		ContentTypeColumn   = sqlite.StringColumn("content_type")
-		allColumns          = sqlite.ColumnList{StreamNameColumn, StreamVersionColumn, EventNameColumn, EventDataColumn, HappenedOnColumn, ContentTypeColumn}
-		mutableColumns      = sqlite.ColumnList{StreamNameColumn, StreamVersionColumn, EventNameColumn, EventDataColumn, HappenedOnColumn, ContentTypeColumn}
+		allColumns          = sqlite.ColumnList{RowIDColumn, StreamNameColumn, StreamVersionColumn, EventIDColumn, EventNameColumn, EventDataColumn, HappenedOnColumn, ContentTypeColumn}
+		mutableColumns      = sqlite.ColumnList{StreamNameColumn, StreamVersionColumn, EventIDColumn, EventNameColumn, EventDataColumn, HappenedOnColumn, ContentTypeColumn}
 	)
 
 	return eventTable{
 		Table: sqlite.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
+		RowID:         RowIDColumn,
 		StreamName:    StreamNameColumn,
 		StreamVersion: StreamVersionColumn,
+		EventID:       EventIDColumn,
 		EventName:     EventNameColumn,
 		EventData:     EventDataColumn,
 		HappenedOn:    HappenedOnColumn,
