@@ -72,6 +72,20 @@ func (mr *MockAppendOnlyStoreMockRecorder) Append(ctx any, events ...any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockAppendOnlyStore)(nil).Append), varargs...)
 }
 
+// Limit mocks base method.
+func (m *MockAppendOnlyStore) Limit(limit int) persistence.ReadOnlyStore {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Limit", limit)
+	ret0, _ := ret[0].(persistence.ReadOnlyStore)
+	return ret0
+}
+
+// Limit indicates an expected call of Limit.
+func (mr *MockAppendOnlyStoreMockRecorder) Limit(limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Limit", reflect.TypeOf((*MockAppendOnlyStore)(nil).Limit), limit)
+}
+
 // ReadAllRecords mocks base method.
 func (m *MockAppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
 	m.ctrl.T.Helper()
@@ -137,6 +151,20 @@ func (m *MockReadOnlyStore) AfterEventID(eventID string) persistence.ReadOnlySto
 func (mr *MockReadOnlyStoreMockRecorder) AfterEventID(eventID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterEventID", reflect.TypeOf((*MockReadOnlyStore)(nil).AfterEventID), eventID)
+}
+
+// Limit mocks base method.
+func (m *MockReadOnlyStore) Limit(limit int) persistence.ReadOnlyStore {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Limit", limit)
+	ret0, _ := ret[0].(persistence.ReadOnlyStore)
+	return ret0
+}
+
+// Limit indicates an expected call of Limit.
+func (mr *MockReadOnlyStoreMockRecorder) Limit(limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Limit", reflect.TypeOf((*MockReadOnlyStore)(nil).Limit), limit)
 }
 
 // ReadAllRecords mocks base method.

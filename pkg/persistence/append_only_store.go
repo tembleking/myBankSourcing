@@ -23,6 +23,9 @@ type ReadOnlyStore interface {
 
 	// AfterEventID returns a ReadOnlyStore that only contains events that happened after the given eventID.
 	AfterEventID(eventID string) ReadOnlyStore
+
+	// Limit returns a ReadOnlyStore that only contains the first n events.
+	Limit(limit int) ReadOnlyStore
 }
 
 type StreamID struct {
