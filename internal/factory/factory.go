@@ -49,7 +49,7 @@ func (f *Factory) accountRepository() domain.Repository[*account.Account] {
 
 func (f *Factory) NewAccountProjection() *account.Projection {
 	return f.accountProjectionField.GetOrInit(func() *account.Projection {
-		accountProjection, err := account.NewAccountProjection(f.eventStore())
+		accountProjection, err := account.NewAccountProjection(f.eventStore().ReadOnlyEventStore)
 		if err != nil {
 			panic(err)
 		}

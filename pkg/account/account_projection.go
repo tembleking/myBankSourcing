@@ -39,7 +39,7 @@ func (a *Projection) handleEvent(event domain.Event) {
 	}
 }
 
-func NewAccountProjection(eventStore *persistence.EventStore) (*Projection, error) {
+func NewAccountProjection(eventStore *persistence.ReadOnlyEventStore) (*Projection, error) {
 	a := &Projection{accountEvents: map[string]*Account{}}
 
 	events, err := eventStore.LoadAllEvents(context.Background())

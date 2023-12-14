@@ -13,13 +13,14 @@ import (
 )
 
 var _ = Describe("Accounts", func() {
-	var eventStore *persistence.EventStore
+	var eventStore *persistence.ReadOnlyEventStore
 
 	BeforeEach(func() {
-		eventStore = persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
-		account := mother.AccountOpenWithMovements()
-		err := eventStore.AppendToStream(context.Background(), account)
-		Expect(err).ToNot(HaveOccurred())
+		store := persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
+
+		Expect(store.AppendToStream(context.Background(), mother.AccountOpenWithMovements())).To(Succeed())
+
+		eventStore = store.ReadOnlyEventStore
 	})
 
 	When("there are multiple AccountOpened events saved", func() {
