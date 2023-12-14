@@ -44,8 +44,8 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 		})
 	}
 
-	err := a.doAtomically(ctx, func(db *gorm.DB) error {
-		return db.WithContext(ctx).Omit("row_id").CreateInBatches(eventsToInsert, 1000).Error
+	err := a.db.Transaction(func(tx *gorm.DB) error {
+		return tx.WithContext(ctx).Omit("row_id").CreateInBatches(eventsToInsert, 1000).Error
 	})
 	if isErrorUniqueConstraintViolation(err) {
 		return persistence.ErrUnexpectedVersion
@@ -131,12 +131,6 @@ func InMemory() *AppendOnlyStore {
 	}
 
 	return db
-}
-
-func (a *AppendOnlyStore) doAtomically(ctx context.Context, function func(tx *gorm.DB) error) (err error) {
-	return a.db.Transaction(func(tx *gorm.DB) error {
-		return function(tx)
-	})
 }
 
 func (a *AppendOnlyStore) Close() error {
