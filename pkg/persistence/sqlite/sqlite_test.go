@@ -92,6 +92,32 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 			{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventID: "event4", EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"},
 		}))
 	})
+
+	When("filtering events after other eventID", func() {
+		BeforeEach(func() {
+			Expect(store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-0", StreamVersion: 0}, EventID: "event0", EventName: "eventName", EventData: []byte("data0"), ContentType: "some-content-type-0"})).To(Succeed())
+			Expect(store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-1", StreamVersion: 0}, EventID: "event1", EventName: "eventNameToIgnore", EventData: []byte("data1"), ContentType: "some-content-type-1"})).To(Succeed())
+			Expect(store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 0}, EventID: "event2", EventName: "eventName", EventData: []byte("data2-0"), ContentType: "some-content-type-0"})).To(Succeed())
+			Expect(store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 1}, EventID: "event3", EventName: "eventName", EventData: []byte("data2-1"), ContentType: "some-content-type-1"})).To(Succeed())
+			Expect(store.Append(ctx, persistence.StoredStreamEvent{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventID: "event4", EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"})).To(Succeed())
+			Expect(store.ReadAllRecords(ctx)).To(HaveLen(5))
+		})
+
+		AfterEach(func() {
+			// Checks if the store is not modified by the filter methods.
+			Expect(store.ReadAllRecords(ctx)).To(HaveLen(5))
+		})
+
+		It("should return only the events after the eventID", func() {
+			records, err := store.AfterEventID("event2").ReadAllRecords(ctx)
+
+			Expect(err).To(BeNil())
+			Expect(records).To(Equal([]persistence.StoredStreamEvent{
+				{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 1}, EventID: "event3", EventName: "eventName", EventData: []byte("data2-1"), ContentType: "some-content-type-1"},
+				{ID: persistence.StreamID{StreamName: "aggregate-2", StreamVersion: 2}, EventID: "event4", EventName: "eventName", EventData: []byte("data2-2"), ContentType: "some-content-type-2"},
+			}))
+		})
+	})
 })
 
 func setupStore() *sqlite.AppendOnlyStore {

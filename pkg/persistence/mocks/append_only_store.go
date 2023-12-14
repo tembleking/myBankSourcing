@@ -39,6 +39,20 @@ func (m *MockAppendOnlyStore) EXPECT() *MockAppendOnlyStoreMockRecorder {
 	return m.recorder
 }
 
+// AfterEventID mocks base method.
+func (m *MockAppendOnlyStore) AfterEventID(eventID string) persistence.ReadOnlyStore {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterEventID", eventID)
+	ret0, _ := ret[0].(persistence.ReadOnlyStore)
+	return ret0
+}
+
+// AfterEventID indicates an expected call of AfterEventID.
+func (mr *MockAppendOnlyStoreMockRecorder) AfterEventID(eventID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterEventID", reflect.TypeOf((*MockAppendOnlyStore)(nil).AfterEventID), eventID)
+}
+
 // Append mocks base method.
 func (m *MockAppendOnlyStore) Append(ctx context.Context, events ...persistence.StoredStreamEvent) error {
 	m.ctrl.T.Helper()
@@ -109,6 +123,20 @@ func NewMockReadOnlyStore(ctrl *gomock.Controller) *MockReadOnlyStore {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockReadOnlyStore) EXPECT() *MockReadOnlyStoreMockRecorder {
 	return m.recorder
+}
+
+// AfterEventID mocks base method.
+func (m *MockReadOnlyStore) AfterEventID(eventID string) persistence.ReadOnlyStore {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AfterEventID", eventID)
+	ret0, _ := ret[0].(persistence.ReadOnlyStore)
+	return ret0
+}
+
+// AfterEventID indicates an expected call of AfterEventID.
+func (mr *MockReadOnlyStoreMockRecorder) AfterEventID(eventID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterEventID", reflect.TypeOf((*MockReadOnlyStore)(nil).AfterEventID), eventID)
 }
 
 // ReadAllRecords mocks base method.

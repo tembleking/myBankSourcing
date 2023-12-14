@@ -20,6 +20,9 @@ type ReadOnlyStore interface {
 
 	// ReadRecords reads events within a single Stream by their names.
 	ReadRecords(ctx context.Context, streamName string) ([]StoredStreamEvent, error)
+
+	// AfterEventID returns a ReadOnlyStore that only contains events that happened after the given eventID.
+	AfterEventID(eventID string) ReadOnlyStore
 }
 
 type StreamID struct {

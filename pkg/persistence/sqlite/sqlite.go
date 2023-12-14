@@ -26,6 +26,10 @@ type AppendOnlyStore struct {
 	db *gorm.DB
 }
 
+func (a *AppendOnlyStore) AfterEventID(eventID string) persistence.ReadOnlyStore {
+	return &AppendOnlyStore{db: a.db.Where("row_id > (select row_id from event where event_id = ?)", eventID)}
+}
+
 func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.StoredStreamEvent) error {
 	if len(events) == 0 {
 		return nil
