@@ -47,9 +47,9 @@ func (f *Factory) accountRepository() domain.Repository[*account.Account] {
 	})
 }
 
-func (f *Factory) NewAccountProjection() *account.Projection {
+func (f *Factory) NewAccountProjection(ctx context.Context) *account.Projection {
 	return f.accountProjectionField.GetOrInit(func() *account.Projection {
-		accountProjection, err := account.NewAccountProjection(f.eventStore().ReadOnlyEventStore)
+		accountProjection, err := account.NewAccountProjection(ctx, f.eventStore().ReadOnlyEventStore, time.Second)
 		if err != nil {
 			panic(err)
 		}
@@ -92,13 +92,13 @@ func (f *Factory) sqliteInstance() *sqlite.AppendOnlyStore {
 
 func (f *Factory) NewHTTPHandler(ctx context.Context) gohttp.Handler {
 	return f.httpHandlerField.GetOrInit(func() gohttp.Handler {
-		return http.NewHTTPServer(ctx, f.NewAccountService(), f.NewAccountProjection())
+		return http.NewHTTPServer(ctx, f.NewAccountService(), f.NewAccountProjection(ctx))
 	})
 }
 
-func (f *Factory) NewGRPCServer() *gogrpc.Server {
+func (f *Factory) NewGRPCServer(ctx context.Context) *gogrpc.Server {
 	return f.grpcServerField.GetOrInit(func() *gogrpc.Server {
-		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService(), f.NewAccountProjection())
+		accountGRPCServer := grpc.NewAccountGRPCServer(f.NewAccountService(), f.NewAccountProjection(ctx))
 		grpcServer := gogrpc.NewServer()
 		reflection.Register(grpcServer)
 

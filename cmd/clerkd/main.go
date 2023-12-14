@@ -40,7 +40,7 @@ func run() error {
 func serveGRPC(ctx context.Context, wg *sync.WaitGroup, factory *factory.Factory) {
 	defer wg.Done()
 
-	server := factory.NewGRPCServer()
+	server := factory.NewGRPCServer(ctx)
 	listener, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		panic(fmt.Errorf("error listening GRPC on port 8081: %w", err))

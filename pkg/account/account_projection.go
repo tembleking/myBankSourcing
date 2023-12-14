@@ -2,27 +2,30 @@ package account
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
 type Projection struct {
-	mutex    sync.RWMutex
-	accounts map[string]*Account
+	mutex                sync.RWMutex
+	accounts             map[string]*Account
+	lastProcessedEventID string
+	eventStore           *persistence.ReadOnlyEventStore
 }
 
-func (a *Projection) Accounts() []*Account {
+func (a *Projection) Accounts() []Account {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
-	result := make([]*Account, 0, len(a.accounts))
+	result := make([]Account, 0, len(a.accounts))
 
 	for _, account := range a.accounts {
-		result = append(result, account)
+		result = append(result, *account)
 	}
 
 	sort.Slice(result, func(i, j int) bool {
@@ -33,9 +36,6 @@ func (a *Projection) Accounts() []*Account {
 }
 
 func (a *Projection) handleEvent(event domain.Event) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-
 	switch e := event.(type) {
 	case *AccountOpened:
 		a.accounts[e.AggregateID()] = NewAccount()
@@ -45,18 +45,47 @@ func (a *Projection) handleEvent(event domain.Event) {
 	default:
 		a.accounts[e.AggregateID()].LoadFromHistory(e)
 	}
+
+	a.lastProcessedEventID = event.EventID()
 }
 
-func NewAccountProjection(eventStore *persistence.ReadOnlyEventStore) (*Projection, error) {
-	events, err := eventStore.LoadAllEvents(context.Background())
+func (a *Projection) refreshProjection(ctx context.Context) {
+	a.mutex.Lock()
+	defer a.mutex.Unlock()
+
+	store := a.eventStore
+	if a.lastProcessedEventID != "" {
+		store = store.AfterEventID(a.lastProcessedEventID)
+	}
+
+	events, err := store.LoadAllEvents(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error loading all events: %w", err)
+		slog.Default().ErrorContext(ctx, "error loading events from store", "error", err.Error())
+		return
 	}
 
-	projection := &Projection{accounts: map[string]*Account{}}
 	for _, event := range events {
-		projection.handleEvent(event)
+		a.handleEvent(event)
 	}
+}
 
-	return projection, nil
+func (a *Projection) startPeriodicRefresh(ctx context.Context, refreshInterval time.Duration) {
+	ticker := time.NewTicker(refreshInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			a.refreshProjection(ctx)
+		}
+	}
+}
+
+func NewAccountProjection(ctx context.Context, eventStore *persistence.ReadOnlyEventStore, refreshInterval time.Duration) (*Projection, error) {
+	p := &Projection{accounts: map[string]*Account{}, eventStore: eventStore}
+	p.refreshProjection(ctx)
+	go p.startPeriodicRefresh(ctx, refreshInterval)
+	return p, nil
 }
