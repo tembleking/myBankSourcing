@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/model"
@@ -117,7 +119,14 @@ func modelEventToPersistence(dbEvent model.Event) (persistence.StoredStreamEvent
 }
 
 func New(connectionString string) (*AppendOnlyStore, error) {
-	db, err := gorm.Open(sqlite.Open(connectionString), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(connectionString), &gorm.Config{
+		Logger: logger.New(log.Default(), logger.Config{
+			Colorful:                  false,
+			IgnoreRecordNotFoundError: true,
+			LogLevel:                  logger.Error,
+		}),
+		SkipDefaultTransaction: true,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to open sqlite database connection: %w", err)
 	}

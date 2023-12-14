@@ -12,27 +12,18 @@ import (
 )
 
 type Projection struct {
-	mutex                sync.RWMutex
-	accounts             map[string]*Account
-	lastProcessedEventID string
-	eventStore           *persistence.ReadOnlyEventStore
+	mutex                 sync.RWMutex
+	accounts              map[string]*Account
+	precalculatedAccounts []Account
+	lastProcessedEventID  string
+	eventStore            *persistence.ReadOnlyEventStore
 }
 
 func (a *Projection) Accounts() []Account {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
-	result := make([]Account, 0, len(a.accounts))
-
-	for _, account := range a.accounts {
-		result = append(result, *account)
-	}
-
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].ID() < result[j].ID()
-	})
-
-	return result
+	return a.precalculatedAccounts
 }
 
 func (a *Projection) handleEvent(event domain.Event) {
@@ -47,6 +38,20 @@ func (a *Projection) handleEvent(event domain.Event) {
 	}
 
 	a.lastProcessedEventID = event.EventID()
+}
+
+func (a *Projection) precalculateAccounts() {
+	accounts := make([]Account, 0, len(a.accounts))
+
+	for _, account := range a.accounts {
+		accounts = append(accounts, *account)
+	}
+
+	sort.Slice(accounts, func(i, j int) bool {
+		return accounts[i].ID() < accounts[j].ID()
+	})
+
+	a.precalculatedAccounts = accounts
 }
 
 func (a *Projection) refreshProjection(ctx context.Context) {
@@ -66,6 +71,10 @@ func (a *Projection) refreshProjection(ctx context.Context) {
 
 	for _, event := range events {
 		a.handleEvent(event)
+	}
+
+	if len(events) > 0 {
+		a.precalculateAccounts()
 	}
 }
 
