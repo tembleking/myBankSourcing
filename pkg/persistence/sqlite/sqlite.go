@@ -81,7 +81,7 @@ func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName string) ([
 
 func readRecodsWithQuery(ctx context.Context, db *gorm.DB) ([]persistence.StoredStreamEvent, error) {
 	var dbEvents []model.Event
-	err := db.Find(&dbEvents).Error
+	err := db.WithContext(ctx).Find(&dbEvents).Error
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
 	}
