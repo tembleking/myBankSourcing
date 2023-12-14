@@ -13,6 +13,7 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence/mocks"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
+	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("EventStore", func() {
@@ -84,6 +85,26 @@ var _ = Describe("EventStore", func() {
 			Expect(stream).To(Equal([]domain.Event{
 				&account.AmountDeposited{ID: "event0", AccountID: "some-account", Quantity: 10, Balance: 10},
 			}))
+		})
+	})
+
+	When("asking for the events after some event ID", func() {
+		It("returns a new store with these modifications", func() {
+			appendOnlyStore.EXPECT().AfterEventID("event0").Return(appendOnlyStore)
+
+			newEventStore := eventStore.AfterEventID("event0")
+			Expect(newEventStore).NotTo(BeNil())
+			Expect(newEventStore).NotTo(PointToTheSameLocationAs(eventStore))
+		})
+	})
+
+	When("asking for a limit number of events", func() {
+		It("returns a new store with these modifications", func() {
+			appendOnlyStore.EXPECT().Limit(42).Return(appendOnlyStore)
+
+			newEventStore := eventStore.Limit(42)
+			Expect(newEventStore).NotTo(BeNil())
+			Expect(newEventStore).NotTo(PointToTheSameLocationAs(eventStore))
 		})
 	})
 })

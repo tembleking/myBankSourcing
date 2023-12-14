@@ -43,7 +43,11 @@ func (b *EventStoreBuilder) Build() *EventStore {
 
 	return &EventStore{
 		serializer:      b.serializer,
-		deserializer:    b.deserializer,
 		appendOnlyStore: b.appendOnlyStore,
+
+		ReadOnlyEventStore: &ReadOnlyEventStore{
+			deserializer:  b.deserializer,
+			readOnlyStore: b.appendOnlyStore,
+		},
 	}
 }

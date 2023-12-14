@@ -2,6 +2,7 @@ package matchers
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/onsi/gomega/gcustom"
 
@@ -35,4 +36,25 @@ func BeAggregateWithTheSameVersionAs(expected domain.Aggregate) gcustom.CustomGo
 
 		return actualAggregate.Version() == expected.Version(), nil
 	}).WithMessage(fmt.Sprintf("be an aggregate with version %d", expected.Version()))
+}
+
+func PointToTheSameLocationAs(expected any) gcustom.CustomGomegaMatcher {
+	return gcustom.MakeMatcher(func(actual any) (success bool, err error) {
+		if expected == nil && actual == nil {
+			return true, nil
+		}
+
+		if reflect.ValueOf(expected).Kind() != reflect.Ptr {
+			return false, fmt.Errorf("the expected value is not a pointer, got %T", expected)
+		}
+
+		if reflect.ValueOf(actual).Kind() != reflect.Ptr {
+			return false, fmt.Errorf("the actual value is not a pointer, got %T", actual)
+		}
+
+		expectedPtr := reflect.ValueOf(expected).Pointer()
+		actualPtr := reflect.ValueOf(actual).Pointer()
+
+		return expectedPtr == actualPtr, nil
+	}).WithMessage("point to the same memory location")
 }

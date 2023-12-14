@@ -13,13 +13,19 @@ import (
 // It can be constructed using the EventStoreBuilder.
 type EventStore struct {
 	serializer      DomainEventSerializer
-	deserializer    DomainEventDeserializer
 	appendOnlyStore AppendOnlyStore
+
+	*ReadOnlyEventStore
+}
+
+type ReadOnlyEventStore struct {
+	deserializer  DomainEventDeserializer
+	readOnlyStore ReadOnlyStore
 }
 
 // LoadEventStream loads all events for a given aggregate id
-func (e *EventStore) LoadEventStream(ctx context.Context, streamName string) ([]domain.Event, error) {
-	records, err := e.appendOnlyStore.ReadRecords(ctx, streamName)
+func (e *ReadOnlyEventStore) LoadEventStream(ctx context.Context, streamName string) ([]domain.Event, error) {
+	records, err := e.readOnlyStore.ReadRecords(ctx, streamName)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
@@ -88,8 +94,8 @@ func (e *EventStore) streamEventsFromAggregate(aggregate domain.Aggregate) ([]St
 	return storedStreamEvents, nil
 }
 
-func (e *EventStore) LoadAllEvents(ctx context.Context) ([]domain.Event, error) {
-	records, err := e.appendOnlyStore.ReadAllRecords(ctx)
+func (e *ReadOnlyEventStore) LoadAllEvents(ctx context.Context) ([]domain.Event, error) {
+	records, err := e.readOnlyStore.ReadAllRecords(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error reading records: %w", err)
 	}
@@ -104,4 +110,18 @@ func (e *EventStore) LoadAllEvents(ctx context.Context) ([]domain.Event, error) 
 	}
 
 	return events, nil
+}
+
+func (e *ReadOnlyEventStore) AfterEventID(eventID string) *ReadOnlyEventStore {
+	return &ReadOnlyEventStore{
+		deserializer:  e.deserializer,
+		readOnlyStore: e.readOnlyStore.AfterEventID(eventID),
+	}
+}
+
+func (e *ReadOnlyEventStore) Limit(limit int) *ReadOnlyEventStore {
+	return &ReadOnlyEventStore{
+		deserializer:  e.deserializer,
+		readOnlyStore: e.readOnlyStore.Limit(limit),
+	}
 }
