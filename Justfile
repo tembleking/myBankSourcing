@@ -48,8 +48,8 @@ mkmigration MIGRATION_NAME:
     migrate create -ext sql -dir pkg/persistence/sqlite/internal/migrations -seq {{ MIGRATION_NAME }}
 
 generate-sql:
-    go install github.com/go-jet/jet/v2/cmd/jet@latest
+    go install gorm.io/gen/tools/gentool@latest
     go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
     migrate -path pkg/persistence/sqlite/internal/migrations -database sqlite3:///tmp/db.db up
-    jet -source sqlite -dsn file:///tmp/db.db -path pkg/persistence/sqlite/internal/sqlgen -ignore-tables schema_migrations
+    gentool -db sqlite -dsn "file:///tmp/db.db?_fk=1&mode=ro" -outPath pkg/persistence/sqlite/internal/sqlgen -onlyModel
     rm /tmp/db.db

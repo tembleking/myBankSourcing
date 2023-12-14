@@ -2,22 +2,17 @@ package sqlite
 
 import (
 	"context"
-	"database/sql"
-	"embed"
 	"errors"
 	"fmt"
 	"strconv"
 
-	. "github.com/go-jet/jet/v2/sqlite"
-	"github.com/golang-migrate/migrate/v4"
-	migratesqlite3 "github.com/golang-migrate/migrate/v4/database/sqlite3"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/sqlgen/model"
-	. "github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/sqlgen/table"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/model"
 )
 
 const (
@@ -28,7 +23,7 @@ const (
 )
 
 type AppendOnlyStore struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
 func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.StoredStreamEvent) error {
@@ -36,10 +31,10 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 		return nil
 	}
 
-	insertStmt := Event.INSERT(Event.StreamName, Event.StreamVersion, Event.EventName, Event.EventID, Event.EventData, Event.HappenedOn, Event.ContentType)
+	eventsToInsert := make([]model.Event, 0, len(events))
 	for _, event := range events {
-		insertStmt.MODEL(model.Event{
-			StreamName:    string(event.ID.StreamName),
+		eventsToInsert = append(eventsToInsert, model.Event{
+			StreamName:    event.ID.StreamName,
 			StreamVersion: strconv.FormatUint(event.ID.StreamVersion, 10),
 			EventName:     event.EventName,
 			EventID:       event.EventID,
@@ -49,9 +44,8 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 		})
 	}
 
-	err := a.doAtomically(ctx, func(tx *sql.Tx) error {
-		_, err := insertStmt.ExecContext(ctx, tx)
-		return err
+	err := a.doAtomically(ctx, func(db *gorm.DB) error {
+		return db.WithContext(ctx).Omit("row_id").CreateInBatches(eventsToInsert, 1000).Error
 	})
 	if isErrorUniqueConstraintViolation(err) {
 		return persistence.ErrUnexpectedVersion
@@ -70,16 +64,16 @@ func isErrorUniqueConstraintViolation(err error) bool {
 }
 
 func (a *AppendOnlyStore) ReadAllRecords(ctx context.Context) ([]persistence.StoredStreamEvent, error) {
-	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns))
+	return readRecodsWithQuery(ctx, a.db.WithContext(ctx))
 }
 
 func (a *AppendOnlyStore) ReadRecords(ctx context.Context, streamName string) ([]persistence.StoredStreamEvent, error) {
-	return a.readRecodsWithQuery(ctx, Event.SELECT(Event.AllColumns).WHERE(Event.StreamName.EQ(String(streamName))))
+	return readRecodsWithQuery(ctx, a.db.WithContext(ctx).Where("stream_name = ?", streamName))
 }
 
-func (a *AppendOnlyStore) readRecodsWithQuery(ctx context.Context, query SelectStatement) ([]persistence.StoredStreamEvent, error) {
+func readRecodsWithQuery(ctx context.Context, db *gorm.DB) ([]persistence.StoredStreamEvent, error) {
 	var dbEvents []model.Event
-	err := query.QueryContext(ctx, a.db, &dbEvents)
+	err := db.Find(&dbEvents).Error
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
 	}
@@ -114,35 +108,8 @@ func modelEventToPersistence(dbEvent model.Event) (persistence.StoredStreamEvent
 	}, nil
 }
 
-//go:embed internal/migrations
-var migrations embed.FS
-
-func (a *AppendOnlyStore) MigrateDB(ctx context.Context) (err error) {
-	driver, err := migratesqlite3.WithInstance(a.db, &migratesqlite3.Config{})
-	if err != nil {
-		return fmt.Errorf("unable to create migration driver: %w", err)
-	}
-
-	fs, err := iofs.New(migrations, "internal/migrations")
-	if err != nil {
-		return fmt.Errorf("unable to create migration fs: %w", err)
-	}
-
-	instance, err := migrate.NewWithInstance("iofs", fs, "sqlite3", driver)
-	if err != nil {
-		return fmt.Errorf("unable to create migration instance: %w", err)
-	}
-
-	err = instance.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return fmt.Errorf("unable to migrate: %w", err)
-	}
-
-	return nil
-}
-
 func New(connectionString string) (*AppendOnlyStore, error) {
-	db, err := sql.Open("sqlite3", connectionString)
+	db, err := gorm.Open(sqlite.Open(connectionString), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to open sqlite database connection: %w", err)
 	}
@@ -166,31 +133,16 @@ func InMemory() *AppendOnlyStore {
 	return db
 }
 
-func (a *AppendOnlyStore) doAtomically(ctx context.Context, function func(tx *sql.Tx) error) (err error) {
-	tx, err := a.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
-	if err != nil {
-		err = fmt.Errorf("unable to begin transaction: %w", err)
-		return
-	}
-
-	defer func() {
-		if panicMsg := recover(); panicMsg != nil {
-			_ = tx.Rollback()
-			panic(panicMsg)
-		}
-
-		if err != nil {
-			rollbackErr := tx.Rollback()
-			err = errors.Join(err, rollbackErr)
-			return
-		}
-		err = tx.Commit()
-	}()
-
-	err = function(tx)
-	return
+func (a *AppendOnlyStore) doAtomically(ctx context.Context, function func(tx *gorm.DB) error) (err error) {
+	return a.db.Transaction(func(tx *gorm.DB) error {
+		return function(tx)
+	})
 }
 
 func (a *AppendOnlyStore) Close() error {
-	return a.db.Close()
+	db, err := a.db.DB()
+	if err != nil {
+		return fmt.Errorf("unable to retrieve database connection: %w", err)
+	}
+	return db.Close()
 }
