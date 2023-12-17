@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/google/uuid"
-
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
@@ -58,7 +56,7 @@ func OpenAccount(id string) (*Account, error) {
 		return nil, fmt.Errorf("id must not be empty")
 	}
 	a := NewAccount()
-	a.Apply(&AccountOpened{ID: uuid.NewString(), AccountID: id, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AccountOpened{ID: domain.NewID(), AccountID: id, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return a, nil
 }
 
@@ -71,7 +69,7 @@ func (a *Account) DepositMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountDeposited{ID: uuid.NewString(), AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AmountDeposited{ID: domain.NewID(), AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
 
@@ -84,7 +82,7 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{ID: uuid.NewString(), AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AmountWithdrawn{ID: domain.NewID(), AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
 
@@ -126,9 +124,9 @@ func (a *Account) TransferMoney(amount int, destination *Account) error {
 		return ErrBalanceIsNotEnoughForTransfer
 	}
 
-	transferID := uuid.NewString()
+	transferID := domain.NewID()
 	newBalanceOrigin := a.Balance() - amount
-	a.Apply(&TransferRequested{ID: uuid.NewString(), TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&TransferRequested{ID: domain.NewID(), TransferID: transferID, Quantity: amount, Balance: newBalanceOrigin, From: a.ID(), To: destination.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
 
@@ -143,6 +141,6 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
-	a.Apply(&AccountClosed{ID: uuid.NewString(), AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AccountClosed{ID: domain.NewID(), AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
