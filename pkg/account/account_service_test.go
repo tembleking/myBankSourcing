@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -90,6 +91,10 @@ var _ = Describe("Account Service", func() {
 
 type fakeAccountRepository struct {
 	accounts map[string]*account.Account
+}
+
+func (f *fakeAccountRepository) NextID() string {
+	return uuid.NewString()
 }
 
 func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*account.Account, error) {

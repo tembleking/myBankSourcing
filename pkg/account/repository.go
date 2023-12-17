@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
@@ -11,6 +13,9 @@ type Repository struct {
 	eventStore *persistence.EventStore
 }
 
+func (r *Repository) NextID() string {
+	return uuid.NewString()
+}
 func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {
 	events, err := r.eventStore.LoadEventStream(ctx, id)
 	if err != nil {

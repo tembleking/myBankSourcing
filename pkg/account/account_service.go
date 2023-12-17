@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
-
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
@@ -16,7 +14,7 @@ type AccountService struct {
 }
 
 func (a *AccountService) OpenAccount(ctx context.Context) (*Account, error) {
-	accountCreated, err := OpenAccount(uuid.NewString())
+	accountCreated, err := OpenAccount(a.accountRepository.NextID())
 	if err != nil {
 		return nil, fmt.Errorf("error opening account: %w", err)
 	}
