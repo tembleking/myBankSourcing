@@ -43,6 +43,10 @@ test-build:
 test:
     go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --cover
 
+bump:
+    go get -u -v -t ./...
+    go mod tidy
+
 mkmigration MIGRATION_NAME:
     go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
     migrate create -ext sql -dir pkg/persistence/sqlite/internal/migrations -seq {{ MIGRATION_NAME }}
