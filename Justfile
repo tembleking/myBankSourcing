@@ -5,7 +5,7 @@ help:
     just -l
 
 # Runs all checks
-check: generate lint test-build test
+check: generate fmt lint test-build test
 
 # Generate mocks
 generate: build-proto generate-sql

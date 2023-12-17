@@ -16,6 +16,7 @@ type Repository struct {
 func (r *Repository) NextID() string {
 	return uuid.NewString()
 }
+
 func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {
 	events, err := r.eventStore.LoadEventStream(ctx, id)
 	if err != nil {
