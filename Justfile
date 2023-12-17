@@ -43,6 +43,11 @@ test-build:
 test:
     go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --cover
 
+fmt:
+    go install mvdan.cc/gofumpt@latest
+    gofumpt -w -l .
+
+
 bump:
     go get -u -v -t ./...
     go mod tidy

@@ -3,6 +3,7 @@ package account
 import (
 	"time"
 
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
 
@@ -16,7 +17,7 @@ func init() {
 }
 
 type AccountOpened struct {
-	ID             string
+	ID             domain.EventID
 	AccountID      string
 	AccountVersion uint64
 	Timestamp      time.Time
@@ -30,7 +31,7 @@ func (a *AccountOpened) Version() uint64 {
 	return a.AccountVersion
 }
 
-func (a *AccountOpened) EventID() string {
+func (a *AccountOpened) EventID() domain.EventID {
 	return a.ID
 }
 
@@ -43,7 +44,7 @@ func (a *AccountOpened) HappenedOn() time.Time {
 }
 
 type AmountDeposited struct {
-	ID             string
+	ID             domain.EventID
 	AccountID      string
 	Quantity       int
 	Balance        int
@@ -59,7 +60,7 @@ func (a *AmountDeposited) Version() uint64 {
 	return a.AccountVersion
 }
 
-func (a *AmountDeposited) EventID() string {
+func (a *AmountDeposited) EventID() domain.EventID {
 	return a.ID
 }
 
@@ -72,7 +73,7 @@ func (a *AmountDeposited) HappenedOn() time.Time {
 }
 
 type AmountWithdrawn struct {
-	ID             string
+	ID             domain.EventID
 	AccountID      string
 	Quantity       int
 	Balance        int
@@ -88,7 +89,7 @@ func (a *AmountWithdrawn) Version() uint64 {
 	return a.AccountVersion
 }
 
-func (a *AmountWithdrawn) EventID() string {
+func (a *AmountWithdrawn) EventID() domain.EventID {
 	return a.ID
 }
 
@@ -101,7 +102,7 @@ func (a *AmountWithdrawn) HappenedOn() time.Time {
 }
 
 type TransferRequested struct {
-	ID             string
+	ID             domain.EventID
 	TransferID     string
 	Quantity       int
 	Balance        int
@@ -115,7 +116,7 @@ func (t *TransferRequested) AggregateID() string {
 	return t.From
 }
 
-func (t *TransferRequested) EventID() string {
+func (t *TransferRequested) EventID() domain.EventID {
 	return t.ID
 }
 
@@ -132,7 +133,7 @@ func (t *TransferRequested) HappenedOn() time.Time {
 }
 
 type TransferReceived struct {
-	ID             string
+	ID             domain.EventID
 	TransferID     string
 	Quantity       int
 	Balance        int
@@ -146,7 +147,7 @@ func (t *TransferReceived) AggregateID() string {
 	return t.To
 }
 
-func (t *TransferReceived) EventID() string {
+func (t *TransferReceived) EventID() domain.EventID {
 	return t.ID
 }
 
@@ -163,7 +164,7 @@ func (t *TransferReceived) HappenedOn() time.Time {
 }
 
 type AccountClosed struct {
-	ID             string
+	ID             domain.EventID
 	AccountID      string
 	AccountVersion uint64
 	Timestamp      time.Time
@@ -173,7 +174,7 @@ func (a *AccountClosed) AggregateID() string {
 	return a.AccountID
 }
 
-func (a *AccountClosed) EventID() string {
+func (a *AccountClosed) EventID() domain.EventID {
 	return a.ID
 }
 

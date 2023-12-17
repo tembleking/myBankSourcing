@@ -90,7 +90,7 @@ var _ = Describe("EventStore", func() {
 
 	When("asking for the events after some event ID", func() {
 		It("returns a new store with these modifications", func() {
-			appendOnlyStore.EXPECT().AfterEventID("event0").Return(appendOnlyStore)
+			appendOnlyStore.EXPECT().AfterEventID(domain.EventID("event0")).Return(appendOnlyStore)
 
 			newEventStore := eventStore.AfterEventID("event0")
 			Expect(newEventStore).NotTo(BeNil())

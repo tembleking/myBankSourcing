@@ -2,6 +2,15 @@ package domain
 
 import "github.com/google/uuid"
 
-func NewID() string {
-	return uuid.Must(uuid.NewV7()).String()
+type EventID string
+
+func (e EventID) SameValueObjectAs(other ValueObject) bool {
+	if otherEventID, ok := other.(EventID); ok {
+		return e == otherEventID
+	}
+	return false
+}
+
+func NewEventID() EventID {
+	return EventID(uuid.Must(uuid.NewV7()).String())
 }

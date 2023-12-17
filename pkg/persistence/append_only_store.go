@@ -3,6 +3,8 @@ package persistence
 import (
 	"context"
 	"time"
+
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
 //go:generate mockgen -source=$GOFILE -destination=mocks/$GOFILE -package=mocks
@@ -22,7 +24,7 @@ type ReadOnlyStore interface {
 	ReadRecords(ctx context.Context, streamName string) ([]StoredStreamEvent, error)
 
 	// AfterEventID returns a ReadOnlyStore that only contains events that happened after the given eventID.
-	AfterEventID(eventID string) ReadOnlyStore
+	AfterEventID(eventID domain.EventID) ReadOnlyStore
 
 	// Limit returns a ReadOnlyStore that only contains the first n events.
 	Limit(limit int) ReadOnlyStore
@@ -35,7 +37,7 @@ type StreamID struct {
 
 type StoredStreamEvent struct {
 	ID          StreamID
-	EventID     string
+	EventID     domain.EventID
 	EventName   string
 	EventData   []byte
 	HappenedOn  time.Time

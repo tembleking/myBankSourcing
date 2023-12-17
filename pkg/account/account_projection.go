@@ -15,7 +15,7 @@ type Projection struct {
 	mutex                 sync.RWMutex
 	accounts              map[string]*Account
 	precalculatedAccounts []Account
-	lastProcessedEventID  string
+	lastProcessedEventID  domain.EventID
 	eventStore            *persistence.ReadOnlyEventStore
 }
 

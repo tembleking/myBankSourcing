@@ -50,6 +50,6 @@ func anEvent() domain.Event {
 		Quantity:       50,
 		Balance:        134,
 		AccountVersion: 2,
-		Timestamp:      time.Date(2023, time.December, 25, 01, 02, 03, 12345, time.UTC),
+		Timestamp:      time.Date(2023, time.December, 25, 1, 2, 3, 12345, time.UTC),
 	}
 }

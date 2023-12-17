@@ -12,6 +12,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	domain "github.com/tembleking/myBankSourcing/pkg/domain"
 	persistence "github.com/tembleking/myBankSourcing/pkg/persistence"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -40,7 +41,7 @@ func (m *MockAppendOnlyStore) EXPECT() *MockAppendOnlyStoreMockRecorder {
 }
 
 // AfterEventID mocks base method.
-func (m *MockAppendOnlyStore) AfterEventID(eventID string) persistence.ReadOnlyStore {
+func (m *MockAppendOnlyStore) AfterEventID(eventID domain.EventID) persistence.ReadOnlyStore {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AfterEventID", eventID)
 	ret0, _ := ret[0].(persistence.ReadOnlyStore)
@@ -140,7 +141,7 @@ func (m *MockReadOnlyStore) EXPECT() *MockReadOnlyStoreMockRecorder {
 }
 
 // AfterEventID mocks base method.
-func (m *MockReadOnlyStore) AfterEventID(eventID string) persistence.ReadOnlyStore {
+func (m *MockReadOnlyStore) AfterEventID(eventID domain.EventID) persistence.ReadOnlyStore {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AfterEventID", eventID)
 	ret0, _ := ret[0].(persistence.ReadOnlyStore)

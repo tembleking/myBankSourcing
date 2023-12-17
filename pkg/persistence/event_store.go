@@ -112,7 +112,7 @@ func (e *ReadOnlyEventStore) LoadAllEvents(ctx context.Context) ([]domain.Event,
 	return events, nil
 }
 
-func (e *ReadOnlyEventStore) AfterEventID(eventID string) *ReadOnlyEventStore {
+func (e *ReadOnlyEventStore) AfterEventID(eventID domain.EventID) *ReadOnlyEventStore {
 	return &ReadOnlyEventStore{
 		deserializer:  e.deserializer,
 		readOnlyStore: e.readOnlyStore.AfterEventID(eventID),

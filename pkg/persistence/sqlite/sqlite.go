@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite/internal/model"
 )
@@ -28,7 +29,7 @@ type AppendOnlyStore struct {
 	db *gorm.DB
 }
 
-func (a *AppendOnlyStore) AfterEventID(eventID string) persistence.ReadOnlyStore {
+func (a *AppendOnlyStore) AfterEventID(eventID domain.EventID) persistence.ReadOnlyStore {
 	return &AppendOnlyStore{db: a.db.Where("row_id > (select row_id from event where event_id = ?)", eventID)}
 }
 
@@ -47,7 +48,7 @@ func (a *AppendOnlyStore) Append(ctx context.Context, events ...persistence.Stor
 			StreamName:    event.ID.StreamName,
 			StreamVersion: strconv.FormatUint(event.ID.StreamVersion, 10),
 			EventName:     event.EventName,
-			EventID:       event.EventID,
+			EventID:       string(event.EventID),
 			EventData:     event.EventData,
 			HappenedOn:    event.HappenedOn,
 			ContentType:   event.ContentType,
@@ -111,7 +112,7 @@ func modelEventToPersistence(dbEvent model.Event) (persistence.StoredStreamEvent
 			StreamVersion: streamVersion,
 		},
 		EventName:   dbEvent.EventName,
-		EventID:     dbEvent.EventID,
+		EventID:     domain.EventID(dbEvent.EventID),
 		EventData:   dbEvent.EventData,
 		HappenedOn:  dbEvent.HappenedOn,
 		ContentType: dbEvent.ContentType,
