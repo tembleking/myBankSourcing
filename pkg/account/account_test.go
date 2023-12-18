@@ -150,6 +150,18 @@ var _ = Describe("Account", func() {
 				Expect(origin.TransferMoney(amount, destination)).To(Succeed())
 				Expect(origin.CloseAccount()).To(MatchError(account.ErrAccountCannotBeClosedWithPendingTransfers))
 			})
+
+			When("and the transfer is returned and withdrawns the money", func() {
+				It("is able to close the account", func() {
+					amount := origin.Balance()
+
+					Expect(origin.TransferMoney(amount, destination)).To(Succeed())
+					Expect(origin.CloseAccount()).To(MatchError(account.ErrAccountCannotBeClosedWithPendingTransfers))
+					Expect(origin.ReturnTransfer("some-transfer-id", amount, "some-destination-account")).To(Succeed())
+					Expect(origin.WithdrawMoney(amount)).To(Succeed())
+					Expect(origin.CloseAccount()).To(Succeed())
+				})
+			})
 		})
 	})
 

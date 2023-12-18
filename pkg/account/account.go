@@ -113,6 +113,7 @@ func (a *Account) onEvent(event domain.Event) {
 		a.balance = event.Balance
 	case *TransferReturned:
 		a.balance = event.Balance
+		a.pendingTransfers--
 	case *AccountClosed:
 		a.isOpen = false
 	}
