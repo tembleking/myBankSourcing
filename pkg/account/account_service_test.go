@@ -2,7 +2,6 @@ package account_test
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -101,7 +100,7 @@ func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*accoun
 	if account, ok := f.accounts[id]; ok {
 		return account, nil
 	}
-	return nil, fmt.Errorf("not found")
+	return nil, account.ErrAccountNotFound
 }
 
 func (f *fakeAccountRepository) Save(ctx context.Context, aggregate *account.Account) error {

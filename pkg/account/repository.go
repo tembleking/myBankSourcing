@@ -2,12 +2,15 @@ package account
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
+
+var ErrAccountNotFound = errors.New("account not found")
 
 type Repository struct {
 	eventStore *persistence.EventStore

@@ -109,6 +109,8 @@ func (a *Account) onEvent(event domain.Event) {
 		})
 	case *TransferReceived:
 		a.balance = event.Balance
+	case *TransferReturned:
+		a.balance = event.Balance
 	case *AccountClosed:
 		a.isOpen = false
 	}
@@ -144,5 +146,25 @@ func (a *Account) CloseAccount() error {
 		return ErrAccountCannotBeClosedWithBalance
 	}
 	a.Apply(&AccountClosed{ID: domain.NewEventID(), AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	return nil
+}
+
+func (a *Account) AcceptTransfer(transferID string, quantity int, originAccount string) error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
+
+	newBalance := a.Balance() + quantity
+	a.Apply(&TransferReceived{ID: domain.NewEventID(), TransferID: transferID, Quantity: quantity, Balance: newBalance, From: originAccount, To: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	return nil
+}
+
+func (a *Account) ReturnTransfer(transferID string, quantity int, destinationAccount string) error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
+
+	newBalance := a.Balance() + quantity
+	a.Apply(&TransferReturned{ID: domain.NewEventID(), TransferID: transferID, Quantity: quantity, Balance: newBalance, From: a.ID(), To: destinationAccount, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
 }
