@@ -29,9 +29,10 @@ func (t *Transfer) SameEntityAs(other domain.Entity) bool {
 type Account struct {
 	domain.BaseAggregate
 
-	isOpen    bool
-	balance   int
-	transfers []Transfer
+	isOpen           bool
+	balance          int
+	transfers        []Transfer
+	pendingTransfers int
 }
 
 func (a *Account) SameEntityAs(other domain.Entity) bool {
@@ -107,6 +108,7 @@ func (a *Account) onEvent(event domain.Event) {
 			Amount:     event.Quantity,
 			ToAccount:  event.To,
 		})
+		a.pendingTransfers++
 	case *TransferReceived:
 		a.balance = event.Balance
 	case *TransferReturned:
@@ -144,6 +146,9 @@ func (a *Account) CloseAccount() error {
 	}
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
+	}
+	if a.pendingTransfers > 0 {
+		return ErrAccountCannotBeClosedWithPendingTransfers
 	}
 	a.Apply(&AccountClosed{ID: domain.NewEventID(), AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil

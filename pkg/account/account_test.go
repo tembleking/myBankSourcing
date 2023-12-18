@@ -106,16 +106,14 @@ var _ = Describe("Account", func() {
 			destination *account.Account
 		)
 		BeforeEach(func() {
-			origin = account.NewAccount()
-			origin.LoadFromHistory(
-				&account.AccountOpened{AccountID: "origin", AccountVersion: 0},
-				&account.AmountDeposited{AccountID: "origin", Balance: 100, Quantity: 100, AccountVersion: 1},
-			)
-			destination = account.NewAccount()
-			destination.LoadFromHistory(
-				&account.AccountOpened{AccountID: "destination", AccountVersion: 0},
-				&account.AmountDeposited{AccountID: "destination", Balance: 30, Quantity: 30, AccountVersion: 1},
-			)
+			var err error
+			origin, err = account.OpenAccount("origin")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(origin.DepositMoney(100)).To(Succeed())
+
+			destination, err = account.OpenAccount("destination")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(destination.DepositMoney(30)).To(Succeed())
 		})
 
 		It("doesn't return any transference before it's actually created", func() {
@@ -142,6 +140,15 @@ var _ = Describe("Account", func() {
 				amount := 101
 
 				Expect(origin.TransferMoney(amount, destination)).To(MatchError(account.ErrBalanceIsNotEnoughForTransfer))
+			})
+		})
+
+		When("and there are pending transfers", func() {
+			It("is not able to close the account", func() {
+				amount := origin.Balance()
+
+				Expect(origin.TransferMoney(amount, destination)).To(Succeed())
+				Expect(origin.CloseAccount()).To(MatchError(account.ErrAccountCannotBeClosedWithPendingTransfers))
 			})
 		})
 	})
