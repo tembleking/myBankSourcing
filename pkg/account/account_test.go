@@ -94,7 +94,7 @@ var _ = Describe("Account", func() {
 
 					err := acc.WithdrawMoney(51)
 
-					Expect(err).To(MatchError(account.ErrBalanceIsNotEnoughForWithdrawal))
+					Expect(err).To(MatchError(account.ErrBalanceIsNotEnough))
 				})
 			})
 		})
@@ -166,6 +166,15 @@ var _ = Describe("Account", func() {
 
 				_, err := origin.TransferMoney(amount, destination)
 				Expect(err).To(MatchError(account.ErrAccountIsClosed))
+			})
+		})
+
+		When("the origin account doesn't have enough balance", func() {
+			It("fails to transfer the money", func() {
+				tooMuchAmount := 200
+
+				_, err := origin.TransferMoney(tooMuchAmount, destination)
+				Expect(err).To(MatchError(account.ErrBalanceIsNotEnough))
 			})
 		})
 	})

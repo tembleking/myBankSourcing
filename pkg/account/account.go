@@ -59,7 +59,7 @@ func (a *Account) WithdrawMoney(amount int) error {
 		return ErrAccountIsClosed
 	}
 	if amount > a.Balance() {
-		return ErrBalanceIsNotEnoughForWithdrawal
+		return ErrBalanceIsNotEnough
 	}
 
 	newBalance := a.Balance() - amount
@@ -102,6 +102,9 @@ func (a *Account) CloseAccount() error {
 func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Transfer, error) {
 	if !a.IsOpen() || !destination.IsOpen() {
 		return nil, ErrAccountIsClosed
+	}
+	if a.Balance() < amount {
+		return nil, ErrBalanceIsNotEnough
 	}
 
 	return &transfer.Transfer{
