@@ -3,7 +3,6 @@ package account_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 )
@@ -100,93 +99,14 @@ var _ = Describe("Account", func() {
 		})
 	})
 
-	When("transferring money to another account", func() {
-		var (
-			origin      *account.Account
-			destination *account.Account
-		)
-		BeforeEach(func() {
-			var err error
-			origin, err = account.OpenAccount("origin")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(origin.DepositMoney(100)).To(Succeed())
-
-			destination, err = account.OpenAccount("destination")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(destination.DepositMoney(30)).To(Succeed())
-		})
-
-		It("doesn't return any transference before it's actually created", func() {
-			Expect(origin.Transfers()).To(BeEmpty())
-		})
-
-		It("transfers the money correctly, but doesn't update the other account yet", func() {
-			amount := 50
-
-			err := origin.TransferMoney(amount, destination)
-
-			Expect(err).ToNot(HaveOccurred())
-			Expect(origin.Balance()).To(Equal(50))
-			Expect(destination.Balance()).To(Equal(30))
-			Expect(origin.Transfers()).To(ConsistOf(MatchFields(IgnoreExtras, Fields{
-				"TransferID": Not(BeEmpty()),
-				"Amount":     Equal(amount),
-				"ToAccount":  Equal("destination"),
-			})))
-		})
-
-		When("the origin account has less money than the amount to transfer", func() {
-			It("returns an error", func() {
-				amount := 101
-
-				Expect(origin.TransferMoney(amount, destination)).To(MatchError(account.ErrBalanceIsNotEnoughForTransfer))
-			})
-		})
-
-		When("and there are pending transfers", func() {
-			It("is not able to close the account", func() {
-				amount := origin.Balance()
-
-				Expect(origin.TransferMoney(amount, destination)).To(Succeed())
-				Expect(origin.CloseAccount()).To(MatchError(account.ErrAccountCannotBeClosedWithPendingTransfers))
-			})
-
-			When("and the transfer is returned and withdrawns the money", func() {
-				It("is able to close the account", func() {
-					amount := origin.Balance()
-
-					Expect(origin.TransferMoney(amount, destination)).To(Succeed())
-					Expect(origin.CloseAccount()).To(MatchError(account.ErrAccountCannotBeClosedWithPendingTransfers))
-					Expect(origin.ReturnTransfer("some-transfer-id", amount, "some-destination-account")).To(Succeed())
-					Expect(origin.WithdrawMoney(amount)).To(Succeed())
-					Expect(origin.CloseAccount()).To(Succeed())
-				})
-			})
-		})
-	})
-
-	When("the account has been closed", func() {
-		It("returns an error if it still contains some balance", func() {
+	When("still contains balance", func() {
+		It("cannot be closed", func() {
 			acc, _ := account.OpenAccount("some-id")
 			_ = acc.DepositMoney(50)
 
 			err := acc.CloseAccount()
 
 			Expect(err).To(MatchError(account.ErrAccountCannotBeClosedWithBalance))
-		})
-
-		It("doesn't allow to perform any action on the account", func() {
-			acc, _ := account.OpenAccount("some-id")
-			Expect(acc.IsOpen()).To(BeTrue())
-			otherAccount, _ := account.OpenAccount("some-other-id")
-			err := acc.CloseAccount()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(acc.IsOpen()).To(BeFalse())
-
-			Expect(acc.DepositMoney(50)).To(MatchError(account.ErrAccountIsClosed))
-			Expect(acc.WithdrawMoney(50)).To(MatchError(account.ErrAccountIsClosed))
-			Expect(acc.TransferMoney(50, otherAccount)).To(MatchError(account.ErrAccountIsClosed))
-			Expect(acc.CloseAccount()).To(MatchError(account.ErrAccountIsClosed))
 		})
 	})
 })

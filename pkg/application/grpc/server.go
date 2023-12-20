@@ -90,23 +90,6 @@ func (s *AccountGRPCServer) WithdrawMoney(ctx context.Context, request *proto.Wi
 	}, nil
 }
 
-func (s *AccountGRPCServer) TransferMoney(ctx context.Context, request *proto.TransferMoneyRequest) (*proto.TransferMoneyResponse, error) {
-	fromAccountID := request.GetFromAccountId()
-	toAccountID := request.GetToAccountId()
-	amount := int(request.GetAmount())
-	account, err := s.accountService.TransferMoney(ctx, fromAccountID, toAccountID, amount)
-	if err != nil {
-		return nil, &runtime.HTTPStatusError{HTTPStatus: 500, Err: err}
-	}
-
-	return &proto.TransferMoneyResponse{
-		Account: &proto.Account{
-			Id:      string(account.ID()),
-			Balance: int64(account.Balance()),
-		},
-	}, nil
-}
-
 func (s *AccountGRPCServer) CloseAccount(ctx context.Context, request *proto.CloseAccountRequest) (*emptypb.Empty, error) {
 	accountID := request.GetAccountId()
 	_, err := s.accountService.CloseAccount(ctx, accountID)

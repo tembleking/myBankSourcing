@@ -74,30 +74,6 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*A
 	return account, err
 }
 
-func (a *AccountService) TransferMoney(ctx context.Context, origin string, destination string, amountToTransfer int) (*Account, error) {
-	originAccount, err := a.accountRepository.GetByID(ctx, origin)
-	if err != nil {
-		return nil, fmt.Errorf("error getting origin account: %w", err)
-	}
-
-	destinationAccount, err := a.accountRepository.GetByID(ctx, destination)
-	if err != nil {
-		return nil, fmt.Errorf("error getting destination account: %w", err)
-	}
-
-	err = originAccount.TransferMoney(amountToTransfer, destinationAccount)
-	if err != nil {
-		return nil, fmt.Errorf("error transferring money: %w", err)
-	}
-
-	err = a.eventStore.AppendToStream(ctx, originAccount, destinationAccount)
-	if err != nil {
-		return nil, fmt.Errorf("error saving from accounts: %w", err)
-	}
-
-	return originAccount, err
-}
-
 func NewAccountService(eventStore *persistence.EventStore, accountRepository domain.Repository[*Account]) *AccountService {
 	return &AccountService{
 		eventStore:        eventStore,

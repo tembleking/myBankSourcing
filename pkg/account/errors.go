@@ -3,10 +3,8 @@ package account
 import "errors"
 
 var (
-	ErrDepositMoneyQuantityCannotBeNegative      = errors.New("the quantity cannot be negative")
-	ErrBalanceIsNotEnoughForWithdrawal           = errors.New("balance is not enough for a withdrawal")
-	ErrBalanceIsNotEnoughForTransfer             = errors.New("balance is not enough for a transfer")
-	ErrAccountIsClosed                           = errors.New("account is closed")
-	ErrAccountCannotBeClosedWithBalance          = errors.New("account cannot be closed with balance")
-	ErrAccountCannotBeClosedWithPendingTransfers = errors.New("account cannot be closed with pending transfers")
+	ErrDepositMoneyQuantityCannotBeNegative = errors.New("the quantity cannot be negative")
+	ErrBalanceIsNotEnoughForWithdrawal      = errors.New("balance is not enough for a withdrawal")
+	ErrAccountIsClosed                      = errors.New("account is closed")
+	ErrAccountCannotBeClosedWithBalance     = errors.New("account cannot be closed with balance")
 )

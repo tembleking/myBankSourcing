@@ -136,44 +136,6 @@ paths:
               - amount
       tags:
         - ClerkAPIService
-  /api/account/v1/{fromAccountId}/transfer/{toAccountId}:
-    post:
-      summary: Transfers money from one account to another
-      operationId: ClerkAPIService_TransferMoney
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/TransferMoneyResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: fromAccountId
-          description: The account id to transfer from
-          in: path
-          required: true
-          type: string
-        - name: toAccountId
-          description: The account id to transfer to
-          in: path
-          required: true
-          type: string
-        - name: body
-          in: body
-          required: true
-          schema:
-            type: object
-            properties:
-              amount:
-                type: string
-                format: int64
-                title: The amount to transfer
-            required:
-              - amount
-      tags:
-        - ClerkAPIService
 definitions:
   Account:
     type: object
@@ -208,14 +170,6 @@ definitions:
       account:
         $ref: '#/definitions/Account'
         title: The created account id
-    required:
-      - account
-  TransferMoneyResponse:
-    type: object
-    properties:
-      account:
-        $ref: '#/definitions/Account'
-        title: The updated account
     required:
       - account
   WithdrawMoneyResponse:

@@ -65,14 +65,6 @@ service ClerkAPIService {
     };
   }
 
-  // Transfers money from one account to another
-  rpc TransferMoney(TransferMoneyRequest) returns (TransferMoneyResponse) {
-    option (google.api.http) = {
-      post: "/api/account/v1/{from_account_id}/transfer/{to_account_id}"
-      body: "*"
-    };
-  }
-
   // Close an account
   rpc CloseAccount(CloseAccountRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {

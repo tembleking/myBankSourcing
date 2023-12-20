@@ -69,23 +69,6 @@ var _ = Describe("Account Service", func() {
 
 		Expect(updatedAccount.IsOpen()).To(BeFalse())
 	})
-
-	It("transfers money between accounts", func(ctx context.Context) {
-		firstAccount, err := accountService.OpenAccount(ctx)
-		Expect(err).ToNot(HaveOccurred())
-
-		secondAccount, err := accountService.OpenAccount(ctx)
-		Expect(err).ToNot(HaveOccurred())
-
-		amountToAdd := 100
-		_, err = accountService.DepositMoneyIntoAccount(ctx, firstAccount.ID(), amountToAdd)
-		Expect(err).ToNot(HaveOccurred())
-
-		amountToTransfer := 25
-		modifiedFirstAccount, err := accountService.TransferMoney(ctx, firstAccount.ID(), secondAccount.ID(), amountToTransfer)
-		Expect(err).ToNot(HaveOccurred())
-		Expect(modifiedFirstAccount.Balance()).To(Equal(75))
-	})
 })
 
 type fakeAccountRepository struct {

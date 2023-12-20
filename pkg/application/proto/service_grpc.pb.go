@@ -24,7 +24,6 @@ const (
 	ClerkAPIService_ListAccounts_FullMethodName  = "/ClerkAPIService/ListAccounts"
 	ClerkAPIService_AddMoney_FullMethodName      = "/ClerkAPIService/AddMoney"
 	ClerkAPIService_WithdrawMoney_FullMethodName = "/ClerkAPIService/WithdrawMoney"
-	ClerkAPIService_TransferMoney_FullMethodName = "/ClerkAPIService/TransferMoney"
 	ClerkAPIService_CloseAccount_FullMethodName  = "/ClerkAPIService/CloseAccount"
 )
 
@@ -40,8 +39,6 @@ type ClerkAPIServiceClient interface {
 	AddMoney(ctx context.Context, in *AddMoneyRequest, opts ...grpc.CallOption) (*AddMoneyResponse, error)
 	// Removes money from an account
 	WithdrawMoney(ctx context.Context, in *WithdrawMoneyRequest, opts ...grpc.CallOption) (*WithdrawMoneyResponse, error)
-	// Transfers money from one account to another
-	TransferMoney(ctx context.Context, in *TransferMoneyRequest, opts ...grpc.CallOption) (*TransferMoneyResponse, error)
 	// Close an account
 	CloseAccount(ctx context.Context, in *CloseAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -90,15 +87,6 @@ func (c *clerkAPIServiceClient) WithdrawMoney(ctx context.Context, in *WithdrawM
 	return out, nil
 }
 
-func (c *clerkAPIServiceClient) TransferMoney(ctx context.Context, in *TransferMoneyRequest, opts ...grpc.CallOption) (*TransferMoneyResponse, error) {
-	out := new(TransferMoneyResponse)
-	err := c.cc.Invoke(ctx, ClerkAPIService_TransferMoney_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *clerkAPIServiceClient) CloseAccount(ctx context.Context, in *CloseAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, ClerkAPIService_CloseAccount_FullMethodName, in, out, opts...)
@@ -120,8 +108,6 @@ type ClerkAPIServiceServer interface {
 	AddMoney(context.Context, *AddMoneyRequest) (*AddMoneyResponse, error)
 	// Removes money from an account
 	WithdrawMoney(context.Context, *WithdrawMoneyRequest) (*WithdrawMoneyResponse, error)
-	// Transfers money from one account to another
-	TransferMoney(context.Context, *TransferMoneyRequest) (*TransferMoneyResponse, error)
 	// Close an account
 	CloseAccount(context.Context, *CloseAccountRequest) (*emptypb.Empty, error)
 }
@@ -141,9 +127,6 @@ func (UnimplementedClerkAPIServiceServer) AddMoney(context.Context, *AddMoneyReq
 }
 func (UnimplementedClerkAPIServiceServer) WithdrawMoney(context.Context, *WithdrawMoneyRequest) (*WithdrawMoneyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawMoney not implemented")
-}
-func (UnimplementedClerkAPIServiceServer) TransferMoney(context.Context, *TransferMoneyRequest) (*TransferMoneyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TransferMoney not implemented")
 }
 func (UnimplementedClerkAPIServiceServer) CloseAccount(context.Context, *CloseAccountRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseAccount not implemented")
@@ -232,24 +215,6 @@ func _ClerkAPIService_WithdrawMoney_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ClerkAPIService_TransferMoney_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TransferMoneyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClerkAPIServiceServer).TransferMoney(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClerkAPIService_TransferMoney_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClerkAPIServiceServer).TransferMoney(ctx, req.(*TransferMoneyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ClerkAPIService_CloseAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloseAccountRequest)
 	if err := dec(in); err != nil {
@@ -290,10 +255,6 @@ var ClerkAPIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawMoney",
 			Handler:    _ClerkAPIService_WithdrawMoney_Handler,
-		},
-		{
-			MethodName: "TransferMoney",
-			Handler:    _ClerkAPIService_TransferMoney_Handler,
 		},
 		{
 			MethodName: "CloseAccount",

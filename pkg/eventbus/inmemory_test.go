@@ -37,18 +37,16 @@ var _ = Describe("Eventbus", func() {
 			ctx,
 			&account.AccountOpened{},
 			&account.AmountDeposited{},
-			&account.TransferRequested{},
 			&account.AmountWithdrawn{},
 			&account.AccountClosed{},
 		)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(subscriber.eventsReceived).To(HaveLen(5))
+		Expect(subscriber.eventsReceived).To(HaveLen(4))
 		Expect(subscriber.eventsReceived[0]).To(BeAssignableToTypeOf(&account.AccountOpened{}))
 		Expect(subscriber.eventsReceived[1]).To(BeAssignableToTypeOf(&account.AmountDeposited{}))
-		Expect(subscriber.eventsReceived[2]).To(BeAssignableToTypeOf(&account.TransferRequested{}))
-		Expect(subscriber.eventsReceived[3]).To(BeAssignableToTypeOf(&account.AmountWithdrawn{}))
-		Expect(subscriber.eventsReceived[4]).To(BeAssignableToTypeOf(&account.AccountClosed{}))
+		Expect(subscriber.eventsReceived[2]).To(BeAssignableToTypeOf(&account.AmountWithdrawn{}))
+		Expect(subscriber.eventsReceived[3]).To(BeAssignableToTypeOf(&account.AccountClosed{}))
 	})
 })
 

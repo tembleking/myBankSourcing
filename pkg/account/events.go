@@ -11,8 +11,6 @@ func init() {
 	serializer.RegisterSerializableEvent(&AccountOpened{})
 	serializer.RegisterSerializableEvent(&AmountDeposited{})
 	serializer.RegisterSerializableEvent(&AmountWithdrawn{})
-	serializer.RegisterSerializableEvent(&TransferRequested{})
-	serializer.RegisterSerializableEvent(&TransferReceived{})
 	serializer.RegisterSerializableEvent(&AccountClosed{})
 }
 
@@ -101,68 +99,6 @@ func (a *AmountWithdrawn) HappenedOn() time.Time {
 	return a.Timestamp
 }
 
-type TransferRequested struct {
-	ID             domain.EventID
-	TransferID     string
-	Quantity       int
-	Balance        int
-	From           string
-	To             string
-	AccountVersion uint64
-	Timestamp      time.Time
-}
-
-func (t *TransferRequested) AggregateID() string {
-	return t.From
-}
-
-func (t *TransferRequested) EventID() domain.EventID {
-	return t.ID
-}
-
-func (t *TransferRequested) EventName() string {
-	return "TransferRequested"
-}
-
-func (t *TransferRequested) Version() uint64 {
-	return t.AccountVersion
-}
-
-func (t *TransferRequested) HappenedOn() time.Time {
-	return t.Timestamp
-}
-
-type TransferReceived struct {
-	ID             domain.EventID
-	TransferID     string
-	Quantity       int
-	Balance        int
-	From           string
-	To             string
-	AccountVersion uint64
-	Timestamp      time.Time
-}
-
-func (t *TransferReceived) AggregateID() string {
-	return t.To
-}
-
-func (t *TransferReceived) EventID() domain.EventID {
-	return t.ID
-}
-
-func (t *TransferReceived) EventName() string {
-	return "TransferReceived"
-}
-
-func (t *TransferReceived) Version() uint64 {
-	return t.AccountVersion
-}
-
-func (t *TransferReceived) HappenedOn() time.Time {
-	return t.Timestamp
-}
-
 type AccountClosed struct {
 	ID             domain.EventID
 	AccountID      string
@@ -188,35 +124,4 @@ func (a *AccountClosed) Version() uint64 {
 
 func (a *AccountClosed) HappenedOn() time.Time {
 	return a.Timestamp
-}
-
-type TransferReturned struct {
-	ID             domain.EventID
-	TransferID     string
-	Quantity       int
-	Balance        int
-	From           string
-	To             string
-	AccountVersion uint64
-	Timestamp      time.Time
-}
-
-func (t *TransferReturned) AggregateID() string {
-	return t.From
-}
-
-func (t *TransferReturned) EventID() domain.EventID {
-	return t.ID
-}
-
-func (t *TransferReturned) EventName() string {
-	return "TransferReturned"
-}
-
-func (t *TransferReturned) HappenedOn() time.Time {
-	return t.Timestamp
-}
-
-func (t *TransferReturned) Version() uint64 {
-	return t.AccountVersion
 }
