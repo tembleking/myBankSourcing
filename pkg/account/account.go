@@ -3,8 +3,6 @@ package account
 import (
 	"fmt"
 
-	"github.com/google/uuid"
-
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/transfer"
 )
@@ -107,10 +105,5 @@ func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Tra
 		return nil, ErrBalanceIsNotEnough
 	}
 
-	return &transfer.Transfer{
-		TransferID:  uuid.NewString(),
-		FromAccount: a.ID(),
-		ToAccount:   destination.ID(),
-		Amount:      amount,
-	}, nil
+	return transfer.RequestTransfer(a.ID(), destination.ID(), amount), nil
 }

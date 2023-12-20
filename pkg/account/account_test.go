@@ -3,7 +3,6 @@ package account_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 )
@@ -133,12 +132,10 @@ var _ = Describe("Account", func() {
 			transfer, err := origin.TransferMoney(amount, destination)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(transfer).To(PointTo(MatchFields(IgnoreExtras, Fields{
-				"TransferID":  Not(BeEmpty()),
-				"FromAccount": Equal(origin.ID()),
-				"ToAccount":   Equal(destination.ID()),
-				"Amount":      Equal(50),
-			})))
+			Expect(transfer.ID()).ToNot(BeEmpty())
+			Expect(transfer.FromAccount()).To(Equal(origin.ID()))
+			Expect(transfer.ToAccount()).To(Equal(destination.ID()))
+			Expect(transfer.Amount()).To(Equal(amount))
 		})
 
 		When("the origin account is closed", func() {

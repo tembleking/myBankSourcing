@@ -9,10 +9,26 @@ import (
 type Transfer struct {
 	domain.BaseAggregate
 
-	TransferID  string
-	FromAccount string
-	ToAccount   string
-	Amount      int
+	transferID  string
+	fromAccount string
+	toAccount   string
+	amount      int
+}
+
+func (t *Transfer) FromAccount() string {
+	return t.fromAccount
+}
+
+func (t *Transfer) ToAccount() string {
+	return t.toAccount
+}
+
+func (t *Transfer) Amount() int {
+	return t.amount
+}
+
+func (t *Transfer) ID() string {
+	return t.transferID
 }
 
 func NewTransfer() *Transfer {
@@ -37,10 +53,10 @@ func (t *Transfer) SameEntityAs(other domain.Entity) bool {
 		return true
 	}
 	if otherTransfer, ok := other.(*Transfer); ok {
-		return t.TransferID == otherTransfer.TransferID &&
-			t.FromAccount == otherTransfer.FromAccount &&
-			t.ToAccount == otherTransfer.ToAccount &&
-			t.Amount == otherTransfer.Amount
+		return t.transferID == otherTransfer.transferID &&
+			t.fromAccount == otherTransfer.fromAccount &&
+			t.toAccount == otherTransfer.toAccount &&
+			t.amount == otherTransfer.amount
 	}
 	return false
 }
@@ -48,9 +64,9 @@ func (t *Transfer) SameEntityAs(other domain.Entity) bool {
 func (t *Transfer) onEvent(event domain.Event) {
 	switch e := event.(type) {
 	case *TransferRequested:
-		t.TransferID = e.TransferID
-		t.FromAccount = e.FromAccount
-		t.ToAccount = e.ToAccount
-		t.Amount = e.Amount
+		t.transferID = e.TransferID
+		t.fromAccount = e.FromAccount
+		t.toAccount = e.ToAccount
+		t.amount = e.Amount
 	}
 }
