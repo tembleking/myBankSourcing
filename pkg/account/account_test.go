@@ -3,6 +3,7 @@ package account_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 )
@@ -107,6 +108,65 @@ var _ = Describe("Account", func() {
 			err := acc.CloseAccount()
 
 			Expect(err).To(MatchError(account.ErrAccountCannotBeClosedWithBalance))
+		})
+	})
+
+	When("transferring money to another account", func() {
+		var (
+			origin      *account.Account
+			destination *account.Account
+		)
+		BeforeEach(func() {
+			var err error
+			origin, err = account.OpenAccount("origin")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(origin.DepositMoney(100)).To(Succeed())
+
+			destination, err = account.OpenAccount("destination")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(destination.DepositMoney(30)).To(Succeed())
+		})
+
+		It("creates the transfer from one account to another", func() {
+			amount := 50
+
+			transfer, err := origin.TransferMoney(amount, destination)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(transfer).To(PointTo(MatchFields(IgnoreExtras, Fields{
+				"TransferID":  Not(BeEmpty()),
+				"FromAccount": Equal(origin.ID()),
+				"ToAccount":   Equal(destination.ID()),
+				"Amount":      Equal(50),
+			})))
+		})
+
+		When("the origin account is closed", func() {
+			BeforeEach(func() {
+				Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())
+				Expect(origin.CloseAccount()).To(Succeed())
+			})
+
+			It("cannot transfer any money", func() {
+				amount := 50
+
+				_, err := origin.TransferMoney(amount, destination)
+				Expect(err).To(MatchError(account.ErrAccountIsClosed))
+			})
+		})
+
+		When("the destination account is closed", func() {
+			BeforeEach(func() {
+				Expect(destination.WithdrawMoney(destination.Balance())).To(Succeed())
+				Expect(destination.CloseAccount()).To(Succeed())
+			})
+
+			It("cannot transfer any money", func() {
+				amount := 50
+
+				_, err := origin.TransferMoney(amount, destination)
+				Expect(err).To(MatchError(account.ErrAccountIsClosed))
+			})
 		})
 	})
 })

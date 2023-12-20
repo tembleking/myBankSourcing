@@ -3,7 +3,10 @@ package account
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/tembleking/myBankSourcing/pkg/domain"
+	"github.com/tembleking/myBankSourcing/pkg/transfer"
 )
 
 type Account struct {
@@ -94,4 +97,17 @@ func (a *Account) CloseAccount() error {
 	}
 	a.Apply(&AccountClosed{ID: domain.NewEventID(), AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
 	return nil
+}
+
+func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Transfer, error) {
+	if !a.IsOpen() || !destination.IsOpen() {
+		return nil, ErrAccountIsClosed
+	}
+
+	return &transfer.Transfer{
+		TransferID:  uuid.NewString(),
+		FromAccount: a.ID(),
+		ToAccount:   destination.ID(),
+		Amount:      amount,
+	}, nil
 }
