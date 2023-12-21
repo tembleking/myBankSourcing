@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
-
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
@@ -17,7 +16,7 @@ type Repository struct {
 }
 
 func (r *Repository) NextID() string {
-	return uuid.NewString()
+	return domain.NewUUID()
 }
 
 func (r *Repository) GetByID(ctx context.Context, id string) (*Account, error) {

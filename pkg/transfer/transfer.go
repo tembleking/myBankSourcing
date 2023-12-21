@@ -1,8 +1,6 @@
 package transfer
 
 import (
-	"github.com/google/uuid"
-
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 )
 
@@ -40,7 +38,7 @@ func NewTransfer() *Transfer {
 func RequestTransfer(fromAccount string, toAccount string, amount int) *Transfer {
 	transfer := NewTransfer()
 	transfer.Apply(&TransferRequested{
-		TransferID:  uuid.NewString(),
+		TransferID:  domain.NewUUID(),
 		FromAccount: fromAccount,
 		ToAccount:   toAccount,
 		Amount:      amount,

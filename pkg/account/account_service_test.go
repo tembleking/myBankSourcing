@@ -3,11 +3,11 @@ package account_test
 import (
 	"context"
 
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
+	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
@@ -76,7 +76,7 @@ type fakeAccountRepository struct {
 }
 
 func (f *fakeAccountRepository) NextID() string {
-	return uuid.NewString()
+	return domain.NewUUID()
 }
 
 func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*account.Account, error) {

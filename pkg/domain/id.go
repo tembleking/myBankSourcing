@@ -12,5 +12,9 @@ func (e EventID) SameValueObjectAs(other ValueObject) bool {
 }
 
 func NewEventID() EventID {
-	return EventID(uuid.Must(uuid.NewV7()).String())
+	return EventID(NewUUID())
+}
+
+func NewUUID() string {
+	return uuid.Must(uuid.NewV7()).String()
 }
