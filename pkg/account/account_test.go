@@ -71,7 +71,7 @@ var _ = Describe("Account", func() {
 
 			When("trying to add a negative amount", func() {
 				It("fails", func() {
-					Expect(acc.DepositMoney(-1)).To(MatchError(account.ErrDepositMoneyQuantityCannotBeNegative))
+					Expect(acc.DepositMoney(-1)).To(MatchError(account.ErrQuantityCannotBeNegative))
 				})
 			})
 		})
@@ -95,6 +95,12 @@ var _ = Describe("Account", func() {
 					err := acc.WithdrawMoney(51)
 
 					Expect(err).To(MatchError(account.ErrBalanceIsNotEnough))
+				})
+			})
+
+			When("the removal of the money is negative", func() {
+				It("fails", func() {
+					Expect(acc.WithdrawMoney(-1)).To(MatchError(account.ErrQuantityCannotBeNegative))
 				})
 			})
 		})
@@ -173,6 +179,13 @@ var _ = Describe("Account", func() {
 
 				_, err := origin.TransferMoney(tooMuchAmount, destination)
 				Expect(err).To(MatchError(account.ErrBalanceIsNotEnough))
+			})
+		})
+
+		When("trying to transfer negative amount", func() {
+			It("fails", func() {
+				_, err := origin.TransferMoney(-1, destination)
+				Expect(err).To(MatchError(account.ErrQuantityCannotBeNegative))
 			})
 		})
 	})

@@ -44,7 +44,7 @@ func (a *Account) DepositMoney(amount int) error {
 		return ErrAccountIsClosed
 	}
 	if amount < 0 {
-		return ErrDepositMoneyQuantityCannotBeNegative
+		return ErrQuantityCannotBeNegative
 	}
 
 	newBalance := a.Balance() + amount
@@ -58,6 +58,9 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 	if amount > a.Balance() {
 		return ErrBalanceIsNotEnough
+	}
+	if amount < 0 {
+		return ErrQuantityCannotBeNegative
 	}
 
 	newBalance := a.Balance() - amount
@@ -110,6 +113,9 @@ func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Tra
 	}
 	if a.Balance() < amount {
 		return nil, ErrBalanceIsNotEnough
+	}
+	if amount < 0 {
+		return nil, ErrQuantityCannotBeNegative
 	}
 
 	return transfer.RequestTransfer(a.ID(), destination.ID(), amount), nil
