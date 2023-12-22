@@ -125,3 +125,34 @@ func (a *AccountClosed) Version() uint64 {
 func (a *AccountClosed) HappenedOn() time.Time {
 	return a.Timestamp
 }
+
+type TransferAssigned struct {
+	ID                 domain.EventID
+	AccountID          string
+	TransferID         string
+	AccountOrigin      string
+	AccountDestination string
+	Amount             int
+	AccountVersion     uint64
+	Timestamp          time.Time
+}
+
+func (t *TransferAssigned) AggregateID() string {
+	return t.AccountID
+}
+
+func (t *TransferAssigned) EventID() domain.EventID {
+	return t.ID
+}
+
+func (t *TransferAssigned) EventName() string {
+	return "TransferAssigned"
+}
+
+func (t *TransferAssigned) HappenedOn() time.Time {
+	return t.Timestamp
+}
+
+func (t *TransferAssigned) Version() uint64 {
+	return t.AccountVersion
+}

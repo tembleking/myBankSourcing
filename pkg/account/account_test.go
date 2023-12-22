@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
+	"github.com/tembleking/myBankSourcing/pkg/transfer"
 )
 
 var _ = Describe("Account", func() {
@@ -172,6 +173,44 @@ var _ = Describe("Account", func() {
 
 				_, err := origin.TransferMoney(tooMuchAmount, destination)
 				Expect(err).To(MatchError(account.ErrBalanceIsNotEnough))
+			})
+		})
+	})
+
+	When("assigning a transfer to an account", func() {
+		var (
+			origin      *account.Account
+			destination *account.Account
+			transfer    *transfer.Transfer
+		)
+		BeforeEach(func() {
+			var err error
+			origin, err = account.OpenAccount("origin")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(origin.DepositMoney(100)).To(Succeed())
+
+			destination, err = account.OpenAccount("destination")
+			Expect(err).ToNot(HaveOccurred())
+
+			transfer, err = origin.TransferMoney(50, destination)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		When("it's the origin account", func() {
+			It("assigns to it and decreases the balance", func() {
+				err := origin.AssignTransfer(transfer)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(origin.Balance()).To(Equal(50))
+			})
+		})
+
+		When("it's the destination account", func() {
+			It("assigns to it and increases the balance", func() {
+				err := destination.AssignTransfer(transfer)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(destination.Balance()).To(Equal(50))
 			})
 		})
 	})

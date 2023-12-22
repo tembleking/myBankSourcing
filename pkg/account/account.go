@@ -79,6 +79,13 @@ func (a *Account) onEvent(event domain.Event) {
 		a.balance = event.Balance
 	case *AccountClosed:
 		a.isOpen = false
+	case *TransferAssigned:
+		if event.AccountOrigin == a.ID() {
+			a.balance -= event.Amount
+		}
+		if event.AccountDestination == a.ID() {
+			a.balance += event.Amount
+		}
 	}
 }
 
@@ -106,4 +113,13 @@ func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Tra
 	}
 
 	return transfer.RequestTransfer(a.ID(), destination.ID(), amount), nil
+}
+
+func (a *Account) AssignTransfer(t *transfer.Transfer) error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
+
+	a.Apply(&TransferAssigned{ID: domain.NewEventID(), TransferID: t.ID(), AccountID: a.ID(), AccountOrigin: t.FromAccount(), AccountDestination: t.ToAccount(), Amount: t.Amount(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	return nil
 }
