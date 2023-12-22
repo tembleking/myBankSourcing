@@ -38,10 +38,13 @@ func NewTransfer() *Transfer {
 func RequestTransfer(fromAccount string, toAccount string, amount int) *Transfer {
 	transfer := NewTransfer()
 	transfer.Apply(&TransferRequested{
-		TransferID:  domain.NewUUID(),
-		FromAccount: fromAccount,
-		ToAccount:   toAccount,
-		Amount:      amount,
+		ID:              domain.NewEventID(),
+		TransferID:      domain.NewUUID(),
+		FromAccount:     fromAccount,
+		ToAccount:       toAccount,
+		Amount:          amount,
+		Timestamp:       transfer.Now(),
+		TransferVersion: transfer.NextVersion(),
 	})
 	return transfer
 }

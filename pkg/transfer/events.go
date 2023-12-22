@@ -4,7 +4,12 @@ import (
 	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/serializer"
 )
+
+func init() {
+	serializer.RegisterSerializableEvent(&TransferRequested{})
+}
 
 type TransferRequested struct {
 	ID              domain.EventID
