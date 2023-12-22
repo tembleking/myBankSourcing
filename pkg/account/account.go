@@ -10,8 +10,9 @@ import (
 type Account struct {
 	domain.BaseAggregate
 
-	isOpen  bool
-	balance int
+	isOpen            bool
+	balance           int
+	transfersAssigned map[string]struct{}
 }
 
 func (a *Account) SameEntityAs(other domain.Entity) bool {
@@ -25,7 +26,7 @@ func (a *Account) SameEntityAs(other domain.Entity) bool {
 }
 
 func NewAccount() *Account {
-	a := &Account{}
+	a := &Account{transfersAssigned: make(map[string]struct{})}
 	a.OnEventFunc = a.onEvent
 	return a
 }
@@ -83,11 +84,16 @@ func (a *Account) onEvent(event domain.Event) {
 	case *AccountClosed:
 		a.isOpen = false
 	case *TransferAssigned:
+		if _, transferAlreadyAssigned := a.transfersAssigned[event.TransferID]; transferAlreadyAssigned {
+			return
+		}
 		if event.AccountOrigin == a.ID() {
 			a.balance -= event.Amount
+			a.transfersAssigned[event.TransferID] = struct{}{}
 		}
 		if event.AccountDestination == a.ID() {
 			a.balance += event.Amount
+			a.transfersAssigned[event.TransferID] = struct{}{}
 		}
 	}
 }

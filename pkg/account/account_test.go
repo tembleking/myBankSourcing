@@ -216,6 +216,18 @@ var _ = Describe("Account", func() {
 
 				Expect(origin.Balance()).To(Equal(50))
 			})
+
+			When("the transfer is already assigned", func() {
+				It("does not assign it again", func() {
+					err := origin.AssignTransfer(transfer)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(origin.Balance()).To(Equal(50))
+
+					err = origin.AssignTransfer(transfer)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(origin.Balance()).To(Equal(50))
+				})
+			})
 		})
 
 		When("it's the destination account", func() {
@@ -224,6 +236,18 @@ var _ = Describe("Account", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(destination.Balance()).To(Equal(50))
+			})
+
+			When("the transfer is already assigned", func() {
+				It("does not assign it again", func() {
+					err := destination.AssignTransfer(transfer)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(destination.Balance()).To(Equal(50))
+
+					err = destination.AssignTransfer(transfer)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(destination.Balance()).To(Equal(50))
+				})
 			})
 		})
 	})
