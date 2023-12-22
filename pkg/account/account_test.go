@@ -145,6 +145,14 @@ var _ = Describe("Account", func() {
 			Expect(transfer.Amount()).To(Equal(amount))
 		})
 
+		When("the account is the same", func() {
+			It("fails", func() {
+				_, err := origin.TransferMoney(50, origin)
+
+				Expect(err).To(MatchError(account.ErrCannotTransferToSameAccount))
+			})
+		})
+
 		When("the origin account is closed", func() {
 			BeforeEach(func() {
 				Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())

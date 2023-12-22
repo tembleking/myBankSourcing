@@ -114,6 +114,9 @@ func (a *Account) CloseAccount() error {
 }
 
 func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Transfer, error) {
+	if a.ID() == destination.ID() {
+		return nil, ErrCannotTransferToSameAccount
+	}
 	if !a.IsOpen() || !destination.IsOpen() {
 		return nil, ErrAccountIsClosed
 	}
