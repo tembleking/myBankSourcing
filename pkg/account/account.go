@@ -159,21 +159,21 @@ func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Tra
 	return transfer.RequestTransfer(a.ID(), destination.ID(), amount), nil
 }
 
-func (a *Account) AssignTransfer(t *transfer.Transfer) error {
+func (a *Account) AssignTransfer(transfer *transfer.Transfer) error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
 	}
-	if a.isTransferAlreadyAssigned(t.ID()) {
+	if a.isTransferAlreadyAssigned(transfer.ID()) {
 		return nil // idempotent
 	}
 
 	a.Apply(&TransferAssigned{
 		ID:                 domain.NewEventID(),
-		TransferID:         t.ID(),
+		TransferID:         transfer.ID(),
 		AccountID:          a.ID(),
-		AccountOrigin:      t.FromAccount(),
-		AccountDestination: t.ToAccount(),
-		Amount:             t.Amount(),
+		AccountOrigin:      transfer.FromAccount(),
+		AccountDestination: transfer.ToAccount(),
+		Amount:             transfer.Amount(),
 		AccountVersion:     a.NextVersion(),
 		Timestamp:          a.Now(),
 	})
