@@ -36,4 +36,12 @@ var _ = Describe("Repository", func() {
 			Expect(repository.Save(ctx, acc)).To(HaveOccurred())
 		})
 	})
+
+	When("retrieving a transfer that does not exist", func() {
+		It("returns an error", func(ctx context.Context) {
+			_, err := repository.GetByID(ctx, "non-existing-transfer")
+
+			Expect(err).To(Equal(transfer.ErrTransferNotFound))
+		})
+	})
 })

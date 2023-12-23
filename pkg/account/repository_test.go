@@ -37,4 +37,12 @@ var _ = Describe("Repository", func() {
 			Expect(repository.Save(ctx, acc)).To(HaveOccurred())
 		})
 	})
+
+	When("the requested account does not exist", func() {
+		It("returns an error", func(ctx context.Context) {
+			_, err := repository.GetByID(ctx, "some-account")
+
+			Expect(err).To(MatchError(account.ErrAccountNotFound))
+		})
+	})
 })
