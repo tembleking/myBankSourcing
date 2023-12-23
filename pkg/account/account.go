@@ -103,7 +103,7 @@ func (a *Account) onEvent(event domain.Event) {
 	case *AccountClosed:
 		a.isOpen = false
 	case *TransferAssigned:
-		if _, transferAlreadyAssigned := a.transfersAssigned[event.TransferID]; transferAlreadyAssigned {
+		if a.isTransferAlreadyAssigned(event.TransferID) {
 			return
 		}
 		if event.AccountOrigin == a.ID() {
@@ -115,6 +115,11 @@ func (a *Account) onEvent(event domain.Event) {
 			a.transfersAssigned[event.TransferID] = struct{}{}
 		}
 	}
+}
+
+func (a *Account) isTransferAlreadyAssigned(transferID string) bool {
+	_, transferAlreadyAssigned := a.transfersAssigned[transferID]
+	return transferAlreadyAssigned
 }
 
 func (a *Account) IsOpen() bool {
@@ -157,6 +162,9 @@ func (a *Account) TransferMoney(amount int, destination *Account) (*transfer.Tra
 func (a *Account) AssignTransfer(t *transfer.Transfer) error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
+	}
+	if a.isTransferAlreadyAssigned(t.ID()) {
+		return nil // idempotent
 	}
 
 	a.Apply(&TransferAssigned{
