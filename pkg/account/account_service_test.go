@@ -7,19 +7,19 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
-	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
+	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 var _ = Describe("Account Service", func() {
 	var (
 		accountService    *account.AccountService
-		accountRepository *fakeAccountRepository
+		accountRepository *inmemory.Repository[*account.Account]
 	)
 
 	BeforeEach(func(ctx context.Context) {
-		accountRepository = &fakeAccountRepository{accounts: map[string]*account.Account{}}
+		accountRepository = inmemory.NewRepository[*account.Account]()
 		eventStore := persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
 		accountService = account.NewAccountService(eventStore, accountRepository)
 	})
@@ -70,23 +70,3 @@ var _ = Describe("Account Service", func() {
 		Expect(updatedAccount.IsOpen()).To(BeFalse())
 	})
 })
-
-type fakeAccountRepository struct {
-	accounts map[string]*account.Account
-}
-
-func (f *fakeAccountRepository) NextID() string {
-	return domain.NewUUID()
-}
-
-func (f *fakeAccountRepository) GetByID(ctx context.Context, id string) (*account.Account, error) {
-	if account, ok := f.accounts[id]; ok {
-		return account, nil
-	}
-	return nil, account.ErrAccountNotFound
-}
-
-func (f *fakeAccountRepository) Save(ctx context.Context, aggregate *account.Account) error {
-	f.accounts[aggregate.ID()] = aggregate
-	return nil
-}
