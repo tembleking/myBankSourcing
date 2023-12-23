@@ -36,7 +36,12 @@ func OpenAccount(id string) (*Account, error) {
 		return nil, fmt.Errorf("id must not be empty")
 	}
 	a := NewAccount()
-	a.Apply(&AccountOpened{ID: domain.NewEventID(), AccountID: id, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AccountOpened{
+		ID:             domain.NewEventID(),
+		AccountID:      id,
+		AccountVersion: a.NextVersion(),
+		Timestamp:      a.Now(),
+	})
 	return a, nil
 }
 
@@ -49,7 +54,14 @@ func (a *Account) DepositMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() + amount
-	a.Apply(&AmountDeposited{ID: domain.NewEventID(), AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AmountDeposited{
+		ID:             domain.NewEventID(),
+		AccountID:      a.ID(),
+		Quantity:       amount,
+		Balance:        newBalance,
+		AccountVersion: a.NextVersion(),
+		Timestamp:      a.Now(),
+	})
 	return nil
 }
 
@@ -65,7 +77,14 @@ func (a *Account) WithdrawMoney(amount int) error {
 	}
 
 	newBalance := a.Balance() - amount
-	a.Apply(&AmountWithdrawn{ID: domain.NewEventID(), AccountID: a.ID(), Quantity: amount, Balance: newBalance, AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AmountWithdrawn{
+		ID:             domain.NewEventID(),
+		AccountID:      a.ID(),
+		Quantity:       amount,
+		Balance:        newBalance,
+		AccountVersion: a.NextVersion(),
+		Timestamp:      a.Now(),
+	})
 	return nil
 }
 
@@ -109,7 +128,12 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
-	a.Apply(&AccountClosed{ID: domain.NewEventID(), AccountID: a.ID(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&AccountClosed{
+		ID:             domain.NewEventID(),
+		AccountID:      a.ID(),
+		AccountVersion: a.NextVersion(),
+		Timestamp:      a.Now(),
+	})
 	return nil
 }
 
@@ -135,6 +159,15 @@ func (a *Account) AssignTransfer(t *transfer.Transfer) error {
 		return ErrAccountIsClosed
 	}
 
-	a.Apply(&TransferAssigned{ID: domain.NewEventID(), TransferID: t.ID(), AccountID: a.ID(), AccountOrigin: t.FromAccount(), AccountDestination: t.ToAccount(), Amount: t.Amount(), AccountVersion: a.NextVersion(), Timestamp: a.Now()})
+	a.Apply(&TransferAssigned{
+		ID:                 domain.NewEventID(),
+		TransferID:         t.ID(),
+		AccountID:          a.ID(),
+		AccountOrigin:      t.FromAccount(),
+		AccountDestination: t.ToAccount(),
+		Amount:             t.Amount(),
+		AccountVersion:     a.NextVersion(),
+		Timestamp:          a.Now(),
+	})
 	return nil
 }
