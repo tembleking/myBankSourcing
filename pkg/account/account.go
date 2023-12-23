@@ -88,44 +88,6 @@ func (a *Account) WithdrawMoney(amount int) error {
 	return nil
 }
 
-func (a *Account) Balance() int {
-	return a.balance
-}
-
-func (a *Account) onEvent(event domain.Event) {
-	switch event := event.(type) {
-	case *AccountOpened:
-		a.isOpen = true
-	case *AmountDeposited:
-		a.balance = event.Balance
-	case *AmountWithdrawn:
-		a.balance = event.Balance
-	case *AccountClosed:
-		a.isOpen = false
-	case *TransferAssigned:
-		if a.isTransferAlreadyAssigned(event.TransferID) {
-			return
-		}
-		if event.AccountOrigin == a.ID() {
-			a.balance -= event.Amount
-			a.transfersAssigned[event.TransferID] = struct{}{}
-		}
-		if event.AccountDestination == a.ID() {
-			a.balance += event.Amount
-			a.transfersAssigned[event.TransferID] = struct{}{}
-		}
-	}
-}
-
-func (a *Account) isTransferAlreadyAssigned(transferID string) bool {
-	_, transferAlreadyAssigned := a.transfersAssigned[transferID]
-	return transferAlreadyAssigned
-}
-
-func (a *Account) IsOpen() bool {
-	return a.isOpen
-}
-
 func (a *Account) CloseAccount() error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
@@ -178,4 +140,42 @@ func (a *Account) AssignTransfer(transfer *transfer.Transfer) error {
 		Timestamp:          a.Now(),
 	})
 	return nil
+}
+
+func (a *Account) Balance() int {
+	return a.balance
+}
+
+func (a *Account) IsOpen() bool {
+	return a.isOpen
+}
+
+func (a *Account) isTransferAlreadyAssigned(transferID string) bool {
+	_, transferAlreadyAssigned := a.transfersAssigned[transferID]
+	return transferAlreadyAssigned
+}
+
+func (a *Account) onEvent(event domain.Event) {
+	switch event := event.(type) {
+	case *AccountOpened:
+		a.isOpen = true
+	case *AmountDeposited:
+		a.balance = event.Balance
+	case *AmountWithdrawn:
+		a.balance = event.Balance
+	case *AccountClosed:
+		a.isOpen = false
+	case *TransferAssigned:
+		if a.isTransferAlreadyAssigned(event.TransferID) {
+			return
+		}
+		if event.AccountOrigin == a.ID() {
+			a.balance -= event.Amount
+			a.transfersAssigned[event.TransferID] = struct{}{}
+		}
+		if event.AccountDestination == a.ID() {
+			a.balance += event.Amount
+			a.transfersAssigned[event.TransferID] = struct{}{}
+		}
+	}
 }
