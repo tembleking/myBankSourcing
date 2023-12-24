@@ -4,9 +4,12 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	"github.com/tembleking/myBankSourcing/internal/factory"
+	"github.com/tembleking/myBankSourcing/pkg/account"
 )
 
 // listCmd represents the list command
@@ -18,16 +21,27 @@ var listCmd = &cobra.Command{
 
 		for _, account := range accounts {
 			account := account
-			cmd.Printf("Account ID: %s, Balance: %d\n", account.AccountID, account.Balance)
+			cmd.Printf("Account ID: %s\nBalance: %d\n", account.AccountID, account.Balance)
 			if len(account.Movements) != 0 {
-				cmd.Println("Movements:")
-			}
-			for _, movement := range account.Movements {
-				movement := movement
-				cmd.Printf("\t%s of %d, resulting in %d\n", movement.Type, movement.Amount, movement.ResultingBalance)
+				printMovements(cmd, account.Movements)
 			}
 		}
 	},
+}
+
+func printMovements(cmd *cobra.Command, movements []account.ProjectedMovement) {
+	cmd.Println("Movements:")
+	for _, movement := range movements {
+		movement := movement
+		cmd.Printf(
+			"  - [%s]: %s of %d, resulting in %d\n",
+			movement.Timestamp.Local().Format(time.RFC1123Z),
+			movement.Type,
+			movement.Amount,
+			movement.ResultingBalance,
+		)
+	}
+	cmd.Printf("\n")
 }
 
 func init() {
