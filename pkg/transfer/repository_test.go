@@ -2,6 +2,7 @@ package transfer_test
 
 import (
 	"context"
+	"log"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,6 +18,7 @@ var _ = Describe("Repository", func() {
 	var repository domain.Repository[*transfer.Transfer]
 
 	BeforeEach(func() {
+		log.SetOutput(GinkgoWriter)
 		repository = transfer.NewRepository(persistence.NewEventStoreBuilder(sqlite.InMemory()).Build())
 	})
 

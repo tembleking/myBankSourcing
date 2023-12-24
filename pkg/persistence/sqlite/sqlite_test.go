@@ -2,6 +2,7 @@ package sqlite_test
 
 import (
 	"context"
+	"log"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,6 +18,7 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 	)
 
 	BeforeEach(func() {
+		log.SetOutput(GinkgoWriter)
 		ctx = context.Background()
 		store = setupStore()
 	})
