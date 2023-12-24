@@ -37,7 +37,7 @@ mkcommand NAME PARENT_COMMAND:
 # Tests if the project builds correctly
 test-build:
     go build ./...
-    go test -run ^$ ./...
+    go test -run ^$ ./... 1>/dev/null
 
 # Runs all tests
 test:
