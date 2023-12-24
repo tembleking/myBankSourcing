@@ -21,6 +21,7 @@ type ProjectedMovement struct {
 	Type             string
 	Amount           int
 	ResultingBalance int
+	Timestamp        time.Time
 }
 
 type Projection struct {
@@ -51,6 +52,7 @@ func (a *Projection) handleEvent(event domain.Event) {
 			Type:             "Deposit",
 			Amount:           e.Quantity,
 			ResultingBalance: e.Balance,
+			Timestamp:        e.HappenedOn(),
 		})
 	case *AmountWithdrawn:
 		a.accounts[e.AggregateID()].Balance -= e.Quantity
@@ -58,6 +60,7 @@ func (a *Projection) handleEvent(event domain.Event) {
 			Type:             "Withdrawal",
 			Amount:           e.Quantity,
 			ResultingBalance: e.Balance,
+			Timestamp:        e.HappenedOn(),
 		})
 	}
 

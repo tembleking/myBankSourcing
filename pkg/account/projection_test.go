@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
@@ -29,14 +30,28 @@ var _ = Describe("Accounts", func() {
 			accounts := accountsProjection.Accounts()
 
 			Expect(accounts).To(HaveLen(1))
-			Expect(accounts[0]).To(Equal(account.ProjectedAccount{
-				AccountID: "some-account",
-				Balance:   5,
-				Movements: []account.ProjectedMovement{
-					{Type: "Deposit", Amount: 50, ResultingBalance: 50},
-					{Type: "Withdrawal", Amount: 30, ResultingBalance: 20},
-					{Type: "Withdrawal", Amount: 15, ResultingBalance: 5},
-				},
+			Expect(accounts[0]).To(MatchFields(IgnoreExtras, Fields{
+				"AccountID": Equal("some-account"),
+				"Balance":   Equal(5),
+				"Movements": ConsistOf(
+					MatchFields(IgnoreExtras, Fields{
+						"Type":             Equal("Deposit"),
+						"Amount":           Equal(50),
+						"ResultingBalance": Equal(50),
+						"Timestamp":        BeTemporally("~", time.Now(), 2*time.Second),
+					}),
+					MatchFields(IgnoreExtras, Fields{
+						"Type":             Equal("Withdrawal"),
+						"Amount":           Equal(30),
+						"ResultingBalance": Equal(20),
+					}),
+					MatchFields(IgnoreExtras, Fields{
+						"Type":             Equal("Withdrawal"),
+						"Amount":           Equal(15),
+						"ResultingBalance": Equal(5),
+						"Timestamp":        BeTemporally("~", time.Now(), 2*time.Second),
+					}),
+				),
 			}))
 		})
 
