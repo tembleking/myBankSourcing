@@ -42,8 +42,8 @@ func (s *AccountGRPCServer) ListAccounts(ctx context.Context, empty *emptypb.Emp
 	protoAccounts := make([]*proto.Account, len(accounts))
 	for i, account := range accounts {
 		protoAccounts[i] = &proto.Account{
-			Id:      string(account.ID()),
-			Balance: int64(account.Balance()),
+			Id:      string(account.AccountID),
+			Balance: int64(account.Balance),
 		}
 	}
 	return &proto.ListAccountsResponse{

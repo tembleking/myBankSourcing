@@ -30,7 +30,7 @@ var closeCmd = &cobra.Command{
 
 			ids := make([]string, len(accounts))
 			for i, account := range accounts {
-				ids[i] = string(account.ID())
+				ids[i] = account.AccountID
 			}
 
 			return ids, cobra.ShellCompDirectiveNoFileComp

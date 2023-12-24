@@ -29,9 +29,15 @@ var _ = Describe("Accounts", func() {
 			accounts := accountsProjection.Accounts()
 
 			Expect(accounts).To(HaveLen(1))
-			Expect(accounts[0].ID()).To(Equal("some-account"))
-			Expect(accounts[0].Balance()).To(Equal(5))
-			Expect(accounts[0].Version()).To(Equal(uint64(4)))
+			Expect(accounts[0]).To(Equal(account.ProjectedAccount{
+				AccountID: "some-account",
+				Balance:   5,
+				Movements: []account.ProjectedMovement{
+					{Type: "Deposit", Amount: 50, ResultingBalance: 50},
+					{Type: "Withdrawal", Amount: 30, ResultingBalance: 20},
+					{Type: "Withdrawal", Amount: 15, ResultingBalance: 5},
+				},
+			}))
 		})
 
 		When("updating an account between refreshes", func() {
@@ -43,9 +49,8 @@ var _ = Describe("Accounts", func() {
 
 				accounts := accountsProjection.Accounts()
 				Expect(accounts).To(HaveLen(1))
-				Expect(accounts[0].Balance()).To(Equal(5))
 
-				events, err := eventStore.LoadEventStream(ctx, accounts[0].ID())
+				events, err := eventStore.LoadEventStream(ctx, accounts[0].AccountID)
 				Expect(err).ToNot(HaveOccurred())
 
 				accountToUpdate := account.NewAccount()
@@ -59,11 +64,11 @@ var _ = Describe("Accounts", func() {
 			It("refreshes the projection after some time", func(ctx context.Context) {
 				accountsBeforeRefresh := accountsProjection.Accounts()
 				Expect(accountsBeforeRefresh).To(HaveLen(1))
-				Expect(accountsBeforeRefresh[0].Balance()).To(Equal(5))
+				Expect(accountsBeforeRefresh[0].Balance).To(Equal(5))
 
 				Eventually(func() int {
 					accountsAfterRefresh := accountsProjection.Accounts()
-					return accountsAfterRefresh[0].Balance()
+					return accountsAfterRefresh[0].Balance
 				}).Should(Equal(105))
 			})
 		})

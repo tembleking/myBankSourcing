@@ -11,15 +11,28 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
-type Projection struct {
-	mutex                 sync.RWMutex
-	accounts              map[string]*Account
-	precalculatedAccounts []Account
-	lastProcessedEventID  domain.EventID
-	eventStore            *persistence.ReadOnlyEventStore
+type ProjectedAccount struct {
+	AccountID string
+	Balance   int
+	Movements []ProjectedMovement
 }
 
-func (a *Projection) Accounts() []Account {
+type ProjectedMovement struct {
+	Type             string
+	Amount           int
+	ResultingBalance int
+}
+
+type Projection struct {
+	mutex                 sync.RWMutex
+	accounts              map[string]*ProjectedAccount
+	precalculatedAccounts []ProjectedAccount
+
+	lastProcessedEventID domain.EventID
+	eventStore           *persistence.ReadOnlyEventStore
+}
+
+func (a *Projection) Accounts() []ProjectedAccount {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
@@ -29,26 +42,37 @@ func (a *Projection) Accounts() []Account {
 func (a *Projection) handleEvent(event domain.Event) {
 	switch e := event.(type) {
 	case *AccountOpened:
-		a.accounts[e.AggregateID()] = NewAccount()
-		a.accounts[e.AggregateID()].LoadFromHistory(e)
+		a.accounts[e.AggregateID()] = &ProjectedAccount{AccountID: e.AggregateID()}
 	case *AccountClosed:
 		delete(a.accounts, e.AccountID)
-	default:
-		a.accounts[e.AggregateID()].LoadFromHistory(e)
+	case *AmountDeposited:
+		a.accounts[e.AggregateID()].Balance += e.Quantity
+		a.accounts[e.AggregateID()].Movements = append(a.accounts[e.AggregateID()].Movements, ProjectedMovement{
+			Type:             "Deposit",
+			Amount:           e.Quantity,
+			ResultingBalance: e.Balance,
+		})
+	case *AmountWithdrawn:
+		a.accounts[e.AggregateID()].Balance -= e.Quantity
+		a.accounts[e.AggregateID()].Movements = append(a.accounts[e.AggregateID()].Movements, ProjectedMovement{
+			Type:             "Withdrawal",
+			Amount:           e.Quantity,
+			ResultingBalance: e.Balance,
+		})
 	}
 
 	a.lastProcessedEventID = event.EventID()
 }
 
 func (a *Projection) precalculateAccounts() {
-	accounts := make([]Account, 0, len(a.accounts))
+	accounts := make([]ProjectedAccount, 0, len(a.accounts))
 
 	for _, account := range a.accounts {
 		accounts = append(accounts, *account)
 	}
 
 	sort.Slice(accounts, func(i, j int) bool {
-		return accounts[i].ID() < accounts[j].ID()
+		return accounts[i].AccountID < accounts[j].AccountID
 	})
 
 	a.precalculatedAccounts = accounts
@@ -93,7 +117,7 @@ func (a *Projection) startPeriodicRefresh(ctx context.Context, refreshInterval t
 }
 
 func NewAccountProjection(ctx context.Context, eventStore *persistence.ReadOnlyEventStore, refreshInterval time.Duration) (*Projection, error) {
-	p := &Projection{accounts: map[string]*Account{}, eventStore: eventStore}
+	p := &Projection{accounts: map[string]*ProjectedAccount{}, eventStore: eventStore}
 	p.refreshProjection(ctx)
 	go p.startPeriodicRefresh(ctx, refreshInterval)
 	return p, nil

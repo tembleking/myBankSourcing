@@ -17,7 +17,15 @@ var listCmd = &cobra.Command{
 		accounts := factory.NewFactory().NewAccountProjection(cmd.Context()).Accounts()
 
 		for _, account := range accounts {
-			cmd.Printf("Account ID: %s, Balance: %d\n", account.ID(), account.Balance())
+			account := account
+			cmd.Printf("Account ID: %s, Balance: %d\n", account.AccountID, account.Balance)
+			if len(account.Movements) != 0 {
+				cmd.Println("Movements:")
+			}
+			for _, movement := range account.Movements {
+				movement := movement
+				cmd.Printf("\t%s of %d, resulting in %d\n", movement.Type, movement.Amount, movement.ResultingBalance)
+			}
 		}
 	},
 }
