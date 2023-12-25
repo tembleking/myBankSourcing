@@ -5,11 +5,9 @@ import (
 	"fmt"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
-	"github.com/tembleking/myBankSourcing/pkg/persistence"
 )
 
 type AccountService struct {
-	eventStore        *persistence.EventStore
 	accountRepository domain.Repository[*Account]
 }
 
@@ -74,9 +72,8 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*A
 	return account, err
 }
 
-func NewAccountService(eventStore *persistence.EventStore, accountRepository domain.Repository[*Account]) *AccountService {
+func NewAccountService(accountRepository domain.Repository[*Account]) *AccountService {
 	return &AccountService{
-		eventStore:        eventStore,
 		accountRepository: accountRepository,
 	}
 }

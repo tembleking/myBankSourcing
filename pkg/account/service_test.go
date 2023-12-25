@@ -7,9 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
-	"github.com/tembleking/myBankSourcing/pkg/persistence"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
-	"github.com/tembleking/myBankSourcing/pkg/persistence/sqlite"
 )
 
 var _ = Describe("Account Service", func() {
@@ -20,8 +18,7 @@ var _ = Describe("Account Service", func() {
 
 	BeforeEach(func(ctx context.Context) {
 		accountRepository = inmemory.NewRepository[*account.Account]()
-		eventStore := persistence.NewEventStoreBuilder(sqlite.InMemory()).Build()
-		accountService = account.NewAccountService(eventStore, accountRepository)
+		accountService = account.NewAccountService(accountRepository)
 	})
 
 	It("opens the account", func(ctx context.Context) {

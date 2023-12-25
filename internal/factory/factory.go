@@ -36,8 +36,7 @@ func NewFactory() *Factory {
 
 func (f *Factory) NewAccountService() *account.AccountService {
 	return f.accountServiceField.GetOrInit(func() *account.AccountService {
-		eventStore := f.eventStore()
-		return account.NewAccountService(eventStore, f.accountRepository())
+		return account.NewAccountService(f.accountRepository())
 	})
 }
 
