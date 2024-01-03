@@ -218,20 +218,20 @@ var _ = Describe("Account", func() {
 		})
 
 		When("it's the origin account", func() {
-			It("assigns to it and decreases the balance", func() {
-				err := origin.AssignTransfer(transfer)
+			It("sends it and decreases the balance", func() {
+				err := origin.SendTransfer(transfer)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(origin.Balance()).To(Equal(50))
 			})
 
-			When("the transfer is already assigned", func() {
-				It("does not assign it again", func() {
-					err := origin.AssignTransfer(transfer)
+			When("the transfer is already sent", func() {
+				It("does not send it again", func() {
+					err := origin.SendTransfer(transfer)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(origin.Balance()).To(Equal(50))
 
-					err = origin.AssignTransfer(transfer)
+					err = origin.SendTransfer(transfer)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(origin.Balance()).To(Equal(50))
 				})
@@ -240,7 +240,7 @@ var _ = Describe("Account", func() {
 
 		When("it's the destination account", func() {
 			It("assigns to it and increases the balance", func() {
-				err := destination.AssignTransfer(transfer)
+				err := destination.ReceiveTransfer(transfer)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(destination.Balance()).To(Equal(50))
@@ -248,11 +248,11 @@ var _ = Describe("Account", func() {
 
 			When("the transfer is already assigned", func() {
 				It("does not assign it again", func() {
-					err := destination.AssignTransfer(transfer)
+					err := destination.ReceiveTransfer(transfer)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(destination.Balance()).To(Equal(50))
 
-					err = destination.AssignTransfer(transfer)
+					err = destination.ReceiveTransfer(transfer)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(destination.Balance()).To(Equal(50))
 				})

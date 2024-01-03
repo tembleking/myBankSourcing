@@ -126,7 +126,7 @@ func (a *AccountClosed) HappenedOn() time.Time {
 	return a.Timestamp
 }
 
-type TransferAssigned struct {
+type TransferSent struct {
 	ID                 domain.EventID
 	AccountID          string
 	TransferID         string
@@ -137,22 +137,53 @@ type TransferAssigned struct {
 	Timestamp          time.Time
 }
 
-func (t *TransferAssigned) AggregateID() string {
+func (t *TransferSent) AggregateID() string {
 	return t.AccountID
 }
 
-func (t *TransferAssigned) EventID() domain.EventID {
+func (t *TransferSent) EventID() domain.EventID {
 	return t.ID
 }
 
-func (t *TransferAssigned) EventName() string {
-	return "TransferAssigned"
+func (t *TransferSent) EventName() string {
+	return "TransferSent"
 }
 
-func (t *TransferAssigned) HappenedOn() time.Time {
+func (t *TransferSent) HappenedOn() time.Time {
 	return t.Timestamp
 }
 
-func (t *TransferAssigned) Version() uint64 {
+func (t *TransferSent) Version() uint64 {
+	return t.AccountVersion
+}
+
+type TransferReceived struct {
+	ID                 domain.EventID
+	AccountID          string
+	TransferID         string
+	AccountOrigin      string
+	AccountDestination string
+	Amount             int
+	AccountVersion     uint64
+	Timestamp          time.Time
+}
+
+func (t *TransferReceived) AggregateID() string {
+	return t.AccountID
+}
+
+func (t *TransferReceived) EventID() domain.EventID {
+	return t.ID
+}
+
+func (t *TransferReceived) EventName() string {
+	return "TransferReceived"
+}
+
+func (t *TransferReceived) HappenedOn() time.Time {
+	return t.Timestamp
+}
+
+func (t *TransferReceived) Version() uint64 {
 	return t.AccountVersion
 }
