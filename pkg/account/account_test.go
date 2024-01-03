@@ -236,6 +236,35 @@ var _ = Describe("Account", func() {
 					Expect(origin.Balance()).To(Equal(50))
 				})
 			})
+
+			When("there has been an error and has to be rolled back", func() {
+				It("rolls back the transaction", func() {
+					Expect(origin.SendTransfer(transfer)).To(Succeed())
+
+					err := origin.RollbackSentTransfer(transfer)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(origin.Balance()).To(Equal(100))
+				})
+
+				When("the account was not sent previously", func() {
+					It("fails, and doesn't roll back anything", func() {
+						err := origin.RollbackSentTransfer(transfer)
+						Expect(err).To(MatchError(account.ErrCannotRollbackTransferNotPreviouslySent))
+						Expect(origin.Balance()).To(Equal(100))
+					})
+				})
+
+				When("the transfer is already rolled back", func() {
+					It("doesn't roll it back again", func() {
+						Expect(origin.SendTransfer(transfer)).To(Succeed())
+						Expect(origin.RollbackSentTransfer(transfer)).To(Succeed())
+
+						err := origin.RollbackSentTransfer(transfer)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(origin.Balance()).To(Equal(100))
+					})
+				})
+			})
 		})
 
 		When("it's the destination account", func() {

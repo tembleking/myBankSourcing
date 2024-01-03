@@ -187,3 +187,34 @@ func (t *TransferReceived) HappenedOn() time.Time {
 func (t *TransferReceived) Version() uint64 {
 	return t.AccountVersion
 }
+
+type TransferSentRolledBack struct {
+	ID                 domain.EventID
+	AccountID          string
+	TransferID         string
+	AccountOrigin      string
+	AccountDestination string
+	Amount             int
+	AccountVersion     uint64
+	Timestamp          time.Time
+}
+
+func (t *TransferSentRolledBack) AggregateID() string {
+	return t.AccountID
+}
+
+func (t *TransferSentRolledBack) EventID() domain.EventID {
+	return t.ID
+}
+
+func (t *TransferSentRolledBack) EventName() string {
+	return "TransferSentRolledBack"
+}
+
+func (t *TransferSentRolledBack) HappenedOn() time.Time {
+	return t.Timestamp
+}
+
+func (t *TransferSentRolledBack) Version() uint64 {
+	return t.AccountVersion
+}

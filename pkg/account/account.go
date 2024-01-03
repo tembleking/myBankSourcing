@@ -10,10 +10,11 @@ import (
 type Account struct {
 	domain.BaseAggregate
 
-	isOpen            bool
-	balance           int
-	transfersSent     map[string]struct{}
-	transfersReceived map[string]struct{}
+	isOpen              bool
+	balance             int
+	transfersSent       map[string]struct{}
+	transfersReceived   map[string]struct{}
+	transfersRolledBack map[string]struct{}
 }
 
 func (a *Account) SameEntityAs(other domain.Entity) bool {
@@ -28,8 +29,9 @@ func (a *Account) SameEntityAs(other domain.Entity) bool {
 
 func NewAccount() *Account {
 	a := &Account{
-		transfersSent:     make(map[string]struct{}),
-		transfersReceived: make(map[string]struct{}),
+		transfersSent:       make(map[string]struct{}),
+		transfersReceived:   make(map[string]struct{}),
+		transfersRolledBack: make(map[string]struct{}),
 	}
 	a.OnEventFunc = a.onEvent
 	return a
@@ -167,6 +169,33 @@ func (a *Account) ReceiveTransfer(transfer *transfer.Transfer) error {
 	return nil
 }
 
+func (a *Account) RollbackSentTransfer(transfer *transfer.Transfer) error {
+	if !a.IsOpen() {
+		return ErrAccountIsClosed
+	}
+
+	if !a.isTransferAlreadySent(transfer.ID()) {
+		return ErrCannotRollbackTransferNotPreviouslySent
+	}
+
+	if a.isTransferAlreadyRolledBack(transfer.ID()) {
+		return nil // idempotent
+	}
+
+	a.Apply(&TransferSentRolledBack{
+		ID:                 domain.NewEventID(),
+		TransferID:         transfer.ID(),
+		AccountID:          a.ID(),
+		AccountOrigin:      transfer.FromAccount(),
+		AccountDestination: transfer.ToAccount(),
+		Amount:             transfer.Amount(),
+		AccountVersion:     a.NextVersion(),
+		Timestamp:          a.Now(),
+	})
+
+	return nil
+}
+
 func (a *Account) Balance() int {
 	return a.balance
 }
@@ -183,6 +212,11 @@ func (a *Account) isTransferAlreadySent(transferID string) bool {
 func (a *Account) isTransferAlreadyReceived(transferID string) bool {
 	_, transferAlreadyReceived := a.transfersReceived[transferID]
 	return transferAlreadyReceived
+}
+
+func (a *Account) isTransferAlreadyRolledBack(transferID string) bool {
+	_, transferAlreadyRolledBack := a.transfersRolledBack[transferID]
+	return transferAlreadyRolledBack
 }
 
 func (a *Account) onEvent(event domain.Event) {
@@ -210,6 +244,14 @@ func (a *Account) onEvent(event domain.Event) {
 		if event.AccountID == a.ID() {
 			a.balance += event.Amount
 			a.transfersReceived[event.TransferID] = struct{}{}
+		}
+	case *TransferSentRolledBack:
+		if !a.isTransferAlreadySent(event.TransferID) {
+			return
+		}
+		if event.AccountID == a.ID() {
+			a.balance += event.Amount
+			a.transfersRolledBack[event.TransferID] = struct{}{}
 		}
 	}
 }
