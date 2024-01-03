@@ -230,28 +230,13 @@ func (a *Account) onEvent(event domain.Event) {
 	case *AccountClosed:
 		a.isOpen = false
 	case *TransferSent:
-		if a.isTransferAlreadySent(event.TransferID) {
-			return
-		}
-		if event.AccountID == a.ID() {
-			a.balance -= event.Amount
-			a.transfersSent[event.TransferID] = struct{}{}
-		}
+		a.balance -= event.Amount
+		a.transfersSent[event.TransferID] = struct{}{}
 	case *TransferReceived:
-		if a.isTransferAlreadyReceived(event.TransferID) {
-			return
-		}
-		if event.AccountID == a.ID() {
-			a.balance += event.Amount
-			a.transfersReceived[event.TransferID] = struct{}{}
-		}
+		a.balance += event.Amount
+		a.transfersReceived[event.TransferID] = struct{}{}
 	case *TransferSentRolledBack:
-		if !a.isTransferAlreadySent(event.TransferID) {
-			return
-		}
-		if event.AccountID == a.ID() {
-			a.balance += event.Amount
-			a.transfersRolledBack[event.TransferID] = struct{}{}
-		}
+		a.balance += event.Amount
+		a.transfersRolledBack[event.TransferID] = struct{}{}
 	}
 }
