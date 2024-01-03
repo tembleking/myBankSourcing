@@ -131,7 +131,7 @@ func (a *Account) SendTransfer(transfer *transfer.Transfer) error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
 	}
-	if a.isTransferAlreadySent(transfer.ID()) {
+	if a.isTransferAlreadySent(transfer) {
 		return nil // idempotent
 	}
 
@@ -152,7 +152,7 @@ func (a *Account) ReceiveTransfer(transfer *transfer.Transfer) error {
 	if !a.IsOpen() {
 		return ErrAccountIsClosed
 	}
-	if a.isTransferAlreadyReceived(transfer.ID()) {
+	if a.isTransferAlreadyReceived(transfer) {
 		return nil // idempotent
 	}
 
@@ -174,11 +174,11 @@ func (a *Account) RollbackSentTransfer(transfer *transfer.Transfer) error {
 		return ErrAccountIsClosed
 	}
 
-	if !a.isTransferAlreadySent(transfer.ID()) {
+	if !a.isTransferAlreadySent(transfer) {
 		return ErrCannotRollbackTransferNotPreviouslySent
 	}
 
-	if a.isTransferAlreadyRolledBack(transfer.ID()) {
+	if a.isTransferAlreadyRolledBack(transfer) {
 		return nil // idempotent
 	}
 
@@ -204,18 +204,18 @@ func (a *Account) IsOpen() bool {
 	return a.isOpen
 }
 
-func (a *Account) isTransferAlreadySent(transferID string) bool {
-	_, transferAlreadySent := a.transfersSent[transferID]
+func (a *Account) isTransferAlreadySent(transfer *transfer.Transfer) bool {
+	_, transferAlreadySent := a.transfersSent[transfer.ID()]
 	return transferAlreadySent
 }
 
-func (a *Account) isTransferAlreadyReceived(transferID string) bool {
-	_, transferAlreadyReceived := a.transfersReceived[transferID]
+func (a *Account) isTransferAlreadyReceived(transfer *transfer.Transfer) bool {
+	_, transferAlreadyReceived := a.transfersReceived[transfer.ID()]
 	return transferAlreadyReceived
 }
 
-func (a *Account) isTransferAlreadyRolledBack(transferID string) bool {
-	_, transferAlreadyRolledBack := a.transfersRolledBack[transferID]
+func (a *Account) isTransferAlreadyRolledBack(transfer *transfer.Transfer) bool {
+	_, transferAlreadyRolledBack := a.transfersRolledBack[transfer.ID()]
 	return transferAlreadyRolledBack
 }
 
