@@ -29,9 +29,9 @@ func (r *Repository) GetByID(ctx context.Context, id string) (*Transfer, error) 
 		return nil, ErrTransferNotFound
 	}
 
-	account := NewTransfer()
-	account.LoadFromHistory(events...)
-	return account, err
+	transfer := NewTransfer()
+	transfer.LoadFromHistory(events...)
+	return transfer, err
 }
 
 func (r *Repository) Save(ctx context.Context, aggregate *Transfer) error {

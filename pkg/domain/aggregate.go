@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-// TODO convert the aggregate into an interface
-
 type Aggregate interface {
 	Entity
 	UncommittedEvents() []Event
