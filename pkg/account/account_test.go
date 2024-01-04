@@ -237,6 +237,16 @@ var _ = Describe("Account", func() {
 				})
 			})
 
+			When("the account is closed", func() {
+				It("does not send the transfer", func() {
+					Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())
+					Expect(origin.CloseAccount()).To(Succeed())
+
+					err := origin.SendTransfer(transfer)
+					Expect(err).To(MatchError(account.ErrAccountIsClosed))
+				})
+			})
+
 			When("there has been an error and has to be rolled back", func() {
 				It("rolls back the transaction", func() {
 					Expect(origin.SendTransfer(transfer)).To(Succeed())
@@ -284,6 +294,14 @@ var _ = Describe("Account", func() {
 					err = destination.ReceiveTransfer(transfer)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(destination.Balance()).To(Equal(50))
+				})
+			})
+			When("the account is closed", func() {
+				It("does not receive the transfer", func() {
+					Expect(destination.CloseAccount()).To(Succeed())
+
+					err := destination.ReceiveTransfer(transfer)
+					Expect(err).To(MatchError(account.ErrAccountIsClosed))
 				})
 			})
 		})
