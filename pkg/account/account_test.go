@@ -225,6 +225,16 @@ var _ = Describe("Account", func() {
 				Expect(origin.Balance()).To(Equal(50))
 			})
 
+			When("after the account has sent a transfer", func() {
+				It("cannot be closed", func() {
+					Expect(origin.SendTransfer(transfer)).To(Succeed())
+					Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())
+
+					err := origin.CloseAccount()
+					Expect(err).To(MatchError(account.ErrAccountCannotBeClosedUntilTransfersAreResolved))
+				})
+			})
+
 			When("the transfer is already sent", func() {
 				It("does not send it again", func() {
 					err := origin.SendTransfer(transfer)
@@ -254,6 +264,15 @@ var _ = Describe("Account", func() {
 					err := origin.RollbackSentTransfer(transfer)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(origin.Balance()).To(Equal(100))
+				})
+
+				It("can be closed again", func() {
+					Expect(origin.SendTransfer(transfer)).To(Succeed())
+					Expect(origin.RollbackSentTransfer(transfer)).To(Succeed())
+					Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())
+
+					err := origin.CloseAccount()
+					Expect(err).ToNot(HaveOccurred())
 				})
 
 				When("the account was not sent previously", func() {
@@ -302,6 +321,33 @@ var _ = Describe("Account", func() {
 
 					err := destination.ReceiveTransfer(transfer)
 					Expect(err).To(MatchError(account.ErrAccountIsClosed))
+				})
+			})
+		})
+
+		When("the transfer is marked as complete in the origin account", func() {
+			It("can be closed again", func() {
+				Expect(origin.SendTransfer(transfer)).To(Succeed())
+				Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())
+
+				err := origin.MarkTransferAsCompleted(transfer)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(origin.CloseAccount()).To(Succeed())
+			})
+
+			It("can be completed multiple times and doesn't fail", func() {
+				Expect(origin.SendTransfer(transfer)).To(Succeed())
+
+				Expect(origin.MarkTransferAsCompleted(transfer)).To(Succeed())
+				Expect(origin.MarkTransferAsCompleted(transfer)).To(Succeed())
+			})
+
+			When("but the transfer was not made", func() {
+				It("fails and returns an error", func() {
+					Expect(origin.WithdrawMoney(origin.Balance())).To(Succeed())
+
+					err := origin.MarkTransferAsCompleted(transfer)
+					Expect(err).To(MatchError(account.ErrCannotCompleteTransferNotPreviouslySent))
 				})
 			})
 		})

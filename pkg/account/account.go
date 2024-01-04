@@ -10,11 +10,12 @@ import (
 type Account struct {
 	domain.BaseAggregate
 
-	isOpen              bool
-	balance             int
-	transfersSent       map[string]struct{}
-	transfersReceived   map[string]struct{}
-	transfersRolledBack map[string]struct{}
+	isOpen                       bool
+	balance                      int
+	transfersSent                map[string]struct{}
+	transfersReceived            map[string]struct{}
+	transfersRolledBack          map[string]struct{}
+	pendingTransfersToBeResolved map[string]struct{}
 }
 
 func (a *Account) SameEntityAs(other domain.Entity) bool {
@@ -29,9 +30,10 @@ func (a *Account) SameEntityAs(other domain.Entity) bool {
 
 func NewAccount() *Account {
 	a := &Account{
-		transfersSent:       make(map[string]struct{}),
-		transfersReceived:   make(map[string]struct{}),
-		transfersRolledBack: make(map[string]struct{}),
+		transfersSent:                make(map[string]struct{}),
+		transfersReceived:            make(map[string]struct{}),
+		transfersRolledBack:          make(map[string]struct{}),
+		pendingTransfersToBeResolved: make(map[string]struct{}),
 	}
 	a.OnEventFunc = a.onEvent
 	return a
@@ -101,6 +103,10 @@ func (a *Account) CloseAccount() error {
 	if a.Balance() > 0 {
 		return ErrAccountCannotBeClosedWithBalance
 	}
+	if len(a.pendingTransfersToBeResolved) > 0 {
+		return ErrAccountCannotBeClosedUntilTransfersAreResolved
+	}
+
 	a.Apply(&AccountClosed{
 		ID:             domain.NewEventID(),
 		AccountID:      a.ID(),
@@ -196,6 +202,24 @@ func (a *Account) RollbackSentTransfer(transfer *transfer.Transfer) error {
 	return nil
 }
 
+func (a *Account) MarkTransferAsCompleted(transfer *transfer.Transfer) error {
+	if !a.isTransferAlreadySent(transfer) {
+		return ErrCannotCompleteTransferNotPreviouslySent
+	}
+
+	a.Apply(&TransferCompleted{
+		ID:                 domain.NewEventID(),
+		TransferID:         transfer.ID(),
+		AccountID:          a.ID(),
+		AccountOrigin:      transfer.FromAccount(),
+		AccountDestination: transfer.ToAccount(),
+		Amount:             transfer.Amount(),
+		AccountVersion:     a.NextVersion(),
+		Timestamp:          a.Now(),
+	})
+	return nil
+}
+
 func (a *Account) Balance() int {
 	return a.balance
 }
@@ -232,11 +256,16 @@ func (a *Account) onEvent(event domain.Event) {
 	case *TransferSent:
 		a.balance -= event.Amount
 		a.transfersSent[event.TransferID] = struct{}{}
+		a.pendingTransfersToBeResolved[event.TransferID] = struct{}{}
 	case *TransferReceived:
 		a.balance += event.Amount
 		a.transfersReceived[event.TransferID] = struct{}{}
 	case *TransferSentRolledBack:
 		a.balance += event.Amount
 		a.transfersRolledBack[event.TransferID] = struct{}{}
+		delete(a.pendingTransfersToBeResolved, event.TransferID)
+	case *TransferCompleted:
+		delete(a.pendingTransfersToBeResolved, event.TransferID)
+
 	}
 }
