@@ -8,17 +8,21 @@ import (
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
 	"github.com/tembleking/myBankSourcing/pkg/persistence/inmemory"
+	"github.com/tembleking/myBankSourcing/pkg/transfer"
+	. "github.com/tembleking/myBankSourcing/test/matchers"
 )
 
 var _ = Describe("Account Service", func() {
 	var (
-		accountService    *account.AccountService
-		accountRepository *inmemory.Repository[*account.Account]
+		accountService     *account.AccountService
+		accountRepository  *inmemory.Repository[*account.Account]
+		transferRepository *inmemory.Repository[*transfer.Transfer]
 	)
 
 	BeforeEach(func(ctx context.Context) {
 		accountRepository = inmemory.NewRepository[*account.Account]()
-		accountService = account.NewAccountService(accountRepository)
+		transferRepository = inmemory.NewRepository[*transfer.Transfer]()
+		accountService = account.NewAccountService(accountRepository, transferRepository)
 	})
 
 	It("opens the account", func(ctx context.Context) {
@@ -65,5 +69,38 @@ var _ = Describe("Account Service", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(updatedAccount.IsOpen()).To(BeFalse())
+	})
+
+	When("the account already exists", func() {
+		var (
+			origin      *account.Account
+			destination *account.Account
+		)
+
+		BeforeEach(func(ctx context.Context) {
+			var err error
+			origin, err = accountService.OpenAccount(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			destination, err = accountService.OpenAccount(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			amount := 100
+			origin, err = accountService.DepositMoneyIntoAccount(ctx, origin.ID(), amount)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("sends a transfer", func(ctx context.Context) {
+			amountToTransfer := 50
+			transfer, err := accountService.TransferMoney(ctx, origin.ID(), destination.ID(), amountToTransfer)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(transfer.ID()).ToNot(BeEmpty())
+			Expect(transfer.Amount()).To(Equal(50))
+			Expect(transfer.FromAccount()).To(Equal(origin.ID()))
+			Expect(transfer.ToAccount()).To(Equal(destination.ID()))
+
+			Expect(transferRepository.GetByID(ctx, transfer.ID())).To(BeAnEntityEqualTo(transfer))
+		})
 	})
 })

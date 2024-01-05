@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/tembleking/myBankSourcing/pkg/account"
+	"github.com/tembleking/myBankSourcing/pkg/transfer"
 
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -21,13 +22,14 @@ import (
 )
 
 type Factory struct {
-	accountServiceField    lazy.Lazy[*account.AccountService]
-	eventStoreField        lazy.Lazy[*persistence.EventStore]
-	appendOnlyStoreField   lazy.Lazy[persistence.AppendOnlyStore]
-	httpHandlerField       lazy.Lazy[gohttp.Handler]
-	grpcServerField        lazy.Lazy[*gogrpc.Server]
-	accountProjectionField lazy.Lazy[*account.Projection]
-	accountRepositoryField lazy.Lazy[domain.Repository[*account.Account]]
+	accountServiceField     lazy.Lazy[*account.AccountService]
+	eventStoreField         lazy.Lazy[*persistence.EventStore]
+	appendOnlyStoreField    lazy.Lazy[persistence.AppendOnlyStore]
+	httpHandlerField        lazy.Lazy[gohttp.Handler]
+	grpcServerField         lazy.Lazy[*gogrpc.Server]
+	accountProjectionField  lazy.Lazy[*account.Projection]
+	accountRepositoryField  lazy.Lazy[domain.Repository[*account.Account]]
+	transferRepositoryField lazy.Lazy[domain.Repository[*transfer.Transfer]]
 }
 
 func NewFactory() *Factory {
@@ -36,13 +38,19 @@ func NewFactory() *Factory {
 
 func (f *Factory) NewAccountService() *account.AccountService {
 	return f.accountServiceField.GetOrInit(func() *account.AccountService {
-		return account.NewAccountService(f.accountRepository())
+		return account.NewAccountService(f.accountRepository(), f.transferRepository())
 	})
 }
 
 func (f *Factory) accountRepository() domain.Repository[*account.Account] {
 	return f.accountRepositoryField.GetOrInit(func() domain.Repository[*account.Account] {
 		return account.NewRepository(f.eventStore())
+	})
+}
+
+func (f *Factory) transferRepository() domain.Repository[*transfer.Transfer] {
+	return f.transferRepositoryField.GetOrInit(func() domain.Repository[*transfer.Transfer] {
+		return transfer.NewRepository(f.eventStore())
 	})
 }
 

@@ -5,10 +5,12 @@ import (
 	"fmt"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
+	"github.com/tembleking/myBankSourcing/pkg/transfer"
 )
 
 type AccountService struct {
-	accountRepository domain.Repository[*Account]
+	accountRepository  domain.Repository[*Account]
+	transferRepository domain.Repository[*transfer.Transfer]
 }
 
 func (a *AccountService) OpenAccount(ctx context.Context) (*Account, error) {
@@ -72,8 +74,33 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*A
 	return account, err
 }
 
-func NewAccountService(accountRepository domain.Repository[*Account]) *AccountService {
+func (a *AccountService) TransferMoney(ctx context.Context, originAccountID string, destinationAccountID string, amount int) (*transfer.Transfer, error) {
+	origin, err := a.accountRepository.GetByID(ctx, originAccountID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting origin account: %w", err)
+	}
+
+	destination, err := a.accountRepository.GetByID(ctx, destinationAccountID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting destination account: %w", err)
+	}
+
+	transfer, err := origin.TransferMoney(amount, destination)
+	if err != nil {
+		return nil, fmt.Errorf("error creating transfer: %w", err)
+	}
+
+	err = a.transferRepository.Save(ctx, transfer)
+	if err != nil {
+		return nil, fmt.Errorf("error saving transfer: %w", err)
+	}
+
+	return transfer, nil
+}
+
+func NewAccountService(accountRepository domain.Repository[*Account], transferRepository domain.Repository[*transfer.Transfer]) *AccountService {
 	return &AccountService{
-		accountRepository: accountRepository,
+		accountRepository:  accountRepository,
+		transferRepository: transferRepository,
 	}
 }

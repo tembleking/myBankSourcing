@@ -93,14 +93,7 @@ paths:
           in: body
           required: true
           schema:
-            type: object
-            properties:
-              amount:
-                type: string
-                format: int64
-                title: The amount to add
-            required:
-              - amount
+            $ref: '#/definitions/ClerkAPIServiceAddMoneyBody'
       tags:
         - ClerkAPIService
   /api/account/v1/{accountId}/withdraw:
@@ -126,14 +119,7 @@ paths:
           in: body
           required: true
           schema:
-            type: object
-            properties:
-              amount:
-                type: string
-                format: int64
-                title: The amount to withdraw
-            required:
-              - amount
+            $ref: '#/definitions/ClerkAPIServiceWithdrawMoneyBody'
       tags:
         - ClerkAPIService
 definitions:
@@ -153,6 +139,24 @@ definitions:
         title: The updated account
     required:
       - account
+  ClerkAPIServiceAddMoneyBody:
+    type: object
+    properties:
+      amount:
+        type: string
+        format: int64
+        title: The amount to add
+    required:
+      - amount
+  ClerkAPIServiceWithdrawMoneyBody:
+    type: object
+    properties:
+      amount:
+        type: string
+        format: int64
+        title: The amount to withdraw
+    required:
+      - amount
   ListAccountsResponse:
     type: object
     properties:
