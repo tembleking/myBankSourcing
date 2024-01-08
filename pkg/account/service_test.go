@@ -120,6 +120,15 @@ var _ = Describe("Account Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(originModified.Balance()).To(Equal(50))
 			})
+
+			It("receives the transfer", func(ctx context.Context) {
+				err := accountService.ReceiveTransfer(ctx, transferRequested.ID())
+				Expect(err).ToNot(HaveOccurred())
+
+				destinationModified, err := accountRepository.GetByID(ctx, destination.ID())
+				Expect(err).ToNot(HaveOccurred())
+				Expect(destinationModified.Balance()).To(Equal(50))
+			})
 		})
 	})
 })

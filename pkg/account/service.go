@@ -122,6 +122,30 @@ func (a *AccountService) SendTransfer(ctx context.Context, transferID string) er
 	return nil
 }
 
+func (a *AccountService) ReceiveTransfer(ctx context.Context, transferID string) error {
+	transfer, err := a.transferRepository.GetByID(ctx, transferID)
+	if err != nil {
+		return fmt.Errorf("error getting the transfer: %w", err)
+	}
+
+	destinationAccount, err := a.accountRepository.GetByID(ctx, transfer.ToAccount())
+	if err != nil {
+		return fmt.Errorf("error getting the destination account: %w", err)
+	}
+
+	err = destinationAccount.ReceiveTransfer(transfer)
+	if err != nil {
+		return fmt.Errorf("error sending the transfer: %w", err)
+	}
+
+	err = a.accountRepository.Save(ctx, destinationAccount)
+	if err != nil {
+		return fmt.Errorf("error saving the account: %w", err)
+	}
+
+	return nil
+}
+
 func NewAccountService(accountRepository domain.Repository[*Account], transferRepository domain.Repository[*transfer.Transfer]) *AccountService {
 	return &AccountService{
 		accountRepository:  accountRepository,
