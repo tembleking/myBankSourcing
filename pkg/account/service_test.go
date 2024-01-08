@@ -143,6 +143,11 @@ var _ = Describe("Account Service", func() {
 					Expect(err).ToNot(HaveOccurred())
 					Expect(originModified.Balance()).To(Equal(100))
 				})
+
+				It("completes the transfer", func(ctx context.Context) {
+					err := accountService.CompleteTransfer(ctx, transferRequested.ID())
+					Expect(err).ToNot(HaveOccurred())
+				})
 			})
 		})
 	})
