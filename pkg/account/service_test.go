@@ -129,6 +129,21 @@ var _ = Describe("Account Service", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(destinationModified.Balance()).To(Equal(50))
 			})
+
+			When("the transfer has already been sent", func() {
+				BeforeEach(func(ctx context.Context) {
+					Expect(accountService.SendTransfer(ctx, transferRequested.ID())).To(Succeed())
+				})
+
+				It("rollsback the transfer", func(ctx context.Context) {
+					err := accountService.RollbackTransfer(ctx, transferRequested.ID())
+					Expect(err).ToNot(HaveOccurred())
+
+					originModified, err := accountRepository.GetByID(ctx, origin.ID())
+					Expect(err).ToNot(HaveOccurred())
+					Expect(originModified.Balance()).To(Equal(100))
+				})
+			})
 		})
 	})
 })
