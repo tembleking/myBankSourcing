@@ -90,7 +90,7 @@ var _ = Describe("Account Service", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("sends a transfer", func(ctx context.Context) {
+		It("creates a transfer request", func(ctx context.Context) {
 			amountToTransfer := 50
 			transfer, err := accountService.TransferMoney(ctx, origin.ID(), destination.ID(), amountToTransfer)
 
@@ -101,6 +101,25 @@ var _ = Describe("Account Service", func() {
 			Expect(transfer.ToAccount()).To(Equal(destination.ID()))
 
 			Expect(transferRepository.GetByID(ctx, transfer.ID())).To(BeAnEntityEqualTo(transfer))
+		})
+
+		When("the transfer has been created", func() {
+			var transferRequested *transfer.Transfer
+
+			BeforeEach(func(ctx context.Context) {
+				var err error
+				transferRequested, err = accountService.TransferMoney(ctx, origin.ID(), destination.ID(), 50)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("sends the transfer", func(ctx context.Context) {
+				err := accountService.SendTransfer(ctx, transferRequested.ID())
+				Expect(err).ToNot(HaveOccurred())
+
+				originModified, err := accountRepository.GetByID(ctx, origin.ID())
+				Expect(err).ToNot(HaveOccurred())
+				Expect(originModified.Balance()).To(Equal(50))
+			})
 		})
 	})
 })

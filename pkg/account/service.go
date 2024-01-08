@@ -98,6 +98,30 @@ func (a *AccountService) TransferMoney(ctx context.Context, originAccountID stri
 	return transfer, nil
 }
 
+func (a *AccountService) SendTransfer(ctx context.Context, transferID string) error {
+	transfer, err := a.transferRepository.GetByID(ctx, transferID)
+	if err != nil {
+		return fmt.Errorf("error getting the transfer: %w", err)
+	}
+
+	originAccount, err := a.accountRepository.GetByID(ctx, transfer.FromAccount())
+	if err != nil {
+		return fmt.Errorf("error getting the origin account: %w", err)
+	}
+
+	err = originAccount.SendTransfer(transfer)
+	if err != nil {
+		return fmt.Errorf("error sending the transfer: %w", err)
+	}
+
+	err = a.accountRepository.Save(ctx, originAccount)
+	if err != nil {
+		return fmt.Errorf("error saving the account: %w", err)
+	}
+
+	return nil
+}
+
 func NewAccountService(accountRepository domain.Repository[*Account], transferRepository domain.Repository[*transfer.Transfer]) *AccountService {
 	return &AccountService{
 		accountRepository:  accountRepository,
