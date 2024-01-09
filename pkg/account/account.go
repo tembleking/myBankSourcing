@@ -206,6 +206,9 @@ func (a *Account) MarkTransferAsCompleted(transfer *transfer.Transfer) error {
 	if !a.isTransferAlreadySent(transfer) {
 		return ErrCannotCompleteTransferNotPreviouslySent
 	}
+	if !a.isTransferPendingToBeResolved(transfer) {
+		return nil // idempotent
+	}
 
 	a.Apply(&TransferCompleted{
 		ID:                 domain.NewEventID(),
@@ -241,6 +244,11 @@ func (a *Account) isTransferAlreadyReceived(transfer *transfer.Transfer) bool {
 func (a *Account) isTransferAlreadyRolledBack(transfer *transfer.Transfer) bool {
 	_, transferAlreadyRolledBack := a.transfersRolledBack[transfer.ID()]
 	return transferAlreadyRolledBack
+}
+
+func (a *Account) isTransferPendingToBeResolved(transfer *transfer.Transfer) bool {
+	_, transferPendingToBeResolved := a.pendingTransfersToBeResolved[transfer.ID()]
+	return transferPendingToBeResolved
 }
 
 func (a *Account) onEvent(event domain.Event) {
