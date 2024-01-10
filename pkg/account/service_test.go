@@ -35,6 +35,17 @@ var _ = Describe("Account Service", func() {
 		Expect(accountRepository.GetByID(ctx, accountCreated.ID())).To(Equal(accountCreated))
 	})
 
+	It("opens the account", func(ctx context.Context) {
+		err := accountService.OnCommand(ctx, &account.OpenNewAccount{ID: "some-account-id"})
+		Expect(err).ToNot(HaveOccurred())
+
+		accountCreated, err := accountRepository.GetByID(ctx, "some-account-id")
+		Expect(err).ToNot(HaveOccurred())
+		Expect(accountCreated).ToNot(BeNil())
+		Expect(accountCreated.Balance()).To(Equal(0))
+		Expect(accountCreated.IsOpen()).To(BeTrue())
+	})
+
 	It("adds money to the account", func(ctx context.Context) {
 		accountCreated, err := accountService.OpenAccount(ctx)
 		Expect(err).ToNot(HaveOccurred())

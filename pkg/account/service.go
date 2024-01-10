@@ -13,8 +13,22 @@ type AccountService struct {
 	transferRepository domain.Repository[*transfer.Transfer]
 }
 
+func (a *AccountService) OnCommand(ctx context.Context, command domain.Command) error {
+	switch c := command.(type) {
+	case *OpenNewAccount:
+		_, err := a.openAccount(ctx, c.ID)
+		return err
+	}
+
+	return nil
+}
+
 func (a *AccountService) OpenAccount(ctx context.Context) (*Account, error) {
-	accountCreated, err := OpenAccount(a.accountRepository.NextID())
+	return a.openAccount(ctx, a.accountRepository.NextID())
+}
+
+func (a *AccountService) openAccount(ctx context.Context, accountID string) (*Account, error) {
+	accountCreated, err := OpenAccount(accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error opening account: %w", err)
 	}

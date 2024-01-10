@@ -38,6 +38,24 @@ func BeAggregateWithTheSameVersionAs(expected domain.Aggregate) gcustom.CustomGo
 	}).WithMessage(fmt.Sprintf("be an aggregate with version %d", expected.Version()))
 }
 
+func BeACommandEqualTo(expected domain.Command) gcustom.CustomGomegaMatcher {
+	return gcustom.MakeMatcher(func(actual interface{}) (success bool, err error) {
+		if expected == nil {
+			return actual == nil, nil
+		}
+
+		if actual == nil {
+			return false, nil
+		}
+
+		if actualEntity, ok := actual.(domain.Command); ok {
+			return expected.SameCommandAs(actualEntity), nil
+		}
+
+		return false, nil
+	}).WithMessage(fmt.Sprintf("expected entity to be equal to %#v", expected))
+}
+
 func PointToTheSameLocationAs(expected any) gcustom.CustomGomegaMatcher {
 	return gcustom.MakeMatcher(func(actual any) (success bool, err error) {
 		if expected == nil && actual == nil {
