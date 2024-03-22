@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Account Service", func() {
 	var (
-		accountService     *account.AccountService
+		accountService     *account.Service
 		accountRepository  *inmemory.Repository[*account.Account]
 		transferRepository *inmemory.Repository[*transfer.Transfer]
 	)

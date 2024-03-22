@@ -8,14 +8,13 @@ import (
 	"github.com/tembleking/myBankSourcing/pkg/transfer"
 )
 
-type AccountService struct {
+type Service struct {
 	accountRepository  domain.Repository[*Account]
 	transferRepository domain.Repository[*transfer.Transfer]
 }
 
-func (a *AccountService) OnCommand(ctx context.Context, command domain.Command) error {
-	switch c := command.(type) {
-	case *OpenNewAccount:
+func (a *Service) OnCommand(ctx context.Context, command domain.Command) error {
+	if c, ok := command.(*OpenNewAccount); ok {
 		_, err := a.openAccount(ctx, c.ID)
 		return err
 	}
@@ -23,11 +22,11 @@ func (a *AccountService) OnCommand(ctx context.Context, command domain.Command) 
 	return nil
 }
 
-func (a *AccountService) OpenAccount(ctx context.Context) (*Account, error) {
+func (a *Service) OpenAccount(ctx context.Context) (*Account, error) {
 	return a.openAccount(ctx, a.accountRepository.NextID())
 }
 
-func (a *AccountService) openAccount(ctx context.Context, accountID string) (*Account, error) {
+func (a *Service) openAccount(ctx context.Context, accountID string) (*Account, error) {
 	accountCreated, err := OpenAccount(accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error opening account: %w", err)
@@ -40,7 +39,7 @@ func (a *AccountService) openAccount(ctx context.Context, accountID string) (*Ac
 	return accountCreated, err
 }
 
-func (a *AccountService) DepositMoneyIntoAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
+func (a *Service) DepositMoneyIntoAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -56,7 +55,7 @@ func (a *AccountService) DepositMoneyIntoAccount(ctx context.Context, accountID 
 	return account, err
 }
 
-func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
+func (a *Service) WithdrawMoneyFromAccount(ctx context.Context, accountID string, amount int) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -72,7 +71,7 @@ func (a *AccountService) WithdrawMoneyFromAccount(ctx context.Context, accountID
 	return account, err
 }
 
-func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*Account, error) {
+func (a *Service) CloseAccount(ctx context.Context, accountID string) (*Account, error) {
 	account, err := a.accountRepository.GetByID(ctx, accountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account: %w", err)
@@ -88,7 +87,7 @@ func (a *AccountService) CloseAccount(ctx context.Context, accountID string) (*A
 	return account, err
 }
 
-func (a *AccountService) TransferMoney(ctx context.Context, originAccountID string, destinationAccountID string, amount int) (*transfer.Transfer, error) {
+func (a *Service) TransferMoney(ctx context.Context, originAccountID string, destinationAccountID string, amount int) (*transfer.Transfer, error) {
 	origin, err := a.accountRepository.GetByID(ctx, originAccountID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting origin account: %w", err)
@@ -112,7 +111,7 @@ func (a *AccountService) TransferMoney(ctx context.Context, originAccountID stri
 	return transfer, nil
 }
 
-func (a *AccountService) SendTransfer(ctx context.Context, transferID string) error {
+func (a *Service) SendTransfer(ctx context.Context, transferID string) error {
 	transfer, err := a.transferRepository.GetByID(ctx, transferID)
 	if err != nil {
 		return fmt.Errorf("error getting the transfer: %w", err)
@@ -136,7 +135,7 @@ func (a *AccountService) SendTransfer(ctx context.Context, transferID string) er
 	return nil
 }
 
-func (a *AccountService) ReceiveTransfer(ctx context.Context, transferID string) error {
+func (a *Service) ReceiveTransfer(ctx context.Context, transferID string) error {
 	transfer, err := a.transferRepository.GetByID(ctx, transferID)
 	if err != nil {
 		return fmt.Errorf("error getting the transfer: %w", err)
@@ -160,7 +159,7 @@ func (a *AccountService) ReceiveTransfer(ctx context.Context, transferID string)
 	return nil
 }
 
-func (a *AccountService) RollbackTransfer(ctx context.Context, transferID string) error {
+func (a *Service) RollbackTransfer(ctx context.Context, transferID string) error {
 	transfer, err := a.transferRepository.GetByID(ctx, transferID)
 	if err != nil {
 		return fmt.Errorf("error getting the transfer: %w", err)
@@ -184,7 +183,7 @@ func (a *AccountService) RollbackTransfer(ctx context.Context, transferID string
 	return nil
 }
 
-func (a *AccountService) CompleteTransfer(ctx context.Context, transferID string) error {
+func (a *Service) CompleteTransfer(ctx context.Context, transferID string) error {
 	transfer, err := a.transferRepository.GetByID(ctx, transferID)
 	if err != nil {
 		return fmt.Errorf("error getting the transfer: %w", err)
@@ -208,8 +207,8 @@ func (a *AccountService) CompleteTransfer(ctx context.Context, transferID string
 	return nil
 }
 
-func NewAccountService(accountRepository domain.Repository[*Account], transferRepository domain.Repository[*transfer.Transfer]) *AccountService {
-	return &AccountService{
+func NewAccountService(accountRepository domain.Repository[*Account], transferRepository domain.Repository[*transfer.Transfer]) *Service {
+	return &Service{
 		accountRepository:  accountRepository,
 		transferRepository: transferRepository,
 	}

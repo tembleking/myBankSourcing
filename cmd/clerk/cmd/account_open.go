@@ -15,7 +15,7 @@ import (
 var accountOpenCmd = &cobra.Command{
 	Use:   "open",
 	Short: "Open an account",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		service := factory.NewFactory().NewAccountService()
 
 		account, err := service.OpenAccount(cmd.Context())

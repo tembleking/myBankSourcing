@@ -16,7 +16,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists the accounts created",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		accounts := factory.NewFactory().NewAccountProjection(cmd.Context()).Accounts()
 
 		for _, account := range accounts {
@@ -35,6 +35,7 @@ func printMovements(cmd *cobra.Command, movements []account.ProjectedMovement) {
 		movement := movement
 		cmd.Printf(
 			"  - [%s]: %s of %d, resulting in %d\n",
+			// nolint:gosmopolitan // Since this is the presentation layer, we want to present it in the local timezone for the user.
 			movement.Timestamp.Local().Format(time.RFC1123Z),
 			movement.Type,
 			movement.Amount,

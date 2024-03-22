@@ -10,8 +10,8 @@ import (
 )
 
 type InMemory struct {
-	mutex     sync.RWMutex
 	listeners []domain.EventListener
+	mutex     sync.RWMutex
 }
 
 func (i *InMemory) Publish(ctx context.Context, events ...domain.Event) error {
@@ -38,7 +38,7 @@ func (i *InMemory) sendEventToListeners(ctx context.Context, event domain.Event)
 	return group.Wait()
 }
 
-func (i *InMemory) Subscribe(ctx context.Context, listener domain.EventListener) error {
+func (i *InMemory) Subscribe(_ context.Context, listener domain.EventListener) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 

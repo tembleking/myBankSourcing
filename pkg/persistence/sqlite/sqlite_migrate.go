@@ -1,7 +1,6 @@
 package sqlite
 
 import (
-	"context"
 	"embed"
 	"errors"
 	"fmt"
@@ -14,7 +13,7 @@ import (
 //go:embed internal/migrations
 var migrations embed.FS
 
-func (a *AppendOnlyStore) MigrateDB(ctx context.Context) (err error) {
+func (a *AppendOnlyStore) MigrateDB() (err error) {
 	db, err := a.db.DB()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve database connection: %w", err)

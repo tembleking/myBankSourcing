@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -89,7 +88,7 @@ func readRecodsWithQuery(ctx context.Context, db *gorm.DB) ([]persistence.Stored
 		return nil, fmt.Errorf("unable to retrieve records from stream: %w", err)
 	}
 
-	var events []persistence.StoredStreamEvent
+	events := make([]persistence.StoredStreamEvent, 0, len(dbEvents))
 	for _, event := range dbEvents {
 		storedStreamEvent, err := modelEventToPersistence(event)
 		if err != nil {
@@ -143,7 +142,7 @@ func InMemory() *AppendOnlyStore {
 		panic(fmt.Errorf("this should not have happened: %w", err))
 	}
 
-	err = db.MigrateDB(context.Background())
+	err = db.MigrateDB()
 	if err != nil {
 		panic(fmt.Errorf("this should not have happened: %w", err))
 	}

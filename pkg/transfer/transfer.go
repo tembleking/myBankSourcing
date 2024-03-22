@@ -5,12 +5,11 @@ import (
 )
 
 type Transfer struct {
-	domain.BaseAggregate
-
 	transferID  string
 	fromAccount string
 	toAccount   string
-	amount      int
+	domain.BaseAggregate
+	amount int
 }
 
 func (t *Transfer) FromAccount() string {
@@ -63,8 +62,7 @@ func (t *Transfer) SameEntityAs(other domain.Entity) bool {
 }
 
 func (t *Transfer) onEvent(event domain.Event) {
-	switch e := event.(type) {
-	case *TransferRequested:
+	if e, ok := event.(*TransferRequested); ok {
 		t.transferID = e.TransferID
 		t.fromAccount = e.FromAccount
 		t.toAccount = e.ToAccount

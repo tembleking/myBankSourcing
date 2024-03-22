@@ -27,7 +27,7 @@ func (g *GoBinarySerializer) ContentType() string {
 	return "application/x-gob"
 }
 
-func (g *GoBinarySerializer) DeserializeDomainEvent(eventName string, data []byte) (domain.Event, error) {
+func (g *GoBinarySerializer) DeserializeDomainEvent(_ string, data []byte) (domain.Event, error) {
 	var event domain.Event
 	err := gob.NewDecoder(bytes.NewReader(data)).Decode(&event)
 	if err != nil {

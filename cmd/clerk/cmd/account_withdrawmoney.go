@@ -31,7 +31,7 @@ var withdrawMoneyCmd = &cobra.Command{
 		cmd.Printf("Account ID: %s, Withdrawn: %d, Balance: %d\n", updatedAccount.ID(), amount, updatedAccount.Balance())
 	},
 	Args: cobra.MinimumNArgs(2),
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
 			accounts := factory.NewFactory().NewAccountProjection(cmd.Context()).Accounts()
 

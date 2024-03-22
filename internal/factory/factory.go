@@ -22,7 +22,7 @@ import (
 )
 
 type Factory struct {
-	accountServiceField     lazy.Lazy[*account.AccountService]
+	accountServiceField     lazy.Lazy[*account.Service]
 	eventStoreField         lazy.Lazy[*persistence.EventStore]
 	appendOnlyStoreField    lazy.Lazy[persistence.AppendOnlyStore]
 	httpHandlerField        lazy.Lazy[gohttp.Handler]
@@ -36,8 +36,8 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f *Factory) NewAccountService() *account.AccountService {
-	return f.accountServiceField.GetOrInit(func() *account.AccountService {
+func (f *Factory) NewAccountService() *account.Service {
+	return f.accountServiceField.GetOrInit(func() *account.Service {
 		return account.NewAccountService(f.accountRepository(), f.transferRepository())
 	})
 }
@@ -86,10 +86,7 @@ func (f *Factory) sqliteInstance() *sqlite.AppendOnlyStore {
 		panic(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = appendOnlyStore.MigrateDB(ctx)
+	err = appendOnlyStore.MigrateDB()
 	if err != nil {
 		panic(err)
 	}

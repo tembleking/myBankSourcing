@@ -11,13 +11,14 @@ func init() {
 	serializer.RegisterSerializableEvent(&TransferRequested{})
 }
 
+// nolint:revive
 type TransferRequested struct {
+	Timestamp       time.Time
 	ID              domain.EventID
 	TransferID      string
 	FromAccount     string
 	ToAccount       string
 	Amount          int
-	Timestamp       time.Time
 	TransferVersion uint64
 }
 

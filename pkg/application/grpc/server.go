@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -12,18 +12,18 @@ import (
 )
 
 type AccountGRPCServer struct {
-	accountService    *account.AccountService
+	accountService    *account.Service
 	accountProjection *account.Projection
 }
 
-func NewAccountGRPCServer(accountService *account.AccountService, accountProjection *account.Projection) *AccountGRPCServer {
+func NewAccountGRPCServer(accountService *account.Service, accountProjection *account.Projection) *AccountGRPCServer {
 	return &AccountGRPCServer{
 		accountService:    accountService,
 		accountProjection: accountProjection,
 	}
 }
 
-func (s *AccountGRPCServer) OpenAccount(ctx context.Context, empty *emptypb.Empty) (*proto.OpenAccountResponse, error) {
+func (s *AccountGRPCServer) OpenAccount(ctx context.Context, _ *emptypb.Empty) (*proto.OpenAccountResponse, error) {
 	account, err := s.accountService.OpenAccount(ctx)
 	if err != nil {
 		return nil, &runtime.HTTPStatusError{HTTPStatus: 500, Err: err}
@@ -37,7 +37,7 @@ func (s *AccountGRPCServer) OpenAccount(ctx context.Context, empty *emptypb.Empt
 	}, nil
 }
 
-func (s *AccountGRPCServer) ListAccounts(ctx context.Context, empty *emptypb.Empty) (*proto.ListAccountsResponse, error) {
+func (s *AccountGRPCServer) ListAccounts(_ context.Context, _ *emptypb.Empty) (*proto.ListAccountsResponse, error) {
 	accounts := s.accountProjection.Accounts()
 	protoAccounts := make([]*proto.Account, len(accounts))
 	for i, account := range accounts {
@@ -54,11 +54,11 @@ func (s *AccountGRPCServer) ListAccounts(ctx context.Context, empty *emptypb.Emp
 func (s *AccountGRPCServer) AddMoney(ctx context.Context, request *proto.AddMoneyRequest) (*proto.AddMoneyResponse, error) {
 	accountID := request.GetAccountId()
 	if accountID == "" {
-		return nil, &runtime.HTTPStatusError{HTTPStatus: 400, Err: fmt.Errorf("account id must be provided")}
+		return nil, &runtime.HTTPStatusError{HTTPStatus: 400, Err: errors.New("account id must be provided")}
 	}
 	amount := int(request.GetAmount())
 	if amount <= 0 {
-		return nil, &runtime.HTTPStatusError{HTTPStatus: 400, Err: fmt.Errorf("amount must be greater than 0")}
+		return nil, &runtime.HTTPStatusError{HTTPStatus: 400, Err: errors.New("amount must be greater than 0")}
 	}
 
 	account, err := s.accountService.DepositMoneyIntoAccount(ctx, accountID, amount)

@@ -24,7 +24,7 @@ var closeCmd = &cobra.Command{
 		cmd.Printf("Closed Account ID: %s\n", accountClosed.ID())
 	},
 	Args: cobra.ExactArgs(1),
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
 			accounts := factory.NewFactory().NewAccountProjection(cmd.Context()).Accounts()
 

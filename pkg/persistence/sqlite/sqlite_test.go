@@ -145,7 +145,7 @@ var _ = Describe("Sqlite AppendOnlyStore", func() {
 func setupStore() *sqlite.AppendOnlyStore {
 	db := sqlite.InMemory()
 
-	err := db.MigrateDB(context.Background())
+	err := db.MigrateDB()
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 
 	return db

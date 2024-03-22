@@ -36,10 +36,10 @@ type StreamID struct {
 }
 
 type StoredStreamEvent struct {
-	ID          StreamID
+	HappenedOn  time.Time
 	EventID     domain.EventID
 	EventName   string
-	EventData   []byte
-	HappenedOn  time.Time
 	ContentType string
+	ID          StreamID
+	EventData   []byte
 }

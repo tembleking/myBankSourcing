@@ -19,7 +19,7 @@ func (r *Repository[T]) NextID() string {
 	return domain.NewUUID()
 }
 
-func (r *Repository[T]) GetByID(ctx context.Context, id string) (T, error) {
+func (r *Repository[T]) GetByID(_ context.Context, id string) (T, error) {
 	if aggregate, ok := r.aggregates[id]; ok {
 		return aggregate, nil
 	}
@@ -27,7 +27,7 @@ func (r *Repository[T]) GetByID(ctx context.Context, id string) (T, error) {
 	return zero, errors.New("aggregate not found")
 }
 
-func (r *Repository[T]) Save(ctx context.Context, aggregate T) error {
+func (r *Repository[T]) Save(_ context.Context, aggregate T) error {
 	r.aggregates[aggregate.ID()] = aggregate
 	return nil
 }

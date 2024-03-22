@@ -14,11 +14,12 @@ func init() {
 	serializer.RegisterSerializableEvent(&AccountClosed{})
 }
 
+// nolint:revive
 type AccountOpened struct {
+	Timestamp      time.Time
 	ID             domain.EventID
 	AccountID      string
 	AccountVersion uint64
-	Timestamp      time.Time
 }
 
 func (a *AccountOpened) AggregateID() string {
@@ -42,12 +43,12 @@ func (a *AccountOpened) HappenedOn() time.Time {
 }
 
 type AmountDeposited struct {
+	Timestamp      time.Time
 	ID             domain.EventID
 	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
-	Timestamp      time.Time
 }
 
 func (a *AmountDeposited) AggregateID() string {
@@ -71,12 +72,12 @@ func (a *AmountDeposited) HappenedOn() time.Time {
 }
 
 type AmountWithdrawn struct {
+	Timestamp      time.Time
 	ID             domain.EventID
 	AccountID      string
 	Quantity       int
 	Balance        int
 	AccountVersion uint64
-	Timestamp      time.Time
 }
 
 func (a *AmountWithdrawn) AggregateID() string {
@@ -99,11 +100,12 @@ func (a *AmountWithdrawn) HappenedOn() time.Time {
 	return a.Timestamp
 }
 
+// nolint:revive
 type AccountClosed struct {
+	Timestamp      time.Time
 	ID             domain.EventID
 	AccountID      string
 	AccountVersion uint64
-	Timestamp      time.Time
 }
 
 func (a *AccountClosed) AggregateID() string {
@@ -127,6 +129,7 @@ func (a *AccountClosed) HappenedOn() time.Time {
 }
 
 type TransferSent struct {
+	Timestamp          time.Time
 	ID                 domain.EventID
 	AccountID          string
 	TransferID         string
@@ -134,7 +137,6 @@ type TransferSent struct {
 	AccountDestination string
 	Amount             int
 	AccountVersion     uint64
-	Timestamp          time.Time
 }
 
 func (t *TransferSent) AggregateID() string {
@@ -158,6 +160,7 @@ func (t *TransferSent) Version() uint64 {
 }
 
 type TransferReceived struct {
+	Timestamp          time.Time
 	ID                 domain.EventID
 	AccountID          string
 	TransferID         string
@@ -165,7 +168,6 @@ type TransferReceived struct {
 	AccountDestination string
 	Amount             int
 	AccountVersion     uint64
-	Timestamp          time.Time
 }
 
 func (t *TransferReceived) AggregateID() string {
@@ -189,6 +191,7 @@ func (t *TransferReceived) Version() uint64 {
 }
 
 type TransferSentRolledBack struct {
+	Timestamp          time.Time
 	ID                 domain.EventID
 	AccountID          string
 	TransferID         string
@@ -196,7 +199,6 @@ type TransferSentRolledBack struct {
 	AccountDestination string
 	Amount             int
 	AccountVersion     uint64
-	Timestamp          time.Time
 }
 
 func (t *TransferSentRolledBack) AggregateID() string {
@@ -220,6 +222,7 @@ func (t *TransferSentRolledBack) Version() uint64 {
 }
 
 type TransferCompleted struct {
+	Timestamp          time.Time
 	ID                 domain.EventID
 	AccountID          string
 	TransferID         string
@@ -227,7 +230,6 @@ type TransferCompleted struct {
 	AccountDestination string
 	Amount             int
 	AccountVersion     uint64
-	Timestamp          time.Time
 }
 
 func (t *TransferCompleted) AggregateID() string {

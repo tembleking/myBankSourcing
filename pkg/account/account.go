@@ -1,21 +1,21 @@
 package account
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/tembleking/myBankSourcing/pkg/domain"
 	"github.com/tembleking/myBankSourcing/pkg/transfer"
 )
 
 type Account struct {
-	domain.BaseAggregate
-
-	isOpen                       bool
-	balance                      int
 	transfersSent                map[string]struct{}
 	transfersReceived            map[string]struct{}
 	transfersRolledBack          map[string]struct{}
 	pendingTransfersToBeResolved map[string]struct{}
+	domain.BaseAggregate
+
+	balance int
+	isOpen  bool
 }
 
 func (a *Account) SameEntityAs(other domain.Entity) bool {
@@ -41,7 +41,7 @@ func NewAccount() *Account {
 
 func OpenAccount(id string) (*Account, error) {
 	if id == "" {
-		return nil, fmt.Errorf("id must not be empty")
+		return nil, errors.New("id must not be empty")
 	}
 	a := NewAccount()
 	a.Apply(&AccountOpened{

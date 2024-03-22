@@ -13,24 +13,23 @@ import (
 
 type ProjectedAccount struct {
 	AccountID string
-	Balance   int
 	Movements []ProjectedMovement
+	Balance   int
 }
 
 type ProjectedMovement struct {
+	Timestamp        time.Time
 	Type             string
 	Amount           int
 	ResultingBalance int
-	Timestamp        time.Time
 }
 
 type Projection struct {
-	mutex                 sync.RWMutex
 	accounts              map[string]*ProjectedAccount
+	eventStore            *persistence.ReadOnlyEventStore
+	lastProcessedEventID  domain.EventID
 	precalculatedAccounts []ProjectedAccount
-
-	lastProcessedEventID domain.EventID
-	eventStore           *persistence.ReadOnlyEventStore
+	mutex                 sync.RWMutex
 }
 
 func (a *Projection) Accounts() []ProjectedAccount {

@@ -12,10 +12,10 @@ type Aggregate interface {
 }
 
 type BaseAggregate struct {
+	OnEventFunc func(Event)
 	id          string
 	events      []Event
 	version     uint64
-	OnEventFunc func(Event)
 }
 
 // Apply applies the event by calling the on-event function and saves them, so they can then be returned by Events
