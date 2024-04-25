@@ -12,14 +12,14 @@ const TableNameEvent = "event"
 
 // Event mapped from table <event>
 type Event struct {
-	RowID         int32     `gorm:"column:row_id;type:INTEGER" json:"row_id"`
-	StreamName    string    `gorm:"column:stream_name;type:TEXT" json:"stream_name"`
-	StreamVersion string    `gorm:"column:stream_version;type:UNSIGNED BIG INT" json:"stream_version"`
-	EventID       string    `gorm:"column:event_id;type:TEXT" json:"event_id"`
-	EventName     string    `gorm:"column:event_name;type:TEXT" json:"event_name"`
-	EventData     []byte    `gorm:"column:event_data;type:BLOB" json:"event_data"`
-	HappenedOn    time.Time `gorm:"column:happened_on;type:TIMESTAMP" json:"happened_on"`
-	ContentType   string    `gorm:"column:content_type;type:TEXT" json:"content_type"`
+	RowID         int32     `gorm:"column:row_id;primaryKey" json:"row_id"`
+	StreamName    string    `gorm:"column:stream_name;not null" json:"stream_name"`
+	StreamVersion string    `gorm:"column:stream_version;not null" json:"stream_version"`
+	EventID       string    `gorm:"column:event_id;not null" json:"event_id"`
+	EventName     string    `gorm:"column:event_name;not null" json:"event_name"`
+	EventData     []byte    `gorm:"column:event_data;not null" json:"event_data"`
+	HappenedOn    time.Time `gorm:"column:happened_on;not null" json:"happened_on"`
+	ContentType   string    `gorm:"column:content_type;not null" json:"content_type"`
 }
 
 // TableName Event's table name

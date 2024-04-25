@@ -5,7 +5,7 @@ help:
     just -l
 
 # Runs all checks
-check: generate fmt lint test-build test
+check: generate fmt lint test-build test check-vulns
 
 # Generate mocks
 generate: build-proto generate-sql
@@ -62,3 +62,8 @@ generate-sql:
     migrate -path pkg/persistence/sqlite/internal/migrations -database sqlite3:///tmp/db.db up
     gentool -db sqlite -dsn "file:///tmp/db.db?_fk=1&mode=ro" -outPath pkg/persistence/sqlite/internal/sqlgen -onlyModel
     rm /tmp/db.db
+
+check-vulns:
+    go install golang.org/x/vuln/cmd/govulncheck@latest
+    govulncheck ./...
+    trivy fs . --exit-code 1 --ignore-unfixed --quiet

@@ -15,8 +15,3 @@ repos:
         entry: just check
         language: system
         pass_filenames: false
-      - id: check_vulns
-        pass_filenames: false
-        name: Check vulnerabilities
-        entry: trivy fs . --exit-code 1 --ignore-unfixed --quiet
-        language: system
